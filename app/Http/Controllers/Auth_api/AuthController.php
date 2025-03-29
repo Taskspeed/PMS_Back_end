@@ -92,6 +92,14 @@ class AuthController extends Controller
             'message' => 'Logout successful',
         ]);
     }
+
+    public function user_account(){
+
+        // Fetch the data using get()
+        $data = User::select('office_id', 'name')->get();
+
+        return response()->json($data);
+    }
 }
 
 

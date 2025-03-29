@@ -12,7 +12,6 @@ class OfficeController extends Controller
     public function index (){
 
         $data = office::all();
-
         return response()->json($data);
     }
 }
