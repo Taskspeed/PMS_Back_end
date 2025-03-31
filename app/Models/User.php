@@ -16,11 +16,18 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens, LogsActivity;
 
+
+    protected static $logAttributes =['name','office_id','role_id','password'];
+
+    protected static $logOnlyDirty = true;
+
+    protected static $logName = 'user';
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'office_id', 'role_id'])
-            ->setDescriptionForEvent(fn(string $eventName) => "User has been {$eventName}");
+            ->logOnly(['name', 'office_id', 'role_id','password'])
+            ->setDescriptionForEvent(fn(string $eventName) => "You have {$eventName} User");
     }
 
     /**
@@ -32,7 +39,8 @@ class User extends Authenticatable
         'name',
         'password',
         'office_id',
-        'role_id'
+        'role_id',
+        'remember_token',
 
     ];
     // Ensure office_id and role_id are returned as integers
