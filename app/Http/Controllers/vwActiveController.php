@@ -14,7 +14,7 @@ class vwActiveController extends Controller
             // 'PMISNO',
             // 'Surname',  // Corrected from 'Sumame' to 'Surname'
             // 'Firstname',
-            // 'BirthDate',
+            'BirthDate',
             // 'Sex',
             // 'Office',
             // 'Status',
