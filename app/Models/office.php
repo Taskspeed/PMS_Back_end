@@ -16,6 +16,7 @@ class office extends Model
         return $this->hasMany(User::class);
     }
 
+    
     // Define relationship with Mfo
     public function mfos()
     {

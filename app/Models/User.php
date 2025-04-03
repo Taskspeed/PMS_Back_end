@@ -41,6 +41,7 @@ class User extends Authenticatable
         'office_id',
         'role_id',
         'remember_token',
+        'designation'
 
     ];
     // Ensure office_id and role_id are returned as integers
@@ -53,6 +54,7 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Office::class);
     }
+
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
