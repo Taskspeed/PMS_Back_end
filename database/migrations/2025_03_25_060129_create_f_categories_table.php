@@ -11,12 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mfos', function (Blueprint $table) {
+        Schema::create('f_categories', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('office_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->foreignId('f_category_id')->constrained('f_categories')->onDelete('cascade');
-            $table->softDeletes(); // Adds deleted_at column
             $table->timestamps();
         });
     }
@@ -26,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mfos');
+        Schema::dropIfExists('f_categories');
     }
 };

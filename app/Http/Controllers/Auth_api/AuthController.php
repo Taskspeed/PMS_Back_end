@@ -5,49 +5,19 @@ namespace App\Http\Controllers\Auth_api;
 
 use Carbon\Carbon;
 use App\Models\User;
+use Inertia\Inertia;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Support\Facades\Auth;
+
 class AuthController extends Controller
 {
 
 
-
-    // public function login(Request $request)
-    // {
-    //     $request->validate([
-    //         'name' => 'required|string',
-    //         'password' => 'required|string',
-    //     ]);
-    //     // Find the user with office data
-    //     $user = User::with('office')->where('name', $request->name)->first();
-
-    //     if (!$user || !Hash::check($request->password, $user->password)) {
-    //         return response()->json([
-    //             'errors' => [
-    //                 'name' => ['The provided credentials are incorrect.'],
-    //             ]
-    //         ], 401);
-    //     }
-
-    //     $token = $user->createToken('auth-token')->plainTextToken;
-
-    //     return response()->json([
-    //         'status' => 'success',
-    //         'message' => 'Login successful',
-    //         'user' => [
-    //             'id' => $user->id,
-    //             'name' => $user->name,
-    //             'office_id' =>$user->office_id,
-    //             'role_id' => $user->role_id,
-    //         ],
-    //         'token' => $token,
-    //     ]);
-    // }
     public function login(Request $request)
 {
     $request->validate([
@@ -67,59 +37,22 @@ class AuthController extends Controller
 
     $token = $user->createToken('auth-token')->plainTextToken;
 
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Login successful',
-        'user' => [
-            'id' => $user->id,
-            'name' => $user->name,
-            'office_id' =>$user->office_id,
-            'role_id' => $user->role_id,
-            'role_name' => $user->role->name ?? null,
-        ],
-        'token' => $token,
-    ]);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Login successful',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'office_id' =>$user->office_id,
+                'role_id' => $user->role_id,
+                'role_name' => $user->role->name ?? null,
+                'designation'=>$user->designation,
+            ],
+            'token' => $token,
+        ]);
+
 }
 
-
-    // public function register(Request $request)
-    // {
-    //     $request->validate([
-    //         'name' => 'required|string|unique:users,name',
-    //         'password' => 'required|string|min:6',
-    //         'office_id' => 'required|exists:offices,id',
-    //         'role_id'=> 'required|exists:Roles,id',
-
-    //     ]);
-
-    //     // Create user
-    //     $user = User::create([
-    //         'name' => $request->name,
-    //         'password' => Hash::make($request->password),
-    //         'office_id' => $request->office_id,
-    //         'role_id' => $request->role_id,
-    //         'remember_token' => Str::random(60),
-    //     ]);
-
-    //     event(new Registered($user));
-
-    //     // Return the same structure as login
-    //     $token = $user->createToken('auth-token')->plainTextToken;
-
-    //     return response()->json([
-    //         'status' => 'success',
-    //         'message' => 'Registration successful',
-    //         'user' => [
-    //             'id' => $user->id,
-    //             'name' => $user->name,
-    //             'office_id' => $user->office_id,
-    //             'role_id' => $user->role_id,
-    //         ],
-    //         'token' => $token, // Return the token
-    //     ]);
-
-
-    // }
     public function register(Request $request)
     {
         try {
@@ -128,6 +61,7 @@ class AuthController extends Controller
                 'password' => 'required|string|min:6',
                 'office_id' => 'required|exists:offices,id',
                 'role_id' => 'required|exists:Roles,id',
+                'designation'=> 'required|string',
             ]);
 
             $user = User::create([
@@ -136,6 +70,7 @@ class AuthController extends Controller
                 'office_id' => $request->office_id,
                 'role_id' => $request->role_id,
                 'remember_token' => Str::random(60),
+                'designation'=>$request->designation,
             ]);
 
             return response()->json([
@@ -146,6 +81,7 @@ class AuthController extends Controller
                     'name' => $user->name,
                     'office_id' => $user->office_id,
                     'role_id' => $user->role_id,
+                    'designation'=>$user->designation,
                 ]
             ], 201); // Use 201 Created status code
 

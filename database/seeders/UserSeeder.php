@@ -28,6 +28,28 @@ class UserSeeder extends Seeder
             'role_id' => 3, // Ensure this role exists in the roles table
             'remember_token' => Str::random(24),
         ]);
+        
+        User::create([
+            'name' => 'deniel',
+            'password' => static::$password ??= Hash::make('admin'),
+            'office_id' => 1, // Ensure this office exists in the offices table
+            'role_id' => 1, // Ensure this role exists in the roles table
+            'remember_token' => Str::random(24),
+        ]);
+        User::create([
+            'name' => 'cliford',
+            'password' => static::$password ??= Hash::make('admin'),
+            'office_id' => 1, // Ensure this office exists in the offices table
+            'role_id' => 1, // Ensure this role exists in the roles table
+            'remember_token' => Str::random(24),
+        ]);
+        User::create([
+            'name' => 'flavs',
+            'password' => static::$password ??= Hash::make('admin'),
+            'office_id' => 20, // Ensure this office exists in the offices table
+            'role_id' => 3, // Ensure this role exists in the roles table
+            'remember_token' => Str::random(24),
+        ]);
 
     }
 }
