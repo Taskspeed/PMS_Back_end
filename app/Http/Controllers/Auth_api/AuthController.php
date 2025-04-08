@@ -5,14 +5,12 @@ namespace App\Http\Controllers\Auth_api;
 
 use Carbon\Carbon;
 use App\Models\User;
-use Inertia\Inertia;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Auth\Events\Registered;
+
 
 class AuthController extends Controller
 {
@@ -136,6 +134,8 @@ class AuthController extends Controller
 
          return response()->json($data);
     }
+
+
 }
 
 

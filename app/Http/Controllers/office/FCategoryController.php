@@ -10,7 +10,7 @@ class FCategoryController extends Controller
 {
     //
 
-    public function data_f_category(){
+    public function index(){
 
         $data = F_category::all();
             return response()->json($data);

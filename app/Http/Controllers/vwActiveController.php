@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\office;
 use App\Models\vwActive;
+use App\Models\vwplantillastructure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class vwActiveController extends Controller
 {
@@ -28,4 +31,6 @@ class vwActiveController extends Controller
         return response()->json($data);
 
     }
+
+
 }

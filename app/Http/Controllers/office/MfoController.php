@@ -7,7 +7,7 @@ use App\Models\User; // Ensure this is the Eloquent User model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
-
+use App\Models\F_category;
 
 class MfoController extends Controller
 {
@@ -37,11 +37,33 @@ class MfoController extends Controller
         return response()->json(['message' => 'MFO created successfully', 'mfo' => $mfo]);
     }
 
-    public function data_mfo(){
+    public function index_data(){
 
     $data = mfo::all();
     return response()->json($data);
     }
+    // public function index_data()
+    // {
+    //     // Fetch categories with their MFOs and each MFO's outputs
+    //     $categories = F_category::with('mfos.outpots')->get();
+    //     $textOutput = "";
+
+    //     foreach ($categories as $category) {
+    //         $textOutput .= "Category: {$category->name}\n";
+
+    //         foreach ($category->mfos as $mfo) {
+    //             $textOutput .= "  MFO: {$mfo->name}\n";
+
+    //             foreach ($mfo->outpots as $output) {
+    //                 $textOutput .= "    - Output / Support Function: {$output->name}\n";
+    //             }
+    //         }
+
+    //         $textOutput .= "\n";
+    //     }
+
+    //     return response($textOutput, 200)->header('Content-Type', 'text/plain');
+    // }
 
 
     public function getUserData(Request $request)
@@ -74,7 +96,7 @@ class MfoController extends Controller
             'mfos' => $mfos
         ]);
     }
-    
+
 
     public function update(Request $request, $id){
 
