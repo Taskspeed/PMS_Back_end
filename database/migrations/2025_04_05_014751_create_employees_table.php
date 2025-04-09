@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('section')->nullable();
             $table->string('unit')->nullable();
             $table->foreignId('office_id')->constrained()->onDelete('cascade');
+            $table->softDeletes(); // Adds deleted_at column
             $table->timestamps();
         });
     }

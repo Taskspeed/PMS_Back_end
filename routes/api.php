@@ -12,6 +12,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\office\FOutpotController;
 use App\Http\Controllers\office\FCategoryController;
 use App\Http\Controllers\VwplantillastructureController;
+use App\Models\Employee;
 
 // Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 //     return $request->user();
@@ -60,45 +61,48 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 
-    // //office structure
-    // Route::get('/office/structure', [VwplantillastructureController::class, 'index']);
 
+    //office structure
+    Route::get('/office/structure', [VwplantillastructureController::class, 'index']);
     //for division
     Route::get('/employees-by-office', [EmployeeController::class, 'show_employee']);
-
-
+    // adding
     Route::post('/add/employee', [EmployeeController::class, 'store']);
+    Route::get('/fetch_employees', [EmployeeController::class, 'fetchEmployees']);
+    Route::get('/employee/counts', [EmployeeController::class, 'getEmployeeCounts']);
 
-    // // for table on division
-    // Route::get('/employee/table', [EmployeeController::class, 'fetchEmployees']);
-
-
+    //soft delete
+    Route::get('/employee', [EmployeeController::class, 'index']);   // Fetch only active (non-deleted) mfo
+    Route::get('/employee/soft-deleted', [EmployeeController::class, 'getSoftDeleted']); // fetch_mfo_SoftDeleted
+    // Route::post('/employee/{id}', [EmployeeController::class, 'update']);
+    Route::delete('/employee/{id}', [EmployeeController::class, 'softDelete']);  // softDelete for MFO
+    Route::patch('/employee/restore/{id}', [EmployeeController::class, 'restore']);     // restore soft-deleted data
+    
 });
-Route::get('/fetch_employees', [EmployeeController::class, 'fetchEmployees']);
-Route::get('/employee/counts', [EmployeeController::class, 'getEmployeeCounts']);
-//office structure
-Route::get('/office/structure', [VwplantillastructureController::class, 'index']);
+
 
 //user with office data
 Route::middleware('auth:sanctum')->get('/user_data', [MfoController::class, 'getUserData']);
 
 
-//user_activity_log
-Route::get('/user_activity_log', [Activity_log_Controller::class, 'index']);
+
+Route::get('/user_activity_log', [Activity_log_Controller::class, 'index']); //user_activity_log
+
 Route::get('/show1', [VwplantillastructureController::class, 'show']);
 
 
 //fetching
 Route::get('/show',[vwActiveController::class, 'show']);
 
-//fetching category
-Route::get('/fetch_f_category', [FCategoryController::class, 'index']);
 
-//fetch office
-Route::get('/fetch_office', [OfficeController::class, 'index']);
 
-// mfo
-Route::get('/fetch_mfo', [MfoController::class, 'index_data']);
+Route::get('/fetch_f_category', [FCategoryController::class, 'index']); //fetching category
 
-// user account and role
-Route::get('/user_account', [AuthController::class, 'user_account']);
+
+Route::get('/fetch_office', [OfficeController::class, 'index']); //fetch office
+
+
+Route::get('/fetch_mfo', [MfoController::class, 'index_data']); // mfo
+
+
+Route::get('/user_account', [AuthController::class, 'user_account']); // user account and role

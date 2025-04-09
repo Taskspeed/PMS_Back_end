@@ -30,9 +30,20 @@ class EmployeeController extends Controller
         foreach ($validated['employees'] as $employeeData) {
             $employee = Employee::create($employeeData);
 
+            // Enhanced activity logging
             activity()
                 ->performedOn($employee)
                 ->causedBy(Auth::user())
+                ->withProperties([
+                    'name' => $employee->name,
+                    'position' => $employee->position,
+                    'rank' => $employee->rank,
+                    'office' => $employee->office,
+                    'division' => $employee->division,
+                    'section' => $employee->section,
+                    'unit' => $employee->unit,
+                    'office_id' => $employee->office_id
+                ])
                 ->log('Employee Created');
 
             $createdEmployees[] = $employee;
@@ -181,5 +192,128 @@ class EmployeeController extends Controller
                 'units' => $unitCounts
             ]
         ]);
+    }
+
+    // Fetch only active (non-deleted) mfo
+    public function index()
+    {
+
+        $employee = Employee::whereNull('deleted_at')->get();
+
+        return response()->json($employee);
+    }
+
+    // fetch_mfo_SoftDeleted
+    public function getSoftDeleted()
+    {
+
+        $employee = Employee::onlyTrashed()->get();
+
+        return response()->json($employee);
+    }
+
+    // softDelete for MFO
+    // public function softDelete($id)
+    // {
+    //     $employee = Employee::findOrFail($id);
+    //     $employee->delete();
+
+    //     // Get updated counts
+    //     $officeId = $employee->office_id;
+    //     $officeCount = Employee::where('office_id', $officeId)->count();
+    //     $divisionCount = $employee->division ? Employee::where('office_id', $officeId)
+    //         ->where('division', $employee->division)
+    //         ->count() : null;
+    //     $sectionCount = $employee->section ? Employee::where('office_id', $officeId)
+    //         ->where('section', $employee->section)
+    //         ->count() : null;
+    //     $unitCount = $employee->unit ? Employee::where('office_id', $officeId)
+    //         ->where('unit', $employee->unit)
+    //         ->count() : null;
+
+    //     activity()
+    //         ->performedOn($employee)
+    //         ->causedBy(Auth::user())
+    //         ->withProperties([
+    //             'name' => $employee->name,
+    //             'position' => $employee->position,
+    //             'rank' => $employee->rank,
+    //             'office' => $employee->office,
+    //             'division' => $employee->division,
+    //             'section' => $employee->section,
+    //             'unit' => $employee->unit,
+    //             'office_id' => $employee->office_id
+    //         ])
+    //         ->log('Employee soft deleted');
+
+    //     return response()->json([
+    //         'message' => 'Employee soft deleted successfully',
+    //         'counts' => [
+    //             'office' => $officeCount,
+    //             'division' => $divisionCount,
+    //             'section' => $sectionCount,
+    //             'unit' => $unitCount
+    //         ]
+    //     ]);
+    // }
+    public function softDelete($id)
+    {
+        $employee = Employee::findOrFail($id);
+        $employee->delete();
+
+        // Get updated counts
+        $officeId = $employee->office_id;
+        $officeCount = Employee::where('office_id', $officeId)->count();
+
+        $divisionCount = $employee->division ? Employee::where('office_id', $officeId)
+            ->where('division', $employee->division)
+            ->count() : null;
+
+        $sectionCount = $employee->section ? Employee::where('office_id', $officeId)
+            ->where('section', $employee->section)
+            ->count() : null;
+
+        $unitCount = $employee->unit ? Employee::where('office_id', $officeId)
+            ->where('unit', $employee->unit)
+            ->count() : null;
+
+        activity()
+            ->performedOn($employee)
+            ->causedBy(Auth::user())
+            ->log('Employee soft deleted');
+
+        return response()->json([
+            'message' => 'Employee soft deleted successfully',
+            'counts' => [
+                'office' => $officeCount,
+                'divisions' => $employee->division ? [$employee->division => $divisionCount] : [],
+                'sections' => $employee->section ? [$employee->section => $sectionCount] : [],
+                'units' => $employee->unit ? [$employee->unit => $unitCount] : []
+            ]
+        ]);
+    }
+    // restore soft-deleted data
+    public function restore($id)
+    {
+
+        $employee = Employee::onlyTrashed()->findOrFail($id);
+        $employee->restore();
+
+        activity()
+            ->performedOn($employee)
+            ->causedBy(Auth::user())
+            ->withProperties([
+                'name' => $employee->name,
+                'position' => $employee->position,
+                'rank' => $employee->rank,
+                'office' => $employee->office,
+                'division' => $employee->division,
+                'section' => $employee->section,
+                'unit' => $employee->unit,
+                'office_id' => $employee->office_id
+            ])
+            ->log('Employee restored');
+
+        return response()->json(['message' => 'Employee restored successfully']);
     }
 }
