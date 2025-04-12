@@ -118,11 +118,29 @@ class AuthController extends Controller
         }
     }
 
+    // public function user_account()
+    // {
+    //     // Fetch users with office data and format date using Carbon
+    //     $data = User::with('office:id,name')
+    //         ->select('office_id', 'name', 'created_at')
+    //         ->get()
+    //         ->map(function ($user) {
+    //             return [
+    //                 'name' => $user->name,
+    //                 'office_name' => $user->office->name ?? 'N/A',
+    //                 'datecreated' => Carbon::parse($user->created_at)->format('F d, Y'),
+    //             ];
+    //         });
+
+    //      return response()->json($data);
+    // }
+
     public function user_account()
     {
         // Fetch users with office data and format date using Carbon
         $data = User::with('office:id,name')
             ->select('office_id', 'name', 'created_at')
+            ->orderBy('created_at', 'desc') // Add this line to sort by newest first
             ->get()
             ->map(function ($user) {
                 return [
@@ -132,10 +150,8 @@ class AuthController extends Controller
                 ];
             });
 
-         return response()->json($data);
+        return response()->json($data);
     }
-
-
 }
 
 

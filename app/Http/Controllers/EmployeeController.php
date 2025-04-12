@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 
 class EmployeeController extends Controller
 {
-
+    //add employee to division,section,unit
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -23,11 +23,17 @@ class EmployeeController extends Controller
             'employees.*.division' => 'nullable|string|max:255',
             'employees.*.section' => 'nullable|string|max:255',
             'employees.*.unit' => 'nullable|string|max:255',
+            'employees.*.rank' => 'nullable|in:Head,Supervisor,Employee'
         ]);
 
         $createdEmployees = [];
 
         foreach ($validated['employees'] as $employeeData) {
+            // Set default rank to Employee if not provided
+            if (!isset($employeeData['rank'])) {
+                $employeeData['rank'] = 'Employee';
+            }
+
             $employee = Employee::create($employeeData);
 
             // Enhanced activity logging
@@ -55,8 +61,65 @@ class EmployeeController extends Controller
             'employees' => $createdEmployees
         ]);
     }
+        //rank update
+    public function updateRank(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'rank' => 'required|in:Head,Supervisor,Employee'
+        ]);
+
+        $employee = Employee::findOrFail($id);
+
+        // Check if this is a Head promotion
+        if ($validated['rank'] === 'Head') {
+            $query = Employee::where('office_id', $employee->office_id)
+                ->where('rank', 'Head')
+                ->where('id', '!=', $employee->id);
+
+            // Check based on organizational level
+            if ($employee->unit) {
+                $query->where('unit', $employee->unit);
+            } elseif ($employee->section) {
+                $query->where('section', $employee->section)
+                    ->whereNull('unit');
+            } elseif ($employee->division) {
+                $query->where('division', $employee->division)
+                    ->whereNull('section')
+                    ->whereNull('unit');
+            } else {
+                $query->whereNull('division')
+                    ->whereNull('section')
+                    ->whereNull('unit');
+            }
+
+            $existingHead = $query->first();
+
+            if ($existingHead) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'There is already a Head in this organizational unit'
+                ], 422);
+            }
+        }
+
+        $employee->rank = $validated['rank'];
+        $employee->save();
+
+        activity()
+            ->performedOn($employee)
+            ->causedBy(Auth::user())
+            ->withProperties(['new_rank' => $validated['rank']])
+            ->log('Employee rank updated');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Employee rank updated successfully'
+        ]);
+    }
 
 
+
+    // for fetching employees on the modal
     public function show_employee(Request $request)
     {
         $user = Auth::user();
@@ -111,7 +174,48 @@ class EmployeeController extends Controller
             ], 500);
         }
     }
+    // Search employees by name or designation
+    public function searchEmployees(Request $request)
+    {
+        $searchTerm = $request->query('search');
+        $unassignedOnly = $request->query('unassigned_only', false);
 
+        if (empty($searchTerm)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Search term is required'
+            ], 400);
+        }
+
+        try {
+            $query = vwActive::where(function ($q) use ($searchTerm) {
+                $q->where('Name4', 'LIKE', "%{$searchTerm}%")
+                    ->orWhere('Designation', 'LIKE', "%{$searchTerm}%");
+            });
+
+            if ($unassignedOnly) {
+                $query->whereNotExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('employees')
+                        ->whereRaw('vwActive.Name4 = employees.name');
+                });
+            }
+
+            $employees = $query->get(['Office as office', 'Name4 as name', 'Designation as position']);
+
+            return response()->json([
+                'success' => true,
+                'data' => $employees
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Search failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Fetch employees based on office and organizational unit
     public function fetchEmployees(Request $request)
     {
         $query = Employee::query();
@@ -121,19 +225,23 @@ class EmployeeController extends Controller
             $query->where('office_id', $request->office_id);
         }
 
-        // Filter by division if provided
-        if ($request->has('division')) {
-            $query->where('division', $request->division);
-        }
-
-        // Filter by section if provided
-        if ($request->has('section')) {
-            $query->where('section', $request->section);
-        }
-
-        // Filter by unit if provided
+        // Check for the most specific organizational unit first
         if ($request->has('unit')) {
             $query->where('unit', $request->unit);
+        } elseif ($request->has('section')) {
+            // Only include employees that don't have a unit assigned
+            $query->where('section', $request->section)
+                ->whereNull('unit');
+        } elseif ($request->has('division')) {
+            // Only include employees that don't have section or unit assigned
+            $query->where('division', $request->division)
+                ->whereNull('section')
+                ->whereNull('unit');
+        } elseif ($request->has('office_id')) {
+            // Only include employees that don't have division, section, or unit assigned
+            $query->whereNull('division')
+                ->whereNull('section')
+                ->whereNull('unit');
         }
 
         $employees = $query->get();
@@ -156,26 +264,33 @@ class EmployeeController extends Controller
             ], 400);
         }
 
-        // Get counts for the entire office
-        $officeCount = Employee::where('office_id', $officeId)->count();
+        // Count office-level employees (no division, section, or unit)
+        $officeCount = Employee::where('office_id', $officeId)
+            ->whereNull('division')
+            ->whereNull('section')
+            ->whereNull('unit')
+            ->count();
 
-        // Get counts grouped by division
+        // Count division-level employees (no section or unit)
         $divisionCounts = Employee::where('office_id', $officeId)
             ->whereNotNull('division')
+            ->whereNull('section')
+            ->whereNull('unit')
             ->select('division', DB::raw('count(*) as count'))
             ->groupBy('division')
             ->get()
             ->keyBy('division');
 
-        // Get counts grouped by section
+        // Count section-level employees (no unit)
         $sectionCounts = Employee::where('office_id', $officeId)
             ->whereNotNull('section')
+            ->whereNull('unit')
             ->select('section', DB::raw('count(*) as count'))
             ->groupBy('section')
             ->get()
             ->keyBy('section');
 
-        // Get counts grouped by unit
+        // Count unit-level employees
         $unitCounts = Employee::where('office_id', $officeId)
             ->whereNotNull('unit')
             ->select('unit', DB::raw('count(*) as count'))
@@ -212,50 +327,6 @@ class EmployeeController extends Controller
         return response()->json($employee);
     }
 
-    // softDelete for MFO
-    // public function softDelete($id)
-    // {
-    //     $employee = Employee::findOrFail($id);
-    //     $employee->delete();
-
-    //     // Get updated counts
-    //     $officeId = $employee->office_id;
-    //     $officeCount = Employee::where('office_id', $officeId)->count();
-    //     $divisionCount = $employee->division ? Employee::where('office_id', $officeId)
-    //         ->where('division', $employee->division)
-    //         ->count() : null;
-    //     $sectionCount = $employee->section ? Employee::where('office_id', $officeId)
-    //         ->where('section', $employee->section)
-    //         ->count() : null;
-    //     $unitCount = $employee->unit ? Employee::where('office_id', $officeId)
-    //         ->where('unit', $employee->unit)
-    //         ->count() : null;
-
-    //     activity()
-    //         ->performedOn($employee)
-    //         ->causedBy(Auth::user())
-    //         ->withProperties([
-    //             'name' => $employee->name,
-    //             'position' => $employee->position,
-    //             'rank' => $employee->rank,
-    //             'office' => $employee->office,
-    //             'division' => $employee->division,
-    //             'section' => $employee->section,
-    //             'unit' => $employee->unit,
-    //             'office_id' => $employee->office_id
-    //         ])
-    //         ->log('Employee soft deleted');
-
-    //     return response()->json([
-    //         'message' => 'Employee soft deleted successfully',
-    //         'counts' => [
-    //             'office' => $officeCount,
-    //             'division' => $divisionCount,
-    //             'section' => $sectionCount,
-    //             'unit' => $unitCount
-    //         ]
-    //     ]);
-    // }
     public function softDelete($id)
     {
         $employee = Employee::findOrFail($id);
