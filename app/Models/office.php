@@ -22,8 +22,14 @@ class office extends Model
     {
         return $this->hasMany(mfo::class);
     }
+
     public function employees()
     {
         return $this->hasMany(Employee::class);
+    }
+    
+    public function f_outpot()
+    {
+        return $this->hasMany(f_outpot::class,);
     }
 }

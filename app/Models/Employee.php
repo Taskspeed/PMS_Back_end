@@ -11,26 +11,33 @@ class Employee extends Model
 {
     //
     use LogsActivity, SoftDeletes;
-    
+
     protected $fillable =[
 
         'name',
-        'position',
+
         'rank',
         'office',
         'division',
         'section',
         'unit',
+         'position_id',
         'office_id',
+
     ];
 
     protected $casts = [
         'office_id' => 'integer',
+        'position_id' => 'integer',
 
     ];
     public function office()
     {
         return $this->belongsTo(office::class);
+    }
+    public function position()
+    {
+        return $this->belongsTo(position::class);
     }
 
     public function getActivitylogOptions(): LogOptions

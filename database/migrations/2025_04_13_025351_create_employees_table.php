@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
             $table->string('name')->nullable();
-            $table->string('position')->nullable();
             $table->string('rank')->nullable();
             $table->string('office')->nullable();
             $table->string('division')->nullable();
             $table->string('section')->nullable();
             $table->string('unit')->nullable();
+            $table->foreignId('position_id')->constrained('positions')->nullable(); // Add this line
             $table->foreignId('office_id')->constrained()->onDelete('cascade');
             $table->softDeletes(); // Adds deleted_at column
             $table->timestamps();

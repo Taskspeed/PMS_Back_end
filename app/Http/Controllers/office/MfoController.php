@@ -37,11 +37,13 @@ class MfoController extends Controller
         return response()->json(['message' => 'MFO created successfully', 'mfo' => $mfo]);
     }
 
+
     public function index_data(){
 
     $data = mfo::all();
     return response()->json($data);
     }
+
 
     public function getUserData(Request $request)
     {
@@ -75,8 +77,35 @@ class MfoController extends Controller
     }
 
 
-    public function update(Request $request, $id){
+    // public function update(Request $request, $id){
 
+    //     // validate the request
+    //     $request->validate([
+    //         'office_id' => 'required|exists:offices,id',
+    //         'name' => 'required|string|max:255',
+    //         'f_category_id' => 'required|exists:f_categories,id',
+    //     ]);
+
+    //     //find the output by id
+    //     $mfos = mfo::findOrFail($id);
+
+    //     //update the mfos
+    //     $mfos->update([
+    //         'office_id'=> $request->office_id,
+    //         'name'=> $request->name,
+    //         'f_category_id' => $request->f_category_id,
+    //     ]);
+    //     // Log activity
+    //     activity()
+    //         ->performedOn($mfos)
+    //         ->causedBy(Auth::user())
+    //         ->withProperties(['name' => $mfos->name])
+    //         ->log('MFO updated');
+
+    //     return response()->json(['message' => 'MFO updated successfully', 'mfo' => $mfos]);
+    // }
+    public function update(Request $request, $id)
+    {
         // validate the request
         $request->validate([
             'office_id' => 'required|exists:offices,id',
@@ -84,26 +113,29 @@ class MfoController extends Controller
             'f_category_id' => 'required|exists:f_categories,id',
         ]);
 
-        //find the output by id
-        $mfos = mfo::findOrFail($id);
+        // find the MFO by id
+        $mfo = Mfo::findOrFail($id);
 
-        //update the mfos
-        $mfos->update([
-            'office_id'=> $request->office_id,
-            'name'=> $request->name,
+        // update the MFO
+        $mfo->update([
+            'office_id' => $request->office_id,
+            'name' => $request->name,
             'f_category_id' => $request->f_category_id,
         ]);
+
         // Log activity
         activity()
-            ->performedOn($mfos)
+            ->performedOn($mfo)
             ->causedBy(Auth::user())
-            ->withProperties(['name' => $mfos->name])
+            ->withProperties(['name' => $mfo->name])
             ->log('MFO updated');
 
-        return response()->json(['message' => 'MFO updated successfully', 'mfo' => $mfos]);
+        return response()->json([
+            'message' => 'MFO updated successfully',
+            'mfo' => $mfo->fresh() // Return fresh data from database
+        ]);
     }
 
-    
      // Fetch only active (non-deleted) mfo
          public function index(){
 
