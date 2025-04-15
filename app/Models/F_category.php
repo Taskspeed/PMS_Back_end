@@ -14,4 +14,9 @@ class F_category extends Model
     {
         return $this->hasMany(Mfo::class,);
     }
+
+    public function f_outpot()
+    {
+        return $this->hasMany(f_outpot::class,);
+    }
 }

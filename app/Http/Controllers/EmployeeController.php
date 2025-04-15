@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\office;
 use App\Models\Employee;
+use App\Models\Position;
 use App\Models\vwActive;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,12 +13,61 @@ use Illuminate\Support\Facades\Auth;
 class EmployeeController extends Controller
 {
     //add employee to division,section,unit
+    // public function store(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'employees' => 'required|array',
+    //         'employees.*.name' => 'required|string|max:255',
+    //         'employees.*.position_id' => 'required|exists:positions,id',
+    //         'employees.*.office_id' => 'required|exists:offices,id',
+    //         'employees.*.office' => 'nullable|string|max:255',
+    //         'employees.*.division' => 'nullable|string|max:255',
+    //         'employees.*.section' => 'nullable|string|max:255',
+    //         'employees.*.unit' => 'nullable|string|max:255',
+    //         'employees.*.rank' => 'nullable|in:Head,Supervisor,Employee'
+    //     ]);
+
+    //     $createdEmployees = [];
+
+    //     foreach ($validated['employees'] as $employeeData) {
+    //         // Set default rank to Employee if not provided
+    //         if (!isset($employeeData['rank'])) {
+    //             $employeeData['rank'] = 'Employee';
+    //         }
+
+    //         $employee = Employee::create($employeeData);
+
+    //         // Enhanced activity logging
+    //         activity()
+    //             ->performedOn($employee)
+    //             ->causedBy(Auth::user())
+    //             ->withProperties([
+    //                 'name' => $employee->name,
+    //                 'position_id' => $employee->position_id,
+    //                 'rank' => $employee->rank,
+    //                 'office' => $employee->office,
+    //                 'division' => $employee->division,
+    //                 'section' => $employee->section,
+    //                 'unit' => $employee->unit,
+    //                 'office_id' => $employee->office_id
+    //             ])
+    //             ->log('Employee Created');
+
+    //         $createdEmployees[] = $employee;
+    //     }
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'Employees created successfully',
+    //         'employees' => $createdEmployees
+    //     ]);
+    // }
     public function store(Request $request)
     {
         $validated = $request->validate([
             'employees' => 'required|array',
             'employees.*.name' => 'required|string|max:255',
-            'employees.*.position' => 'required|string|max:255',
+            'employees.*.position_id' => 'required|exists:positions,id',
             'employees.*.office_id' => 'required|exists:offices,id',
             'employees.*.office' => 'nullable|string|max:255',
             'employees.*.division' => 'nullable|string|max:255',
@@ -28,41 +78,62 @@ class EmployeeController extends Controller
 
         $createdEmployees = [];
 
-        foreach ($validated['employees'] as $employeeData) {
-            // Set default rank to Employee if not provided
-            if (!isset($employeeData['rank'])) {
-                $employeeData['rank'] = 'Employee';
+        // Use a transaction to ensure data integrity
+        DB::beginTransaction();
+        try {
+            foreach ($validated['employees'] as $employeeData) {
+                // Set default rank to Employee if not provided
+                if (!isset($employeeData['rank'])) {
+                    $employeeData['rank'] = 'Employee';
+                }
+
+                $employee = Employee::create($employeeData);
+
+                // Enhanced activity logging
+                activity()
+                    ->performedOn($employee)
+                    ->causedBy(Auth::user())
+                    ->withProperties([
+                        'name' => $employee->name,
+                        'position_id' => $employee->position_id,
+                        'rank' => $employee->rank,
+                        'office' => $employee->office,
+                        'division' => $employee->division,
+                        'section' => $employee->section,
+                        'unit' => $employee->unit,
+                        'office_id' => $employee->office_id
+                    ])
+                    ->log('Employee Created');
+
+                $createdEmployees[] = $employee;
             }
 
-            $employee = Employee::create($employeeData);
+            DB::commit();
 
-            // Enhanced activity logging
-            activity()
-                ->performedOn($employee)
-                ->causedBy(Auth::user())
-                ->withProperties([
-                    'name' => $employee->name,
-                    'position' => $employee->position,
-                    'rank' => $employee->rank,
-                    'office' => $employee->office,
-                    'division' => $employee->division,
-                    'section' => $employee->section,
-                    'unit' => $employee->unit,
-                    'office_id' => $employee->office_id
-                ])
-                ->log('Employee Created');
-
-            $createdEmployees[] = $employee;
+            return response()->json([
+                'success' => true,
+                'message' => 'Employees created successfully',
+                'employees' => $createdEmployees
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create employees',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Employees created successfully',
-            'employees' => $createdEmployees
-        ]);
     }
+
+    public function index_position()
+    {
+        $positions = Position::all();
+        return response()->json($positions);
+    }
+
         //rank update
     public function updateRank(Request $request, $id)
+
     {
         $validated = $request->validate([
             'rank' => 'required|in:Head,Supervisor,Employee'
@@ -116,7 +187,6 @@ class EmployeeController extends Controller
             'message' => 'Employee rank updated successfully'
         ]);
     }
-
 
 
     // for fetching employees on the modal
@@ -174,6 +244,7 @@ class EmployeeController extends Controller
             ], 500);
         }
     }
+
     // Search employees by name or designation
     public function searchEmployees(Request $request)
     {
@@ -216,9 +287,44 @@ class EmployeeController extends Controller
     }
 
     // Fetch employees based on office and organizational unit
+    // public function fetchEmployees(Request $request)
+    // {
+    //     $query = Employee::query();
+
+    //     // Filter by office_id if provided
+    //     if ($request->has('office_id')) {
+    //         $query->where('office_id', $request->office_id);
+    //     }
+
+    //     // Check for the most specific organizational unit first
+    //     if ($request->has('unit')) {
+    //         $query->where('unit', $request->unit);
+    //     } elseif ($request->has('section')) {
+    //         // Only include employees that don't have a unit assigned
+    //         $query->where('section', $request->section)
+    //             ->whereNull('unit');
+    //     } elseif ($request->has('division')) {
+    //         // Only include employees that don't have section or unit assigned
+    //         $query->where('division', $request->division)
+    //             ->whereNull('section')
+    //             ->whereNull('unit');
+    //     } elseif ($request->has('office_id')) {
+    //         // Only include employees that don't have division, section, or unit assigned
+    //         $query->whereNull('division')
+    //             ->whereNull('section')
+    //             ->whereNull('unit');
+    //     }
+
+    //     $employees = $query->get();
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => $employees
+    //     ]);
+    // }
     public function fetchEmployees(Request $request)
     {
-        $query = Employee::query();
+        $query = Employee::with('position'); // Eager load the position relationship
 
         // Filter by office_id if provided
         if ($request->has('office_id')) {
@@ -229,22 +335,32 @@ class EmployeeController extends Controller
         if ($request->has('unit')) {
             $query->where('unit', $request->unit);
         } elseif ($request->has('section')) {
-            // Only include employees that don't have a unit assigned
             $query->where('section', $request->section)
                 ->whereNull('unit');
         } elseif ($request->has('division')) {
-            // Only include employees that don't have section or unit assigned
             $query->where('division', $request->division)
                 ->whereNull('section')
                 ->whereNull('unit');
         } elseif ($request->has('office_id')) {
-            // Only include employees that don't have division, section, or unit assigned
             $query->whereNull('division')
                 ->whereNull('section')
                 ->whereNull('unit');
         }
 
-        $employees = $query->get();
+        $employees = $query->get()->map(function ($employee) {
+            return [
+                'id' => $employee->id,
+                'name' => $employee->name,
+                'position_id' => $employee->position_id,
+                'position' => $employee->position ? $employee->position->name : null, // Include position name
+                'office_id' => $employee->office_id,
+                'office' => $employee->office,
+                'division' => $employee->division,
+                'section' => $employee->section,
+                'unit' => $employee->unit,
+                'rank' => $employee->rank
+            ];
+        });
 
         return response()->json([
             'success' => true,

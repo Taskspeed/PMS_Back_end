@@ -11,34 +11,60 @@ use Symfony\Component\Console\Output\Output;
 class FOutpotController extends Controller
 {
 
-    // Handle MFO Creation
+    public function getAllOutputs(Request $request)
+    {
+        $office_id = $request->input('office_id');
+
+        $outputs = F_outpot::with(['category', 'mfo'])
+            ->when($office_id, function ($query) use ($office_id) {
+                $query->where('office_id', $office_id);
+            })
+            ->get();
+
+        return response()->json($outputs);
+    }
+
+
     public function store(Request $request)
     {
-        // Validate the request
         $request->validate([
-            'mfo_id' => 'required|exists:mfos,id',
             'name' => 'required|string|max:255',
+            'f_category_id' => 'required|exists:f_categories,id',
+            'office_id' => 'required|exists:offices,id'
         ]);
 
-        $output = F_outpot::create([
-            'mfo_id' => $request->mfo_id,
-            'name' => $request->name,
+        $outputData = [
+            'f_category_id' => $request->f_category_id,
+            'office_id' => $request->office_id,
+            'name' => $request->name
+        ];
 
-        ]);
+        // Only add mfo_id if it's present in the request
+        if ($request->has('mfo_id')) {
+            $request->validate(['mfo_id' => 'exists:mfos,id']);
+            $outputData['mfo_id'] = $request->mfo_id;
+        }
+
+        $output = F_outpot::create($outputData);
 
         activity()
             ->performedOn($output)
             ->causedBy(Auth::user())
-            ->withProperties(['name' =>  $output->name])
+            ->withProperties(['name' => $output->name])
             ->log('Output created');
-        return response()->json(['message' => 'Output created successfully', ' Output' =>  $output]);
+
+        return response()->json([
+            'message' => 'Output created successfully',
+            'output' => $output
+        ]);
     }
+
 
     public function update(Request $request, $id)
     {
         // Validate the request
         $request->validate([
-            'mfo_id' => 'required|exists:mfos,id',
+            // 'mfo_id' => 'required|exists:mfos,id',
             'name' => 'required|string|max:255',
         ]);
 
@@ -47,7 +73,7 @@ class FOutpotController extends Controller
 
         // Update the output
         $output->update([
-            'mfo_id' => $request->mfo_id,
+            // 'mfo_id' => $request->mfo_id,
             'name' => $request->name,
         ]);
 
@@ -110,5 +136,12 @@ class FOutpotController extends Controller
         return response()->json(['message' => 'Output restored successfully']);
     }
 
+
+    public function Outputs(Request $request)
+    {
+        $outputs = F_outpot::all();
+
+        return response()->json($outputs);
+    }
 
 }
