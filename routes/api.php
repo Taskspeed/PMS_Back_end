@@ -59,7 +59,7 @@
         Route::get('/employees-by-office', [EmployeeController::class, 'show_employee']); //fetch emplyee base on office
         Route::get('/fetch_employees', [EmployeeController::class, 'fetchEmployees']);  // fetch employee  base where employee assign division, section, unit
 
-    //for employee
+         //for employee
         Route::post('/add/employee', [EmployeeController::class, 'store']); // adding
         Route::post('/employees/{id}/rank', [EmployeeController::class, 'updateRank']); //updating the rank of employee
         Route::get('/search-employees', [EmployeeController::class, 'searchEmployees']); // search employee
@@ -73,9 +73,8 @@
         // Unit Work Plan route
         Route::get('/employees/divisions', [UnitWorkPlanController::class, 'getDivisionsByOffice']); // get the division by office
         Route::get('/employees', [UnitWorkPlanController::class, 'getEmployeesByDivision']);
-        Route::post('/unit_work_plant/store', [UnitWorkPlanController::class, 'store']);
 
-        // Route::get('/employee', [UnitWorkPlanController::class, 'index']); //fetching position
+
 
         //mfo on UnitWorkPlan
         Route::get('/f_category', [UnitWorkPlanController::class, 'category']); //fetching category
@@ -93,15 +92,22 @@
         Route::get('/office/structure', [VwplantillastructureController::class, 'index']); //plantilla structure
         Route::get('/user_activity_log', [Activity_log_Controller::class, 'index']); //user_activity_log
 
+        Route::post('/unit_work_plan/store', [UnitWorkPlanController::class, 'store']); //for adding unit work plan
+
+        Route::get('/unit_work_plan/index', [UnitWorkPlanController::class, 'unit_work_plan']); //for fetching unit work plan
+        Route::get('/employee/{id}/competencies', [UnitWorkPlanController::class, 'getEmployeeCompetencies']);
+        Route::get('/position', [EmployeeController::class, 'index_position']);
+
+        Route::get('/division/status', [UnitWorkPlanController::class, 'get_division_status']);
+        Route::get('/division/employee/performance', [UnitWorkPlanController::class, 'get_employee_performance']);
+        Route::post('/employee/{id}/update/unitworkplan', [UnitWorkPlanController::class, 'updateEmployee']); // employee unit work plan
+
     });
 
-    Route::get('/employee/{id}/competencies', [UnitWorkPlanController::class, 'getEmployeeCompetencies']);
-    Route::get('/position', [EmployeeController::class, 'index_position']);
 
-    // Route::middleware('auth:sanctum')->get('/SupportOutputs', [UnitWorkPlanController::class, 'SupportOutputs']);
-    // Route::middleware('auth:sanctum')->get('/user_data', [MfoController::class, 'getUserData']);
-    // Route::middleware('auth:sanctum')->get('/allOutputs', [UnitWorkPlanController::class, 'getAllOutputs']);
 
+    // Route::get('/division/status', [UnitWorkPlanController::class, 'get_division_status']);
+    // Route::get('/division/employee/performance', [UnitWorkPlanController::class, 'get_employee_performance']);
 
 
     // Route::get('/office/structure', [VwplantillastructureController::class, 'index']); //plantilla structure
@@ -122,13 +128,3 @@
 
     // Route::get('/offices', [OfficeController::class, 'index']);
 
-
-
-
-    Route::get('/core', [UnitWorkPlanController::class, 'core']);
-    Route::get('/technical', [UnitWorkPlanController::class, 'technical']);
-    Route::get('/leadership', [UnitWorkPlanController::class, 'leadership']);
-    Route::get('/position/{id}/competencies', [UnitWorkPlanController::class, 'showWithCompetencies']);
-    Route::get('/employee', [UnitWorkPlanController::class, 'index']); //fetching position
-
-    // Route::get('/employee/designation', [vwActiveController::class, 'index']); // fetch employee name and designation
