@@ -13,55 +13,7 @@ use Illuminate\Support\Facades\Auth;
 class EmployeeController extends Controller
 {
     //add employee to division,section,unit
-    // public function store(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'employees' => 'required|array',
-    //         'employees.*.name' => 'required|string|max:255',
-    //         'employees.*.position_id' => 'required|exists:positions,id',
-    //         'employees.*.office_id' => 'required|exists:offices,id',
-    //         'employees.*.office' => 'nullable|string|max:255',
-    //         'employees.*.division' => 'nullable|string|max:255',
-    //         'employees.*.section' => 'nullable|string|max:255',
-    //         'employees.*.unit' => 'nullable|string|max:255',
-    //         'employees.*.rank' => 'nullable|in:Head,Supervisor,Employee'
-    //     ]);
 
-    //     $createdEmployees = [];
-
-    //     foreach ($validated['employees'] as $employeeData) {
-    //         // Set default rank to Employee if not provided
-    //         if (!isset($employeeData['rank'])) {
-    //             $employeeData['rank'] = 'Employee';
-    //         }
-
-    //         $employee = Employee::create($employeeData);
-
-    //         // Enhanced activity logging
-    //         activity()
-    //             ->performedOn($employee)
-    //             ->causedBy(Auth::user())
-    //             ->withProperties([
-    //                 'name' => $employee->name,
-    //                 'position_id' => $employee->position_id,
-    //                 'rank' => $employee->rank,
-    //                 'office' => $employee->office,
-    //                 'division' => $employee->division,
-    //                 'section' => $employee->section,
-    //                 'unit' => $employee->unit,
-    //                 'office_id' => $employee->office_id
-    //             ])
-    //             ->log('Employee Created');
-
-    //         $createdEmployees[] = $employee;
-    //     }
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Employees created successfully',
-    //         'employees' => $createdEmployees
-    //     ]);
-    // }
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -73,7 +25,7 @@ class EmployeeController extends Controller
             'employees.*.division' => 'nullable|string|max:255',
             'employees.*.section' => 'nullable|string|max:255',
             'employees.*.unit' => 'nullable|string|max:255',
-            'employees.*.rank' => 'nullable|in:Head,Supervisor,Employee'
+            'employees.*.rank' => 'nullable|in:Head,Supervisor,Employee,Rank-in-File,Managerial'
         ]);
 
         $createdEmployees = [];
@@ -136,7 +88,7 @@ class EmployeeController extends Controller
 
     {
         $validated = $request->validate([
-            'rank' => 'required|in:Head,Supervisor,Employee'
+            'rank' => 'required|in:Head,Supervisor,Employee,Managerial,Rank-in-File'
         ]);
 
         $employee = Employee::findOrFail($id);
@@ -286,42 +238,6 @@ class EmployeeController extends Controller
         }
     }
 
-    // Fetch employees based on office and organizational unit
-    // public function fetchEmployees(Request $request)
-    // {
-    //     $query = Employee::query();
-
-    //     // Filter by office_id if provided
-    //     if ($request->has('office_id')) {
-    //         $query->where('office_id', $request->office_id);
-    //     }
-
-    //     // Check for the most specific organizational unit first
-    //     if ($request->has('unit')) {
-    //         $query->where('unit', $request->unit);
-    //     } elseif ($request->has('section')) {
-    //         // Only include employees that don't have a unit assigned
-    //         $query->where('section', $request->section)
-    //             ->whereNull('unit');
-    //     } elseif ($request->has('division')) {
-    //         // Only include employees that don't have section or unit assigned
-    //         $query->where('division', $request->division)
-    //             ->whereNull('section')
-    //             ->whereNull('unit');
-    //     } elseif ($request->has('office_id')) {
-    //         // Only include employees that don't have division, section, or unit assigned
-    //         $query->whereNull('division')
-    //             ->whereNull('section')
-    //             ->whereNull('unit');
-    //     }
-
-    //     $employees = $query->get();
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'data' => $employees
-    //     ]);
-    // }
     public function fetchEmployees(Request $request)
     {
         $query = Employee::with('position'); // Eager load the position relationship

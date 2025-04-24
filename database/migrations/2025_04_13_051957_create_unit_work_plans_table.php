@@ -12,21 +12,23 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('unit_work_plans', function (Blueprint $table) {
+
             $table->id();
-            $table->string('name')->nullable();
-            $table->string('rank')->nullable();
-            $table->string('position')->nullable();
-            $table->string('division')->nullable();
-            $table->string('target_period')->nullable();
-            $table->year('year')->nullable();
+            $table->string('division');
+            $table->string('target_period');
+            $table->year('year');
+            $table->string('rank');
+            $table->string('position');
             $table->string('category')->nullable();
             $table->string('mfo')->nullable();
             $table->string('output')->nullable();
             $table->json('core')->nullable();
             $table->json('technical')->nullable();
             $table->json('leadership')->nullable();
-            $table->text('success_indicator')->nullable();
-            $table->text('required_output')->nullable();
+            $table->text('success_indicator');
+            $table->text('required_output');
+            $table->json('standard_outcomes');
+            $table->foreignId('office_id')->constrained()->nullable();
             $table->foreignId('employee_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });

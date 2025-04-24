@@ -8,13 +8,38 @@ class Unit_work_plan extends Model
 {
     //
 
+    // protected $fillable = [
+    //     'name',
+    //     'rank',
+    //     'position',
+    //     'division',
+    //     'target_period',
+    //     'year',
+    //     'category',
+    //     'mfo',
+    //     'output',
+    //     'core',
+    //     'technical',
+    //     'leadership',
+    //     'success_indicator',
+    //     'required_output',
+    //     'employee_id'
+    // ];
+
+    // protected $casts = [
+    //     'core' => 'array',
+    //     'technical' => 'array',
+    //     'leadership' => 'array',
+    //     'employee_id' => 'integer',
+    // ];
     protected $fillable = [
-        'name',
-        'rank',
-        'position',
+        'office_id',
         'division',
         'target_period',
         'year',
+        'employee_id',
+        'rank',
+        'position',
         'category',
         'mfo',
         'output',
@@ -23,13 +48,24 @@ class Unit_work_plan extends Model
         'leadership',
         'success_indicator',
         'required_output',
-        'employee_id'
+        'standard_outcomes'
     ];
 
     protected $casts = [
         'core' => 'array',
         'technical' => 'array',
         'leadership' => 'array',
+        'standard_outcomes' => 'array',
         'employee_id' => 'integer',
+        'year' => 'integer',
     ];
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class);
+    }
+    public function office()
+    {
+        return $this->belongsTo(Office::class);
+    }
 }
