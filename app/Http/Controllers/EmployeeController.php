@@ -25,7 +25,7 @@ class EmployeeController extends Controller
             'employees.*.division' => 'nullable|string|max:255',
             'employees.*.section' => 'nullable|string|max:255',
             'employees.*.unit' => 'nullable|string|max:255',
-            'employees.*.rank' => 'nullable|in:Head,Supervisor,Employee,Rank-in-File,Managerial'
+            'employees.*.rank' => 'nullable|in:Supervisor,Employee,Rank-in-File,Managerial,Section-Head,Office-Head,Division-Head'
         ]);
 
         $createdEmployees = [];
@@ -88,7 +88,7 @@ class EmployeeController extends Controller
 
     {
         $validated = $request->validate([
-            'rank' => 'required|in:Head,Supervisor,Employee,Managerial,Rank-in-File'
+            'rank' => 'required|in:Supervisor,Employee,Managerial,Rank-in-File,Section-Head,Office-Head,Division-Head'
         ]);
 
         $employee = Employee::findOrFail($id);

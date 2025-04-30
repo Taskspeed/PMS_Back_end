@@ -72,38 +72,12 @@ class MfoController extends Controller
 
         return response()->json([
             'user' => $user,
-            'mfos' => $mfos
+            'mfos' => $mfos,
+
         ]);
     }
 
 
-    // public function update(Request $request, $id){
-
-    //     // validate the request
-    //     $request->validate([
-    //         'office_id' => 'required|exists:offices,id',
-    //         'name' => 'required|string|max:255',
-    //         'f_category_id' => 'required|exists:f_categories,id',
-    //     ]);
-
-    //     //find the output by id
-    //     $mfos = mfo::findOrFail($id);
-
-    //     //update the mfos
-    //     $mfos->update([
-    //         'office_id'=> $request->office_id,
-    //         'name'=> $request->name,
-    //         'f_category_id' => $request->f_category_id,
-    //     ]);
-    //     // Log activity
-    //     activity()
-    //         ->performedOn($mfos)
-    //         ->causedBy(Auth::user())
-    //         ->withProperties(['name' => $mfos->name])
-    //         ->log('MFO updated');
-
-    //     return response()->json(['message' => 'MFO updated successfully', 'mfo' => $mfos]);
-    // }
     public function update(Request $request, $id)
     {
         // validate the request

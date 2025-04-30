@@ -3,20 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Mfo;
-use App\Models\Core;
 use App\Models\Employee;
 use App\Models\F_outpot;
-use App\Models\Position;
-use App\Models\Technical;
 use App\Models\F_category;
-use App\Models\Leadership;
 use Illuminate\Http\Request;
 use App\Models\Unit_work_plan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use Symfony\Component\Console\Output\Output;
-use Symfony\Component\HttpKernel\Event\ResponseEvent;
+
 
 class UnitWorkPlanController extends Controller
 {
@@ -64,6 +59,7 @@ class UnitWorkPlanController extends Controller
             'employee_work_plans.*.performance_standards.*.output' => 'nullable|string',
             'employee_work_plans.*.performance_standards.*.success_indicator' => 'required|string',
             'employee_work_plans.*.performance_standards.*.required_output' => 'required|string',
+            'employee_work_plans.*.performance_standards.*.mode' => 'required|string',
             'employee_work_plans.*.performance_standards.*.standard_outcomes' => 'required|array',
             'employee_work_plans.*.performance_standards.*.standard_outcomes.*.rating' => 'required|string',
             'employee_work_plans.*.performance_standards.*.standard_outcomes.*.quantity' => 'required|string',
@@ -103,6 +99,7 @@ class UnitWorkPlanController extends Controller
                     'output' => $standard['output'] ?? null,
                     'success_indicator' => $standard['success_indicator'],
                     'required_output' => $standard['required_output'],
+                    'mode' => $standard['mode'],
                     'standard_outcomes' => json_encode($standard['standard_outcomes']),
                     'core' => isset($standard['core_competency']) ? json_encode($standard['core_competency']) : null,
                     'technical' => isset($standard['technical_competency']) ? json_encode($standard['technical_competency']) : null,
@@ -163,6 +160,41 @@ class UnitWorkPlanController extends Controller
     }
 
 
+    // public function getEmployeesByDivision(Request $request)
+    // {
+    //     $user = Auth::user();
+    //     if (!$user || !$user->office_id) {
+    //         return response()->json(['message' => 'Unauthorized or no office assigned'], 403);
+    //     }
+
+    //     $request->validate([
+    //         'division' => 'required|string'
+    //     ]);
+
+    //     // Debug logging
+    //     Log::info('Fetching employees for office: ' . $user->office_id . ' and division: ' . $request->division);
+
+    //     // $employees = Employee::where('office_id', $user->office_id)
+    //     //     ->where('division', $request->division)
+    //     //     ->select('id', 'name', 'position', 'rank')
+    //     //     ->get();
+    //     $employees = Employee::select([
+    //         'employees.id',
+    //         'employees.name',
+    //         'positions.name as position', // Get position name from positions table
+    //         'employees.rank'
+    //     ])
+    //         ->leftJoin('positions', 'employees.position_id', '=', 'positions.id')
+    //         ->where('office_id', $user->office_id)
+    //         ->where('division', $request->division)
+    //         ->whereNull('deleted_at')
+    //         ->get();
+
+    //     Log::info('Found employees: ' . $employees->count());
+
+    //     return response()->json($employees);
+    // }
+
     public function getEmployeesByDivision(Request $request)
     {
         $user = Auth::user();
@@ -174,17 +206,11 @@ class UnitWorkPlanController extends Controller
             'division' => 'required|string'
         ]);
 
-        // Debug logging
-        Log::info('Fetching employees for office: ' . $user->office_id . ' and division: ' . $request->division);
-
-        // $employees = Employee::where('office_id', $user->office_id)
-        //     ->where('division', $request->division)
-        //     ->select('id', 'name', 'position', 'rank')
-        //     ->get();
-        $employees = Employee::select([
+        // Get regular employees in the selected division
+        $divisionEmployees = Employee::select([
             'employees.id',
             'employees.name',
-            'positions.name as position', // Get position name from positions table
+            'positions.name as position',
             'employees.rank'
         ])
             ->leftJoin('positions', 'employees.position_id', '=', 'positions.id')
@@ -193,11 +219,24 @@ class UnitWorkPlanController extends Controller
             ->whereNull('deleted_at')
             ->get();
 
-        Log::info('Found employees: ' . $employees->count());
+        // Get office-head employees (assuming they have a specific rank or position)
+        $officeHeads = Employee::select([
+            'employees.id',
+            'employees.name',
+            'positions.name as position',
+            'employees.rank'
+        ])
+            ->leftJoin('positions', 'employees.position_id', '=', 'positions.id')
+            ->where('office_id', $user->office_id)
+            ->where('rank', 'like', '%office-head%') // Adjust this condition based on how office-head is identified
+            ->whereNull('deleted_at')
+            ->get();
+
+        // Combine both collections
+        $employees = $divisionEmployees->merge($officeHeads)->unique('id');
 
         return response()->json($employees);
     }
-
 
     public function getMfosByCategory(Request $request)
     {
@@ -315,17 +354,6 @@ public function getSupportOutputs(Request $request)
     }
 
 
-    //Competencies
-
-    // New method to get position with competencies
-    // Legend mapping
-    private $legend = [
-        0 => 'Not Applicable',
-        1 => 'Basic',
-        2 => 'Intermediate',
-        3 => 'Advanced',
-        4 => 'Superior'
-    ];
 
 
 
@@ -446,6 +474,7 @@ public function getSupportOutputs(Request $request)
         return response()->json($data);
     }
 
+
     public function get_employee_performance(Request $request)
     {
         $user = Auth::user();
@@ -455,29 +484,15 @@ public function getSupportOutputs(Request $request)
 
         $request->validate([
             'division' => 'required|string',
-            'target_period' => 'required|string' // Format: "January - June 2025"
+            'target_period' => 'required|string', // Format: "January - June"
+            'year' => 'required|integer'          // Separate year parameter
         ]);
-
-        // Split the target period into period and year more reliably
-        $parts = preg_split('/\s+/', $request->target_period);
-
-        // The last part is the year
-        $year = end($parts);
-
-        // The period is everything except the last part
-        array_pop($parts);
-        $period = implode(' ', $parts);
-
-        // Validate the year is numeric
-        if (!is_numeric($year)) {
-            return response()->json(['message' => 'Invalid target period format'], 400);
-        }
 
         $data = Unit_work_plan::with('employee')
             ->where('office_id', $user->office_id)
             ->where('division', $request->division)
-            ->where('target_period', $period)
-            ->where('year', $year)
+            ->where('target_period', $request->target_period)
+            ->where('year', $request->year)
             ->get();
 
         $result = $data->map(function ($item) {
@@ -487,9 +502,9 @@ public function getSupportOutputs(Request $request)
                 'position' => $item->position,
                 'rank' => $item->rank,
                 'status' => $item->status,
-                'category'=>$item->category,
-                'mfo'=>$item->mfo,
-                'output'=>$item->output,
+                'category' => $item->category,
+                'mfo' => $item->mfo,
+                'output' => $item->output,
                 'performance_standards' => [
                     'success_indicator' => $item->success_indicator,
                     'required_output' => $item->required_output,
@@ -503,7 +518,6 @@ public function getSupportOutputs(Request $request)
 
         return response()->json($result);
     }
-
     public function updateEmployee(Request $request, $id)
     {
         $validated = $request->validate([

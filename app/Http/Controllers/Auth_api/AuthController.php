@@ -118,7 +118,6 @@ class AuthController extends Controller
         }
     }
 
- 
     public function user_account()
     {
         // Fetch users with office data and format date using Carbon
@@ -129,12 +128,86 @@ class AuthController extends Controller
             ->map(function ($user) {
                 return [
                     'name' => $user->name,
+                     'password'=>$user->password,
                     'office_name' => $user->office->name ?? 'N/A',
                     'datecreated' => Carbon::parse($user->created_at)->format('F d, Y'),
                 ];
             });
 
         return response()->json($data);
+    }
+
+    // Add this method to your AuthController.php
+    public function update(Request $request)
+    {
+        $request->validate([
+            'oldPassword' => 'required|string',
+            'newPassword' => 'nullable|string|min:6|different:oldPassword',
+        ]);
+
+        try {
+            $user = $request->user();
+
+            // Verify old password
+            if (!Hash::check($request->oldPassword, $user->password)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'The provided old password is incorrect.'
+                ], 422);
+            }
+
+            // Update password if new password is provided
+            if ($request->newPassword) {
+                $user->password = Hash::make($request->newPassword);
+                $user->save();
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Password updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to update password: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    public function getTempPassword(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            // Verify user has permission
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized'
+                ], 401);
+            }
+
+            // Generate a temporary password (valid for 10 seconds)
+            $tempPassword = Str::random(12); // Or use your actual decryption logic
+
+            // Log this access
+            Log::info('Password viewed by user', [
+                'user_id' => $user->id,
+                'ip' => $request->ip(),
+                'time' => now()
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'tempPassword' => $tempPassword,
+                'expires_in' => 10 // seconds
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Password view error: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to retrieve password'
+            ], 500);
+        }
     }
 }
 

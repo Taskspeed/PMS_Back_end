@@ -27,9 +27,11 @@ return new class extends Migration
             $table->json('leadership')->nullable();
             $table->text('success_indicator');
             $table->text('required_output');
+            $table->text('mode');
             $table->json('standard_outcomes');
             $table->foreignId('office_id')->constrained()->nullable();
             $table->foreignId('employee_id')->constrained()->onDelete('cascade');
+            $table->enum('status', ['pending', 'approved', 'denied'])->default('pending')->after('employee_id');
             $table->timestamps();
         });
     }

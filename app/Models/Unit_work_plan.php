@@ -48,7 +48,9 @@ class Unit_work_plan extends Model
         'leadership',
         'success_indicator',
         'required_output',
-        'standard_outcomes'
+        'standard_outcomes',
+        'status',
+         'mode'
     ];
 
     protected $casts = [
