@@ -38,7 +38,8 @@ class vwActiveController extends Controller
             'Office',
             // Make sure this field matches your database column name
             'name4',
-            'Designation'
+            'Designation',
+            'status'
         );
 
         if ($request->has('office_name')) {  // Changed from office_id to office_name

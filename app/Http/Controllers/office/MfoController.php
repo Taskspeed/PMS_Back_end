@@ -14,7 +14,7 @@ class MfoController extends Controller
 
 
     // Handle MFO Creation
-    public function store(Request $request)
+    public function store(Request $request)  // store
     {
         // Validate the request
         $request->validate([
@@ -38,47 +38,18 @@ class MfoController extends Controller
     }
 
 
-    public function index_data(){
+    public function index_data() // fetching data
+    {
 
     $data = mfo::all();
     return response()->json($data);
     }
 
 
-    public function getUserData(Request $request)
-    {
-        // Get authenticated user
-        $user = Auth::user();
-
-        // Check if authenticated
-        if (!$user) {
-            return response()->json(['error' => 'User not authenticated'], 401);
-        }
-
-        // Load office relationship
-        if ($user instanceof \App\Models\User) {
-            $user->load('office');
-        }
-
-        // Validate if user has an office
-        if (!$user->office) {
-            return response()->json(['error' => 'User does not have an associated office'], 400);
-        }
-
-        // Fetch MFOs with category name using eager loading
-        $mfos = Mfo::with('category:id,name')
-            ->where('office_id', $user->office_id)
-            ->get();
-
-        return response()->json([
-            'user' => $user,
-            'mfos' => $mfos,
-
-        ]);
-    }
+  
 
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $id) // update
     {
         // validate the request
         $request->validate([
@@ -109,6 +80,7 @@ class MfoController extends Controller
             'mfo' => $mfo->fresh() // Return fresh data from database
         ]);
     }
+
 
      // Fetch only active (non-deleted) mfo
          public function index(){
