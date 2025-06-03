@@ -15,7 +15,6 @@ class Employee extends Model
     protected $fillable =[
 
         'name',
-
         'rank',
         'office',
         'division',
@@ -39,10 +38,12 @@ class Employee extends Model
     {
         return $this->belongsTo(position::class);
     }
-    public function unit_work_plan()
+
+    public function unitWorkPlans()
     {
-        return $this->belongsTo(Unit_work_plan::class);
+        return $this->hasMany(Unit_work_plan::class);
     }
+
 
     public function getActivitylogOptions(): LogOptions
     {

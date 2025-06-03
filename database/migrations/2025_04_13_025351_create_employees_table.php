@@ -19,8 +19,10 @@ return new class extends Migration
             $table->string('division')->nullable();
             $table->string('section')->nullable();
             $table->string('unit')->nullable();
-            $table->foreignId('position_id')->constrained('positions')->nullable(); // Add this line
-            $table->foreignId('office_id')->constrained()->onDelete('cascade');
+            // $table->foreignId('position_id')->constrained('positions')->nullable(); // Add this line
+            // $table->foreignId('office_id')->constrained()->onDelete('cascade')->nullable(); // Add this line
+            $table->foreignId('position_id')->nullable()->constrained('positions');
+            $table->foreignId('office_id')->nullable()->constrained()->onDelete('cascade');
             $table->softDeletes(); // Adds deleted_at column
             $table->timestamps();
         });

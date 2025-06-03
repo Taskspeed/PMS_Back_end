@@ -395,6 +395,7 @@ class EmployeeController extends Controller
             ]
         ]);
     }
+
     // restore soft-deleted data
     public function restore($id)
     {
@@ -418,5 +419,38 @@ class EmployeeController extends Controller
             ->log('Employee restored');
 
         return response()->json(['message' => 'Employee restored successfully']);
+    }
+
+
+    // In EmployeeController.php
+    public function getOfficeStructureCounts(Request $request)
+    {
+        $officeId = $request->office_id;
+
+        if (!$officeId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Office ID is required'
+            ], 400);
+        }
+
+        $divisionCount = Employee::where('office_id', $officeId)
+            ->whereNotNull('division')
+            ->distinct('division')
+            ->count('division');
+
+        $sectionCount = Employee::where('office_id', $officeId)
+            ->whereNotNull('section')
+            ->distinct('section')
+            ->count('section');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'divisions' => $divisionCount,
+                'sections' => $sectionCount,
+                'total' => $divisionCount + $sectionCount
+            ]
+        ]);
     }
 }

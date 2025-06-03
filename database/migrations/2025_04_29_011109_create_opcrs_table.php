@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('opcrs', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->nullable();
+            $table->foreignId('employee_id')->constrained()->nullable();
             $table->string('target_period');
             $table->year('year');
             $table->json('strategic function')->nullable();

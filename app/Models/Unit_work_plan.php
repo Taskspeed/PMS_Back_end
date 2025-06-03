@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Symfony\Component\Console\Output\Output;
 
 class Unit_work_plan extends Model
 {
@@ -70,4 +71,8 @@ class Unit_work_plan extends Model
     {
         return $this->belongsTo(Office::class);
     }
+    // In Unit_work_plan.php model
+   
+
+
 }
