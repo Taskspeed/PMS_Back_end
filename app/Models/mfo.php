@@ -23,7 +23,6 @@ class mfo extends Model
         'office_id' => 'integer',
 
     ];
-
     // Define relationship with Office
     public function office()
     {
@@ -42,7 +41,10 @@ class mfo extends Model
         return $this->hasMany(F_outpot::class);
     }
 
-
+    public function unitWorkPlans()
+    {
+        return $this->hasMany(Unit_work_plan::class);
+    }
 
     public function getActivitylogOptions(): LogOptions
     {

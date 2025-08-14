@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('positions', function (Blueprint $table) {
             $table->id();
             $table->string('name')->nullable();
-            $table->integer('sg')->nullable();
+            $table->integer('salary_grade')->nullable();
             $table->integer('level')->nullable();
             $table->foreignId('core_id')->constrained()->onDelete('cascade');
             $table->foreignId('technical_id')->constrained()->onDelete('cascade');

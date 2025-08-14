@@ -23,7 +23,6 @@ return new class extends Migration
             $table->uuid('batch_uuid')->nullable(); //
             $table->string('event')->nullable();
             $table->timestamps();
-
             $table->index('log_name');
             $table->index(['subject_id', 'subject_type'], 'subject');
             $table->index(['causer_id', 'causer_type'], 'causer');

@@ -112,7 +112,14 @@ class UnitWorkPlanController extends Controller
 
 
 
-
+  public function index(){
+    $data = Unit_work_plan::all();
+    return response()->json([
+        'status' => 200,
+        'message' => 'success',
+        'data' => $data
+    ]);
+  }
 
 
 

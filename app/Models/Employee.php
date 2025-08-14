@@ -20,7 +20,7 @@ class Employee extends Model
         'division',
         'section',
         'unit',
-         'position_id',
+        'position_id',
         'office_id',
 
     ];

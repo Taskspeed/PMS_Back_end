@@ -11,18 +11,6 @@ use Symfony\Component\Console\Output\Output;
 class FOutpotController extends Controller
 {
 
-    public function getAllOutputs(Request $request)
-    {
-        $office_id = $request->input('office_id');
-
-        $outputs = F_outpot::with(['category', 'mfo'])
-            ->when($office_id, function ($query) use ($office_id) {
-                $query->where('office_id', $office_id);
-            })
-            ->get();
-
-        return response()->json($outputs);
-    }
 
 
     public function store(Request $request)
@@ -137,11 +125,5 @@ class FOutpotController extends Controller
     }
 
 
-    public function Outputs(Request $request)
-    {
-        $outputs = F_outpot::all();
-
-        return response()->json($outputs);
-    }
 
 }

@@ -28,7 +28,7 @@ class office extends Model
         return $this->hasMany(Employee::class);
     }
 
-    public function f_outpot()
+    public function f_outpots()
     {
         return $this->hasMany(f_outpot::class,);
     }

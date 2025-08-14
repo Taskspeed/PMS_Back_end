@@ -14,26 +14,56 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    public function user_account()
+    {
+        // Fetch users with office data and format date using Carbon
+        $data = User::with('office:id,name','role:id,name')
+            ->select('office_id', 'role_id','name', 'created_at')
+            ->orderBy('created_at', 'desc') // Add this line to sort by newest first
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'name' => $user->name,
+                    'password' => $user->password,
+                    'office_name' => $user->office->name ?? 'N/A',
+                    'role_name' => $user->role->name ?? 'N/A',
+                'role_id' => $user->role_id, // <-- Add this line
+                'datecreated' => Carbon::parse($user->created_at)->format('F d, Y'),
+                ];
+            });
+
+        return response()->json($data);
+    }
 
 
     public function login(Request $request)
-{
-    $request->validate([
-        'name' => 'required|string',
-        'password' => 'required|string',
-    ]);
-    // Find the user with office and role data
-    $user = User::with('office')->with('role')->where('name', $request->name)->first();
+    {
+        $request->validate([
+            'name' => 'required|string',
+            'password' => 'required|string',
+        ]);
 
-    if (!$user || !Hash::check($request->password, $user->password)) {
-        return response()->json([
-            'errors' => [
-                'name' => ['The provided credentials are incorrect.'],
-            ]
-        ], 401);
-    }
+        // Attempt to find the user
+        $user = User::with('office', 'role')->where('name', $request->name)->first();
 
-    $token = $user->createToken('auth-token')->plainTextToken;
+        if (!$user) {
+            return response()->json([
+                'errors' => [
+                    'name' => ['Username does not exist.']
+                ]
+            ], 422); // 422 = Unprocessable Entity for validation-style errors
+        }
+
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'errors' => [
+                    'password' => ['Password is incorrect.']
+                ]
+            ], 422);
+        }
+
+        // Generate token if credentials are valid
+        $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
             'status' => 'success',
@@ -41,16 +71,16 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
-                'office_id' =>$user->office_id,
+                'office_id' => $user->office_id,
                 'role_id' => $user->role_id,
                 'role_name' => $user->role->name ?? null,
-                'designation'=>$user->designation,
+                'designation' => $user->designation,
             ],
             'token' => $token,
         ]);
+    }
 
-}
-
+    
     public function register(Request $request)
     {
         try {
@@ -67,7 +97,7 @@ class AuthController extends Controller
                 'password' => Hash::make($request->password),
                 'office_id' => $request->office_id,
                 'role_id' => $request->role_id,
-                'remember_token' => Str::random(60),
+                'remember_token' => Str::random(32),
                 'designation'=>$request->designation,
             ]);
 
@@ -90,6 +120,8 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+
     public function logout(Request $request)
     {
         try {
@@ -118,24 +150,6 @@ class AuthController extends Controller
         }
     }
 
-    public function user_account()
-    {
-        // Fetch users with office data and format date using Carbon
-        $data = User::with('office:id,name')
-            ->select('office_id', 'name', 'created_at')
-            ->orderBy('created_at', 'desc') // Add this line to sort by newest first
-            ->get()
-            ->map(function ($user) {
-                return [
-                    'name' => $user->name,
-                     'password'=>$user->password,
-                    'office_name' => $user->office->name ?? 'N/A',
-                    'datecreated' => Carbon::parse($user->created_at)->format('F d, Y'),
-                ];
-            });
-
-        return response()->json($data);
-    }
 
     // Add this method to your AuthController.php
     public function update(Request $request)
@@ -173,6 +187,7 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
     public function getTempPassword(Request $request)
     {
         try {

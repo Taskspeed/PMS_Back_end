@@ -8,12 +8,12 @@ use Illuminate\Http\Request;
 
 class FCategoryController extends Controller
 {
-    //
 
-    public function index(){
 
-        $data = F_category::all();
-            return response()->json($data);
+    // public function index(){
 
-    }
+    //     $data = F_category::all();
+    //         return response()->json($data);
+
+    // }
 }

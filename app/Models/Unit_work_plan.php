@@ -72,7 +72,17 @@ class Unit_work_plan extends Model
         return $this->belongsTo(Office::class);
     }
     // In Unit_work_plan.php model
-   
+    public function outpots()
+    {
+        return $this->hasMany(F_outpot::class);
+    }
 
+    public function category()
+    {
+        return $this->belongsTo(F_category::class);
+    }
+    public function mfo(){
 
+        return $this->belongsTo(mfo::class);
+    }
 }

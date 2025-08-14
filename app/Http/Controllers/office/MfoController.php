@@ -38,15 +38,8 @@ class MfoController extends Controller
     }
 
 
-    public function index_data() // fetching data
-    {
+   
 
-    $data = mfo::all();
-    return response()->json($data);
-    }
-
-
-  
 
 
     public function update(Request $request, $id) // update
