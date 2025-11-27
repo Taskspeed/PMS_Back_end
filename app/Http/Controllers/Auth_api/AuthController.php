@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    //test
     public function user_account()
     {
         // Fetch users with office data and format date using Carbon
@@ -80,7 +81,7 @@ class AuthController extends Controller
         ]);
     }
 
-    
+
     public function register(Request $request)
     {
         try {
