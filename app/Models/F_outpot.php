@@ -29,10 +29,10 @@ class F_outpot extends Model
     {
         return $this->belongsTo(Office::class);
     }
-    public function unitWorkPlans()
-    {
-        return $this->hasMany(Unit_work_plan::class);
-    }
+    // public function unitWorkPlans()
+    // {
+    //     return $this->hasMany(Unit_work_plan::class);
+    // }
 
     protected $casts = [
         'mfo_id' => 'integer',

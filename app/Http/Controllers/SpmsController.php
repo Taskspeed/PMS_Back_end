@@ -3,167 +3,520 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Models\TargetPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\vwplantillastructure;
-
-class SpmsController extends Controller
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Routing\Controller as BaseController;
+class SpmsController extends BaseController
 {
-    //
 
 
-    public function Spms_index(Request $request)
+    protected $user;
+    protected $officeId;
+
+    public function __construct()
     {
-        // Get office_id from request
+        $this->middleware(function ($request, $next) {
+            $this->user = Auth::user();
+            $this->officeId = $this->user->office_id;
+
+            return $next($request);
+        });
+    }
+
+
+    // this structure
+    public function plantillaStructureSpms(Request $request)
+    {
         $officeId = $request->input('office_id');
 
-        // If no office_id provided, return empty array or all offices based on your requirements
-        if (!$officeId) {
-            return response()->json([]);
-        }
+        if (!$officeId) return response()->json([]);
 
-        // First get the office name corresponding to the office_id
-        $officeName = DB::table('offices')->where('id', $officeId)->value('name');
+        $officeName = DB::table('vwofficearrangement')->where('id', $officeId)->value('Office');
+        if (!$officeName) return response()->json([]);
 
-        if (!$officeName) {
-            return response()->json([]);
-        }
-
-        // Now query the view for just this office
+        // BASE RESULT STRUCTURE
         $officeData = [
             'office' => $officeName,
-            'divisions' => [],
-            'sections_without_division' => [],
-            'units_without_division' => [],
-            'units_without_section' => []
+            'office2' => []
         ];
 
-        // Get all organizational units for this office
-        $allUnits = vwplantillastructure::where('office', $officeName)
-            ->orderBy('Division')
-            ->orderBy('Section')
-            ->orderBy('Unit')
+        // GET ALL RECORDS FOR THE OFFICE
+        $allunits = DB::table('vwplantillastructure')->where('office', $officeName)
+            ->orderBy('office2')
+            ->orderBy('group')
+            ->orderBy('division')
+            ->orderBy('section')
+            ->orderBy('unit')
             ->get();
 
-        // Process divisions
-        $divisions = $allUnits->whereNotNull('Division')->unique('Division');
-        foreach ($divisions as $division) {
-            $divisionData = [
-                'division' => $division->Division,
-                'sections' => [],
-                'units_without_section' => []
+        /* ============================================================
+       1. PROCESS OFFICE2
+    ============================================================ */
+
+        $office2List = $allunits->unique('office2');
+
+        foreach ($office2List as $office2Row) {
+
+            $office2Name = $office2Row->office2 ?? null;
+
+            $office2Data = [
+                'office2' => $office2Name,
+                'group' => []
             ];
 
-            // Process sections within this division
-            $sections = $allUnits->where('Division', $division->Division)
-                ->whereNotNull('Section')
-                ->unique('Section');
+            // FILTER ALL RECORDS UNDER THIS office2
+            $office2units = $allunits->where('office2', $office2Name);
 
-            foreach ($sections as $section) {
-                $sectionData = [
-                    'section' => $section->Section,
-                    'units' => $allUnits->where('Division', $division->Division)
-                        ->where('Section', $section->Section)
-                        ->whereNotNull('Unit')
-                        ->pluck('Unit')
+            /* ============================================================
+           2. PROCESS group UNDER THIS office2
+        ============================================================ */
+
+            $group = $office2units->unique('group');
+
+            foreach ($group as $groupRow) {
+
+                $groupName = $groupRow->group ?? null;
+
+                $groupData = [
+                    'group' => $groupName,
+                    'divisions' => [],
+                    'sections_without_division' => [],
+                    'units_without_division' => []
+                ];
+
+                // FILTER RECORDS FOR THIS GROUP
+                $groupunits = $office2units->where('group', $groupName);
+
+                /* ============================================================
+               3. PROCESS divisionS UNDER THIS GROUP
+            ============================================================ */
+                $divisions = $groupunits->whereNotNull('division')->unique('division');
+
+                foreach ($divisions as $division) {
+
+                    $divisionData = [
+                        'division' => $division->division,
+                        'sections' => [],
+                        'units_without_section' => []
+                    ];
+
+                    // sectionS UNDER THIS division
+                    $sections = $groupunits
+                        ->where('division', $division->division)
+                        ->whereNotNull('section')
+                        ->unique('section');
+
+                    foreach ($sections as $section) {
+
+                        $sectionData = [
+                            'section' => $section->section,
+                            'units' => $groupunits
+                                ->where('division', $division->division)
+                                ->where('section', $section->section)
+                                ->whereNotNull('unit')
+                                ->pluck('unit')
+                                ->unique()
+                                ->values()
+                                ->toArray()
+                        ];
+
+                        $divisionData['sections'][] = $sectionData;
+                    }
+
+                    // unitS WITHOUT section
+                    $divisionunits = $groupunits
+                        ->where('division', $division->division)
+                        ->whereNull('section')
+                        ->whereNotNull('unit')
+                        ->pluck('unit')
                         ->unique()
                         ->values()
-                        ->toArray()
-                ];
-                $divisionData['sections'][] = $sectionData;
-            }
+                        ->toArray();
 
-            // Process units directly under division (no section)
-            $divisionUnits = $allUnits->where('Division', $division->Division)
-                ->whereNull('Section')
-                ->whereNotNull('Unit')
-                ->pluck('Unit')
-                ->unique()
-                ->values()
-                ->toArray();
+                    $divisionData['units_without_section'] = $divisionunits;
 
-            if (!empty($divisionUnits)) {
-                $divisionData['units_without_section'] = $divisionUnits;
-            }
+                    $groupData['divisions'][] = $divisionData;
+                }
 
-            $officeData['divisions'][] = $divisionData;
-        }
+                /* ============================================================
+               4. sectionS WITHOUT division UNDER THIS GROUP
+            ============================================================ */
 
-        // Process sections without division
-        $sectionsWithoutDivision = $allUnits->whereNull('Division')
-            ->whereNotNull('Section')
-            ->unique('Section');
+                $sectionsWithoutdivision = $groupunits
+                    ->whereNull('division')
+                    ->whereNotNull('section')
+                    ->unique('section');
 
-        foreach ($sectionsWithoutDivision as $section) {
-            $sectionData = [
-                'section' => $section->Section,
-                'units' => $allUnits->whereNull('Division')
-                    ->where('Section', $section->Section)
-                    ->whereNotNull('Unit')
-                    ->pluck('Unit')
+                foreach ($sectionsWithoutdivision as $section) {
+
+                    $sectionData = [
+                        'section' => $section->section,
+                        'units' => $groupunits
+                            ->whereNull('division')
+                            ->where('section', $section->section)
+                            ->whereNotNull('unit')
+                            ->pluck('unit')
+                            ->unique()
+                            ->values()
+                            ->toArray()
+                    ];
+
+                    $groupData['sections_without_division'][] = $sectionData;
+                }
+
+                // unitS WITHOUT division AND section
+                $unitsWithoutdivision = $groupunits
+                    ->whereNull('division')
+                    ->whereNull('section')
+                    ->whereNotNull('unit')
+                    ->pluck('unit')
                     ->unique()
                     ->values()
-                    ->toArray()
-            ];
-            $officeData['sections_without_division'][] = $sectionData;
-        }
+                    ->toArray();
 
-        // Process units without division or section
-        $unitsWithoutDivision = $allUnits->whereNull('Division')
-            ->whereNull('Section')
-            ->whereNotNull('Unit')
-            ->pluck('Unit')
-            ->unique()
-            ->values()
-            ->toArray();
+                $groupData['units_without_division'] = $unitsWithoutdivision;
 
-        if (!empty($unitsWithoutDivision)) {
-            $officeData['units_without_division'] = $unitsWithoutDivision;
+                $office2Data['group'][] = $groupData;
+            }
+
+            $officeData['office2'][] = $office2Data;
         }
 
         return response()->json([$officeData]);
     }
 
-    public function fetchEmployees(Request $request)
+    public function fetchEmployees(Request $request) //employee with target peroid
     {
-        $query = Employee::with('position');
 
-        // Filter by office_id if provided
-        if ($request->has('office_id')) {
-            $query->where('office_id', $request->office_id);
+        // Get semester & year from request
+        $semester = $request->input('semester');   // example: January-June / July-December
+        $year = $request->input('year');           // example: 2025
+
+        if (!$semester || !$year) {
+            return response()->json([
+                'message' => 'Please provide semester and year'
+            ], 422);
         }
 
-        // Filter by organizational unit if provided
-        if ($request->has('division')) {
-            $query->where('division', $request->division);
+        $employees = Employee::where('office_id', $this->officeId)
+            ->get()
+            ->map(function ($emp) use ($semester, $year) {
+
+                // Look for target period based on user request
+                $existing = $emp->targetPeriods()
+                    ->where('semester', $semester)
+                    ->where('year', $year)
+                    ->first();
+
+                $emp->has_target_period = $existing ? true : false;
+                $emp->existing_target_period = $existing;
+
+                // Remove auto-loaded relation if exists
+                unset($emp->target_periods);
+
+                return $emp;
+            });
+
+        return response()->json($employees);
+    }
+
+
+    public function getTargetPeriodsSemesterYear() // geting the year and semester
+    {
+        $targetPeriods = TargetPeriod::select('semester', 'year')
+            ->groupBy('semester', 'year')
+            ->orderBy('year', 'desc')
+            ->get();
+
+        return response()->json($targetPeriods);
+    }
+
+
+    public function getEmployeeCountAndUnitworkplan(Request $request)
+    {
+        // $user = Auth::user();
+        // $officeId = $user->office_id;
+
+        if (!$this->officeId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Office ID is required'
+            ], 400);
         }
 
-        if ($request->has('section')) {
-            $query->where('section', $request->section);
+        // 1. Get office name
+        $officeName = DB::table('offices')->where('id', $this->officeId)->value('name');
+        if (!$officeName) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Office not found'
+            ], 404);
         }
 
-        if ($request->has('unit')) {
-            $query->where('unit', $request->unit);
-        }
+        // 2. Fetch plantilla structure records
+        $plantilla = DB::table('vwplantillastructure')
+            ->where('office', $officeName)
+            ->orderBy('office2')
+            ->orderBy('group')
+            ->orderBy('division')
+            ->orderBy('section')
+            ->orderBy('unit')
+            ->get();
 
-        $employees = $query->get()->map(function ($employee) {
-            return [
-                'id' => $employee->id,
-                'name' => $employee->name,
-                'position_id' => $employee->position_id,
-                'position' => $employee->position ? $employee->position->name : null,
-                'office_id' => $employee->office_id,
-                'office' => $employee->office,
-                'division' => $employee->division,
-                'section' => $employee->section,
-                'unit' => $employee->unit,
-                'rank' => $employee->rank
+        // 3. Helper count function
+        $countWorkplan = function ($query) {
+            $total = $query->count();
+            $with = $query->filter(function ($emp) {
+                return TargetPeriod::where('control_no', $emp->ControlNo)->exists();
+            })->count();
+
+            return "$with/$total";
+        };
+
+        // 4. Preload all employees of this office (1 query only)
+        $employees = Employee::where('office_id', $this->officeId)
+            ->select('ControlNo', 'office2', 'group', 'division', 'section', 'unit')
+            ->get();
+
+        // 5. Start final output - FIX: Use filter instead of where for null checks
+        $result = [
+            "office" => [
+                "name" => $officeName,
+                "unitWorkPlan" => $countWorkplan($employees->filter(function ($e) {
+                    return is_null($e->division) && is_null($e->section) && is_null($e->unit);
+                }))
+            ],
+            "office2" => []
+        ];
+
+        /* ============================================================
+   LOOP OFFICE2
+============================================================ */
+        foreach ($plantilla->unique('office2') as $o2) {
+
+            $office2Name = $o2->office2;
+            $office2Employees = $employees->where('office2', $office2Name);
+
+            $office2Block = [
+                "office2" => $office2Name,
+                "unitWorkPlan" => $countWorkplan($office2Employees),
+                "group" => []
             ];
+
+            /* ============================================================
+       LOOP GROUP
+    ============================================================ */
+            foreach ($plantilla->where('office2', $office2Name)->unique('group') as $grp) {
+
+                $groupName = $grp->group;
+                $groupEmployees = $office2Employees->where('group', $groupName);
+
+                $groupBlock = [
+                    "group" => $groupName,
+                    "unitWorkPlan" => $countWorkplan($groupEmployees),
+                    "divisions" => [],
+                    "sections_without_division" => [],
+                    "units_without_division" => []
+                ];
+
+                /* ============================================================
+           DIVISIONS
+        ============================================================ */
+                $divisions = $plantilla
+                    ->where('office2', $office2Name)
+                    ->where('group', $groupName)
+                    ->whereNotNull('division')
+                    ->unique('division');
+
+                foreach ($divisions as $div) {
+                    $divisionName = $div->division;
+                    $divisionEmployees = $groupEmployees->where('division', $divisionName);
+
+                    $divisionBlock = [
+                        "division" => $divisionName,
+                        "unitWorkPlan" => $countWorkplan($divisionEmployees),
+                        "sections" => [],
+                        "units_without_section" => []
+                    ];
+
+                    // Sections under this division
+                    $sections = $plantilla
+                        ->where('division', $divisionName)
+                        ->whereNotNull('section')
+                        ->unique('section');
+
+                    foreach ($sections as $sec) {
+                        $sectionName = $sec->section;
+                        $sectionEmployees = $divisionEmployees->where('section', $sectionName);
+
+                        $sectionBlock = [
+                            "section" => $sectionName,
+                            "unitWorkPlan" => $countWorkplan($sectionEmployees),
+                            "units" => []
+                        ];
+
+                        // Units under this section
+                        $units = $plantilla
+                            ->where('division', $divisionName)
+                            ->where('section', $sectionName)
+                            ->pluck('unit')
+                            ->unique()
+                            ->filter()
+                            ->values();
+
+                        foreach ($units as $unitName) {
+                            $unitEmployees = $sectionEmployees->where('unit', $unitName);
+
+                            $sectionBlock["units"][] = [
+                                "unit" => $unitName,
+                                "unitWorkPlan" => $countWorkplan($unitEmployees)
+                            ];
+                        }
+
+                        $divisionBlock["sections"][] = $sectionBlock;
+                    }
+
+                    // Units without section - FIX: Use filter for null checks
+                    $unitsWithoutSection = $plantilla
+                        ->where('division', $divisionName)
+                        ->filter(function ($item) {
+                            return is_null($item->section);
+                        })
+                        ->pluck('unit')
+                        ->unique()
+                        ->filter()
+                        ->values();
+
+                    foreach ($unitsWithoutSection as $u) {
+                        $unitEmployees = $divisionEmployees->filter(function ($emp) use ($u) {
+                            return is_null($emp->section) && $emp->unit == $u;
+                        });
+                        $divisionBlock["units_without_section"][] = [
+                            "unit" => $u,
+                            "unitWorkPlan" => $countWorkplan($unitEmployees)
+                        ];
+                    }
+
+                    $groupBlock["divisions"][] = $divisionBlock;
+                }
+
+                /* ============================================================
+           SECTIONS WITHOUT DIVISION
+        ============================================================ */
+                $sectionsWithoutDivision = $plantilla
+                    ->filter(function ($item) {
+                        return is_null($item->division);
+                    })
+                    ->whereNotNull('section')
+                    ->where('group', $groupName)
+                    ->where('office2', $office2Name)
+                    ->unique('section');
+
+                foreach ($sectionsWithoutDivision as $sec) {
+
+                    $sectionName = $sec->section;
+                    // FIX: Use filter for null checks on collections
+                    $sectionEmployees = $groupEmployees->filter(function ($emp) use ($sectionName) {
+                        return is_null($emp->division) && $emp->section == $sectionName;
+                    });
+
+                    $sectionBlock = [
+                        "section" => $sectionName,
+                        "unitWorkPlan" => $countWorkplan($sectionEmployees),
+                        "units" => []
+                    ];
+
+                    $units = $plantilla
+                        ->where('section', $sectionName)
+                        ->filter(function ($item) {
+                            return is_null($item->division);
+                        })
+                        ->pluck('unit')
+                        ->unique()
+                        ->filter()
+                        ->values();
+
+                    foreach ($units as $u) {
+                        $unitEmployees = $sectionEmployees->where('unit', $u);
+                        $sectionBlock["units"][] = [
+                            "unit" => $u,
+                            "unitWorkPlan" => $countWorkplan($unitEmployees)
+                        ];
+                    }
+
+                    $groupBlock["sections_without_division"][] = $sectionBlock;
+                }
+
+                /* ============================================================
+           UNITS WITHOUT DIVISION & SECTION
+        ============================================================ */
+                $unitsWithoutDiv = $plantilla
+                    ->filter(function ($item) {
+                        return is_null($item->division) && is_null($item->section);
+                    })
+                    ->where('group', $groupName)
+                    ->pluck('unit')
+                    ->unique()
+                    ->filter()
+                    ->values();
+
+                foreach ($unitsWithoutDiv as $u) {
+                    $unitEmployees = $groupEmployees->filter(function ($emp) use ($u) {
+                        return is_null($emp->division) && is_null($emp->section) && $emp->unit == $u;
+                    });
+                    $groupBlock["units_without_division"][] = [
+                        "unit" => $u,
+                        "unitWorkPlan" => $countWorkplan($unitEmployees)
+                    ];
+                }
+
+                $office2Block["group"][] = $groupBlock;
+            }
+
+            $result["office2"][] = $office2Block;
+        }
+
+        return response()->json($result);
+    }
+
+    // getting the employee target period by control no on there structure
+    public function getEmployeeHaveUnitWorkPlan(Request $request, $control_no)
+    {
+        $user = Auth::user();
+        $officeId = $user->office_id;
+
+        // Convert "011900,001090" → ['011900', '001090']
+        $controlNos = explode(',', $control_no);
+
+        // Fetch all employees by control_no (even without target periods)
+        $employees = Employee::where('office_id', $officeId)
+            ->whereIn('ControlNo', $controlNos)
+            ->with([
+                'targetPeriods' => function ($query) use ($controlNos) {
+                    $query->whereIn('control_no', $controlNos);
+                },
+                'targetPeriods.performanceStandards',
+                'targetPeriods.standardOutcomes'
+
+            ])
+            ->get();
+
+        if ($employees->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employees not found.'
+            ], 404);
+        }
+
+        // Add targetPeriod flag to each employee
+        $employees->transform(function ($employee) {
+            $employee->targetPeriod = $employee->targetPeriods->isNotEmpty();
+            return $employee;
         });
 
-        return response()->json([
-            'success' => true,
-            'data' => $employees
-        ]);
+        return response()->json($employees);
     }
 }

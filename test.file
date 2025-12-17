@@ -1,0 +1,281 @@
+{
+    "office": {
+        "name": "OFFICE OF THE CITY MAYOR",
+        "unitWorkPlan": "0/7"  7 because he have 4 under of him 1 office2 and 6group
+    },
+    "office2": [
+        {
+            "office2": null,
+            "unitWorkPlan": "0/3", because he have 3 division
+            "group": [
+                {
+                    "group": null,
+                    "unitWorkPlan": "0/0",
+                    "divisions": [],
+                    "sections_without_division": [],
+                    "units_without_division": []
+                },
+                {
+                    "group": "ADMINISTRATIVE AND FISCAL MANAGEMENT GROUP",
+                    "unitWorkPlan": "0/0",
+                    "divisions": [],
+                    "sections_without_division": [],
+                    "units_without_division": []
+                },
+                {
+                    "group": "BUSINESS AND TAX MANAGEMENT GROUP",
+                    "unitWorkPlan": "0/0",
+                    "divisions": [
+                        {
+                            "division": "BUSINESS PERMIT AND LICENSING DIVISION",
+                            "unitWorkPlan": "0/0",
+                            "sections": [
+                                {
+                                    "section": "ADMINISTRATIVE SECTION",
+                                    "unitWorkPlan": "0/0",
+                                    "units": []
+                                },
+                                {
+                                    "section": "INSPECTION AND TAX MAPPING SECTION",
+                                    "unitWorkPlan": "0/0",
+                                    "units": []
+                                },
+                                {
+                                    "section": "LICENSING AND FRANCHISING SECTION",
+                                    "unitWorkPlan": "0/0",
+                                    "units": []
+                                },
+                                {
+                                    "section": "RECORDS MANAGEMENT SECTION",
+                                    "unitWorkPlan": "0/0",
+                                    "units": []
+                                }
+                            ],
+                            "units_without_section": []
+                        },
+                        {
+                            "division": "TAGUM CITY BUSINESS AND INCENTIVE DIVISION",
+                            "unitWorkPlan": "0/0",
+                            "sections": [],
+                            "units_without_section": []
+                        }
+                    ],
+                    "sections_without_division": [],
+                    "units_without_division": []
+                },
+                {
+                    "group": "INFORMATION AND EDUCATION DEVELOPMENT GROUP",
+                    "unitWorkPlan": "0/4",
+                    "divisions": [
+                        {
+                            "division": "CITY EDUCATION DEVELOPMENT DIVISION",
+                            "unitWorkPlan": "0/0",
+                            "sections": [],
+                            "units_without_section": []
+                        },
+                        {
+                            "division": "CITY INFORMATION DIVISION",
+                            "unitWorkPlan": "0/4",
+                            "sections": [
+                                {
+                                    "section": "BROADCASTING SECTION",
+                                    "unitWorkPlan": "0/2",
+                                    "units": [
+                                        {
+                                            "unit": "CONTENT MANAGEMENT UNIT",
+                                            "unitWorkPlan": "0/0",
+                                            "completedEmployees": 0,
+                                            "totalEmployees": 0,
+                                            "isComplete": false
+                                        },
+                                        {
+                                            "unit": "RADIO BROADCASTING UNIT",
+                                            "unitWorkPlan": "0/0",
+                                            "completedEmployees": 0,
+                                            "totalEmployees": 0,
+                                            "isComplete": false
+                                        }
+                                    ]
+                                },
+                                {
+                                    "section": "MULTIMEDIA SECTION",
+                                    "unitWorkPlan": "0/2",
+                                    "units": [
+                                        {
+                                            "unit": "SOCIAL MEDIA UNIT",
+                                            "unitWorkPlan": "0/0",
+                                            "completedEmployees": 0,
+                                            "totalEmployees": 0,
+                                            "isComplete": false
+                                        },
+                                        {
+                                            "unit": "VIDEO PRODUCTION UNIT",
+                                            "unitWorkPlan": "0/0",
+                                            "completedEmployees": 0,
+                                            "totalEmployees": 0,
+                                            "isComplete": false
+                                        }
+                                    ]
+                                }
+                            ],
+                            "units_without_section": []
+                        }
+                    ],
+                    "sections_without_division": [],
+                    "units_without_division": []
+                },
+                {
+                    "group": "PUBLIC SAFETY AND SECURITY MANAGEMENT GROUP",
+                    "unitWorkPlan": "0/0",
+                    "divisions": [],
+                    "sections_without_division": [
+                        {
+                            "section": "CIVIL SECURITY SECTION",
+                            "unitWorkPlan": "0/0",
+                            "units": []
+                        },
+                        {
+                            "section": "TRAFFIC MANAGEMENT SECTION",
+                            "unitWorkPlan": "0/0",
+                            "units": []
+                        }
+                    ],
+                    "units_without_division": []
+                },
+                {
+                    "group": "SPECIAL PROGRAM MANAGEMENT GROUP 1",
+                    "unitWorkPlan": "0/2",
+                    "divisions": [
+                        {
+                            "division": "COOPERATIVE DEVELOPMENT, NON-GOVERNMENT ORGANIZATIONS, GOVERNMENT ORGANIZATIONS, PEOPLE ORGANIZATIONS DEVELOPMENT DIVISION",
+                            "unitWorkPlan": "0/0",
+                            "sections": [],
+                            "units_without_section": []
+                        },
+                        {
+                            "division": "PERSON WITH DISABILITY AFFAIRS MANAGEMENT AND SENIOR CITIZEN AFFAIRS DIVISION",
+                            "unitWorkPlan": "0/0",
+                            "sections": [],
+                            "units_without_section": []
+                        },
+                        {
+                            "division": "SPORTS DEVELOPMENT DIVISION",
+                            "unitWorkPlan": "0/0",
+                            "sections": [],
+                            "units_without_section": []
+                        },
+                        {
+                            "division": "YOUTH DEVELOPMENT DIVISION",
+                            "unitWorkPlan": "0/2",
+                            "sections": [],
+                            "units_without_section": [
+                                {
+                                    "unit": "PROJECT MANAGEMENT AND POLICY DEVELOPMENT UNIT",
+                                    "unitWorkPlan": "0/0",
+                                    "completedEmployees": 0,
+                                    "totalEmployees": 0,
+                                    "isComplete": false
+                                },
+                                {
+                                    "unit": "SPECIAL PROGRAM AND OPERATION UNIT",
+                                    "unitWorkPlan": "0/0",
+                                    "completedEmployees": 0,
+                                    "totalEmployees": 0,
+                                    "isComplete": false
+                                }
+                            ]
+                        }
+                    ],
+                    "sections_without_division": [],
+                    "units_without_division": []
+                },
+                {
+                    "group": "SPECIAL PROGRAM MANAGEMENT GROUP 2",
+                    "unitWorkPlan": "0/0",
+                    "divisions": [
+                        {
+                            "division": "COMMUNITY AND CULTURAL AFFAIRS DEVELOPMENT DIVISION",
+                            "unitWorkPlan": "0/0",
+                            "sections": [
+                                {
+                                    "section": "COMMUNITY AFFAIRS SECTION",
+                                    "unitWorkPlan": "0/0",
+                                    "units": []
+                                },
+                                {
+                                    "section": "MUSLIM AND TRIBAL AFFAIRS SECTION",
+                                    "unitWorkPlan": "0/0",
+                                    "units": []
+                                }
+                            ],
+                            "units_without_section": []
+                        },
+                        {
+                            "division": "GENDER AND DEVELOPMENT, SOCIAL AND HEALTH AWARENESS, MORAL AND SPIRITUAL DEVELOPMENT DIVISION",
+                            "unitWorkPlan": "0/0",
+                            "sections": [],
+                            "units_without_section": []
+                        }
+                    ],
+                    "sections_without_division": [],
+                    "units_without_division": []
+                }
+            ]
+        },
+        {
+            "office2": "OFFICE OF THE CITY ADMINISTRATOR",
+            "unitWorkPlan": "0/0",
+            "group": [
+                {
+                    "group": null,
+                    "unitWorkPlan": "0/0",
+                    "divisions": [
+                        {
+                            "division": "BIDS AND AWARDS COMMITTEE SECRETARIAT & PROCUREMENT DIVISION",
+                            "unitWorkPlan": "0/0",
+                            "sections": [
+                                {
+                                    "section": "ADMINISTRATIVE AND BAC SECRETARIAT SECTION",
+                                    "unitWorkPlan": "0/0",
+                                    "units": []
+                                },
+                                {
+                                    "section": "PROCUREMENT SECTION",
+                                    "unitWorkPlan": "0/0",
+                                    "units": []
+                                }
+                            ],
+                            "units_without_section": []
+                        },
+                        {
+                            "division": "CITY ANTI-DRUG ABUSE MANAGEMENT DIVISION",
+                            "unitWorkPlan": "0/0",
+                            "sections": [
+                                {
+                                    "section": "REHABILITATION AND TRAINING SECTION",
+                                    "unitWorkPlan": "0/0",
+                                    "units": []
+                                }
+                            ],
+                            "units_without_section": []
+                        },
+                        {
+                            "division": "INTERNAL AUDIT AND MONITORING DIVISION",
+                            "unitWorkPlan": "0/0",
+                            "sections": [
+                                {
+                                    "section": "PROJECT MONITORING AND EVALUATION SECTION",
+                                    "unitWorkPlan": "0/0",
+                                    "units": []
+                                }
+                            ],
+                            "units_without_section": []
+                        }
+                    ],
+                    "sections_without_division": [],
+                    "units_without_division": []
+                }
+            ]
+        }
+    ]
+}

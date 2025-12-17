@@ -19,8 +19,8 @@ class F_category extends Model
     {
         return $this->hasMany(f_outpot::class,);
     }
-    public function unitWorkPlans()
-    {
-        return $this->hasMany(Unit_work_plan::class);
-    }
+    // public function unitWorkPlans()
+    // {
+    //     return $this->hasMany(Unit_work_plan::class);
+    // }
 }

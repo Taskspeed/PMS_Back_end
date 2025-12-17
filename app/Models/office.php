@@ -9,7 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class office extends Model
 {
-     protected $fillable =['name'];
+
+     protected $table = 'vwofficearrangement';
+
+
+    //  protected $fillable =['name'];
 
     public function users(): HasMany
     {
@@ -32,8 +36,8 @@ class office extends Model
     {
         return $this->hasMany(f_outpot::class,);
     }
-    public function unit_work_plan()
-    {
-        return $this->hasMany(Unit_work_plan::class);
-    }
+    // public function unit_work_plan()
+    // {
+    //     return $this->hasMany(Unit_work_plan::class);
+    // }
 }

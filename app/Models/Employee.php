@@ -10,10 +10,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Employee extends Model
 {
     //
-    use LogsActivity, SoftDeletes;
+    use LogsActivity;
+
+    protected $table = 'employees';
 
     protected $fillable =[
-
         'name',
         'rank',
         'office',
@@ -22,12 +23,22 @@ class Employee extends Model
         'unit',
         'position_id',
         'office_id',
+        'ControlNo',
+        'group',
+        'office2',
+        'tblStructureID',
+        'sg',
+        'level',
+        'positionID',
+        'itemNo',
+        'pageNo',
+        'position'
 
     ];
 
     protected $casts = [
         'office_id' => 'integer',
-        'position_id' => 'integer',
+        // 'position_id' => 'integer',
 
     ];
     public function office()
@@ -38,11 +49,15 @@ class Employee extends Model
     {
         return $this->belongsTo(position::class);
     }
-
-    public function unitWorkPlans()
+    public function targetPeriods()
     {
-        return $this->hasMany(Unit_work_plan::class);
+        return $this->hasMany(TargetPeriod::class, 'control_no', 'ControlNo');
     }
+
+    // public function unitWorkPlans()
+    // {
+    //     return $this->hasMany(Unit_work_plan::class);
+    // }
 
 
     public function getActivitylogOptions(): LogOptions

@@ -18,7 +18,7 @@ class AuthController extends Controller
     public function user_account()
     {
         // Fetch users with office data and format date using Carbon
-        $data = User::with('office:id,name','role:id,name')
+        $data = User::with('office:id,Office','role:id,name')
             ->select('office_id', 'role_id','name', 'created_at')
             ->orderBy('created_at', 'desc') // Add this line to sort by newest first
             ->get()
@@ -26,7 +26,7 @@ class AuthController extends Controller
                 return [
                     'name' => $user->name,
                     'password' => $user->password,
-                    'office_name' => $user->office->name ?? 'N/A',
+                    'office_name' => $user->office->Office ?? 'N/A',
                     'role_name' => $user->role->name ?? 'N/A',
                 'role_id' => $user->role_id, // <-- Add this line
                 'datecreated' => Carbon::parse($user->created_at)->format('F d, Y'),
@@ -86,6 +86,7 @@ class AuthController extends Controller
     {
         try {
             $request->validate([
+                'control_no' => 'required|string',
                 'name' => 'required|string|unique:users,name',
                 'password' => 'required|string|min:6',
                 'office_id' => 'required|exists:offices,id',
@@ -94,6 +95,7 @@ class AuthController extends Controller
             ]);
 
             $user = User::create([
+                'control_no' => $request->control_no,
                 'name' => $request->name,
                 'password' => Hash::make($request->password),
                 'office_id' => $request->office_id,
@@ -107,6 +109,7 @@ class AuthController extends Controller
                 'message' => 'User created successfully',
                 'user' => [
                     'id' => $user->id,
+                    'control_no' => $user->control_no,
                     'name' => $user->name,
                     'office_id' => $user->office_id,
                     'role_id' => $user->role_id,
