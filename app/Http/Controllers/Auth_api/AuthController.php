@@ -9,13 +9,15 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\addEmployeeRequest;
+use App\Http\Requests\registerRequest;
 use Illuminate\Support\Facades\Hash;
 
 
 class AuthController extends Controller
 {
     //test
-    public function user_account()
+    public function userAccount()
     {
         // Fetch users with office data and format date using Carbon
         $data = User::with('office:id,Office','role:id,name')
@@ -82,17 +84,17 @@ class AuthController extends Controller
     }
 
 
-    public function register(Request $request)
+    public function register(registerRequest $request)
     {
         try {
-            $request->validate([
-                'control_no' => 'required|string',
-                'name' => 'required|string|unique:users,name',
-                'password' => 'required|string|min:6',
-                'office_id' => 'required|exists:offices,id',
-                'role_id' => 'required|exists:Roles,id',
-                'designation'=> 'required|string',
-            ]);
+            // $request->validate([
+            //     'control_no' => 'required|string',
+            //     'name' => 'required|string|unique:users,name',
+            //     'password' => 'required|string|min:6',
+            //     'office_id' => 'required|exists:offices,id',
+            //     'role_id' => 'required|exists:Roles,id',
+            //     'designation'=> 'required|string',
+            // ]);
 
             $user = User::create([
                 'control_no' => $request->control_no,

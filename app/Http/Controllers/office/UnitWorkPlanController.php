@@ -16,60 +16,77 @@ use Illuminate\Support\Facades\DB;
 use App\Models\PerformanceStandard;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\addEmployeeUnitWorkPlanRequest;
 use App\Models\Configuration;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Routing\Controller as BaseController;
 
-class UnitWorkPlanController extends Controller
+class UnitWorkPlanController extends BaseController
 {
 
-    // unit work plan store function
-    public function storeUnitWorkPlan(Request $request) //  old working store function
+
+    protected $user;
+    protected $officeId;
+
+    public function __construct()
     {
-        $validated = $request->validate([
+        $this->middleware(function ($request, $next) {
+            $this->user = Auth::user();
+            $this->officeId = $this->user->office_id;
 
-            'employees' => 'required|array|min:1',
-
-             // employee details
-            'employees.*.control_no' => 'required|string',
-            'employees.*.office' => 'required|string',
-            'employees.*.office2' => 'nullable|string',
-            'employees.*.group' => 'nullable|string',
-            'employees.*.division' => 'nullable|string',
-            'employees.*.section' => 'nullable|string',
-            'employees.*.unit' => 'nullable|string',
-
-            // semester and year
-            'employees.*.semester' => 'required|string',
-            'employees.*.year' => 'required|integer',
-
-            // performance standards
-            'employees.*.performance_standards' => 'required|array|min:1',
-            'employees.*.performance_standards.*.category' => 'required|string',
-            'employees.*.performance_standards.*.mfo' => 'required|string',
-            'employees.*.performance_standards.*.output' => 'required|string',
-            'employees.*.performance_standards.*.core_competency' => 'nullable|array',
-            'employees.*.performance_standards.*.technical_competency' => 'nullable|array',
-            'employees.*.performance_standards.*.leadership_competency' => 'nullable|array',
-            'employees.*.performance_standards.*.success_indicator' => 'required|string',
-            'employees.*.performance_standards.*.performance_indicator' => 'required|string',
-            'employees.*.performance_standards.*.required_output' => 'required|string',
-
-            // standatd outcomes / ratings
-            'employees.*.performance_standards.*.ratings' => 'required|array|min:1',
-            'employees.*.performance_standards.*.ratings.*.rating' => 'nullable|integer',
-            'employees.*.performance_standards.*.ratings.*.quantity' => 'nullable|string',
-            'employees.*.performance_standards.*.ratings.*.effectiveness' => 'nullable|string',
-            'employees.*.performance_standards.*.ratings.*.timeliness' => 'nullable|string',
-
-            'employees.*.performance_standards.*.config' => 'required|array',
-            'employees.*.performance_standards.*.config.*.quantity' => 'required|string',
-            'employees.*.performance_standards.*.config.*.timeliness' => 'required|string',
-            'employees.*.performance_standards.*.config.*.type' => 'required|string',
+            return $next($request);
+        });
+    }
 
 
+    // unit work plan store function
+    public function storeUnitWorkPlan(addEmployeeUnitWorkPlanRequest $request) //  old working store function
+    {
+        $validated = $request->validate(
+
+            // 'employees' => 'required|array|min:1',
+
+            // // employee details
+            // 'employees.*.control_no' => 'required|string',
+            // 'employees.*.office' => 'required|string',
+            // 'employees.*.office2' => 'nullable|string',
+            // 'employees.*.group' => 'nullable|string',
+            // 'employees.*.division' => 'nullable|string',
+            // 'employees.*.section' => 'nullable|string',
+            // 'employees.*.unit' => 'nullable|string',
+
+            // // semester and year
+            // 'employees.*.semester' => 'required|string',
+            // 'employees.*.year' => 'required|integer',
+
+            // // performance standards
+            // 'employees.*.performance_standards' => 'required|array|min:1',
+            // 'employees.*.performance_standards.*.category' => 'required|string',
+            // 'employees.*.performance_standards.*.mfo' => 'required|string',
+            // 'employees.*.performance_standards.*.output' => 'required|string',
+            // 'employees.*.performance_standards.*.core_competency' => 'nullable|array',
+            // 'employees.*.performance_standards.*.technical_competency' => 'nullable|array',
+            // 'employees.*.performance_standards.*.leadership_competency' => 'nullable|array',
+            // 'employees.*.performance_standards.*.success_indicator' => 'required|string',
+            // 'employees.*.performance_standards.*.performance_indicator' => 'required|string',
+            // 'employees.*.performance_standards.*.required_output' => 'required|string',
+
+            // // standatd outcomes / ratings
+            // 'employees.*.performance_standards.*.ratings' => 'required|array|min:1',
+            // 'employees.*.performance_standards.*.ratings.*.rating' => 'nullable|integer',
+            // 'employees.*.performance_standards.*.ratings.*.quantity' => 'nullable|string',
+            // 'employees.*.performance_standards.*.ratings.*.effectiveness' => 'nullable|string',
+            // 'employees.*.performance_standards.*.ratings.*.timeliness' => 'nullable|string',
+
+            // 'employees.*.performance_standards.*.config' => 'required|array',
+            // 'employees.*.performance_standards.*.config.*.quantity' => 'required|string',
+            // 'employees.*.performance_standards.*.config.*.timeliness' => 'required|string',
+            // 'employees.*.performance_standards.*.config.*.type' => 'required|string',
 
 
-        ]);
+
+
+        );
 
         DB::beginTransaction(); // Start transaction
 
@@ -152,7 +169,9 @@ class UnitWorkPlanController extends Controller
         }
     }
 
-    //updating the unit work plan of employee
+
+
+    // updating the unit work plan of employee
     public function updateUnitWorkPlan(Request $request, $controlNo, $semester, $year)
     {
         $validated = $request->validate([
@@ -173,7 +192,6 @@ class UnitWorkPlanController extends Controller
             'performance_standards.*.ratings.*.effectiveness' => 'nullable|string',
             'performance_standards.*.ratings.*.timeliness' => 'nullable|string',
 
-
             'performance_standards.*.config' => 'required|array',
             'performance_standards.*.config.*.quantity' => 'required|string',
             'performance_standards.*.config.*.timeliness' => 'required|string',
@@ -183,34 +201,56 @@ class UnitWorkPlanController extends Controller
         DB::beginTransaction();
 
         try {
-            // ✅ FIND TARGET PERIOD USING control_no + semester + year
-            $targetPeriod = TargetPeriod::where('control_no', $controlNo)
-                ->where('semester', $semester)
+            // ✅ STEP 1: Employee + office restriction
+            $employee = Employee::where('ControlNo', $controlNo)
+                ->where('office_id', $this->officeId)
+                ->first();
+
+            if (!$employee) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Employee not found or access denied.'
+                ], 404);
+            }
+
+            // ✅ STEP 2: Target Period
+            $targetPeriod = $employee->targetPeriods()
                 ->where('year', $year)
-                ->firstOrFail();
+                ->where('semester', $semester)
+                ->first();
 
-            // OPTIONAL: prevent update if already approved
-            // if ($targetPeriod->status === 'approved') {
-            //     return response()->json([
-            //         'success' => false,
-            //         'message' => 'Approved Unit Work Plan cannot be edited.'
-            //     ], 403);
-            // }
+            if (!$targetPeriod) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unit Work Plan not found.'
+                ], 404);
+            }
 
-            // RESET STATUS
+            // OPTIONAL: prevent update if approved
+            if ($targetPeriod->status === 'approve') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Approved Unit Work Plan cannot be edited.'
+                ], 403);
+            }
+
+            // ✅ Reset status
             $targetPeriod->update([
                 'status' => 'pending',
             ]);
 
+            // ✅ DELETE CHILD RECORDS IN CORRECT ORDER
+            Configuration::whereIn(
+                'performance_standard_id',
+                PerformanceStandard::where('target_period_id', $targetPeriod->id)->pluck('id')
+            )->delete();
 
-
-            // ✅ delete ALL old data correctly
             StandardOutcome::where('target_period_id', $targetPeriod->id)->delete();
             PerformanceStandard::where('target_period_id', $targetPeriod->id)->delete();
 
-
-            // RE-CREATE PERFORMANCE STANDARDS
+            // ✅ RE-CREATE PERFORMANCE STANDARDS
             foreach ($validated['performance_standards'] as $standard) {
+
                 $performanceStandard = PerformanceStandard::create([
                     'target_period_id' => $targetPeriod->id,
                     'category' => $standard['category'],
@@ -227,6 +267,7 @@ class UnitWorkPlanController extends Controller
                 foreach ($standard['ratings'] as $rating) {
                     StandardOutcome::create([
                         'target_period_id' => $targetPeriod->id,
+                        'performance_standard_id' => $performanceStandard->id,
                         'rating' => $rating['rating'],
                         'quantity_target' => $rating['quantity'],
                         'effectiveness_criteria' => $rating['effectiveness'],
@@ -261,8 +302,6 @@ class UnitWorkPlanController extends Controller
         }
     }
 
-
-
     // find employee
     public function findEmployee(Request $request, $controlNo)
     {
@@ -283,11 +322,11 @@ class UnitWorkPlanController extends Controller
     }
 
 
-
     // view the unitworkplant of the employee based on controlno , semester and year
     public function getUnitworkplan($controlNo, $semester, $year)
     {
         $employee = Employee::where('ControlNo', $controlNo)
+            ->where('office_id', $this->officeId)
             ->with([
                 'targetPeriods' => function ($q) use ($year, $semester) {
                     $q->where('year', $year)
@@ -302,22 +341,70 @@ class UnitWorkPlanController extends Controller
         }
 
         // Transform the response
+        // Transform the response
         $employee = $employee->toArray();
 
         foreach ($employee['target_periods'] as &$period) {
+
             $configs = [];
-            foreach ($period['performance_standards'] as $ps) {
+
+            foreach ($period['performance_standards'] as &$ps) {
+
                 if (!empty($ps['configurations'])) {
                     $configs = array_merge($configs, $ps['configurations']);
                 }
-                // Remove configurations from inside performance_standards
+
+                // ✅ properly remove configurations inside performance_standards
                 unset($ps['configurations']);
             }
+
+            // ✅ assign configurations only once at target_period level
             $period['configurations'] = $configs;
         }
 
+        unset($period, $ps); // good practice
+
+
         return response()->json($employee);
     }
+
+
+    // delete the unit work plan of the employee based on semester and year
+    public function deleteUnitWorkPlan($controlNo, $semester, $year)
+    {
+        // ✅ STEP 1: Find employee with office restriction
+        $employee = Employee::where('ControlNo', $controlNo)
+            ->where('office_id', $this->officeId)
+            ->first();
+
+        if (!$employee) {
+            return response()->json([
+                'message' => 'Employee not found or access denied'
+            ], 404);
+        }
+
+        // ✅ STEP 2: Find target period (Unit Work Plan)
+        $targetPeriod = $employee->targetPeriods()
+            ->where('year', $year)
+            ->where('semester', $semester)
+            ->first();
+
+        if (!$targetPeriod) {
+            return response()->json([
+                'message' => 'Unit Work Plan not found'
+            ], 404);
+        }
+
+        // ✅ STEP 3: Delete target period
+        $targetPeriod->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Unit Work Plan deleted successfully',
+            'data' => $targetPeriod,
+        ]);
+    }
+
 
     // public function getUnitworkplan($controlNo, $semester, $year)
     // {
@@ -784,5 +871,3 @@ class UnitWorkPlanController extends Controller
 
 
 }
-
-

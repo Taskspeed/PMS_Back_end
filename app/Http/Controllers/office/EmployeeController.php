@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\office;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\addEmployeeRequest;
 use App\Models\office;
 use App\Models\Employee;
 use App\Models\Position;
@@ -15,30 +16,32 @@ class EmployeeController extends Controller
 {
 
     //add employee on the plantilla structure
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'employees' => 'required|array',
-            'employees.*.ControlNo' => 'required|string',
-            'employees.*.name' => 'required|string|max:255',
-            // 'employees.*.position_id' => 'required|exists:positions,id',
-            'employees.*.office_id' => 'required|exists:offices,id',
-            'employees.*.office' => 'nullable|string|max:255',
-            'employees.*.position' => 'required|string|max:255', // changed from 'designation' to 'position'
-            'employees.*.office2' => 'nullable|string|max:255',
-            'employees.*.group' => 'nullable|string|max:255',
-            'employees.*.division' => 'nullable|string|max:255',
-            'employees.*.section' => 'nullable|string|max:255',
-            'employees.*.unit' => 'nullable|string|max:255',
-            'employees.*.rank' => 'nullable|in:Supervisor,Employee,Rank-in-File,Managerial,Section-Head,Office-Head,Division-Head',
 
-            'employees.*.tblStructureID' => 'required|string|max:255',
-            'employees.*.sg' => 'required|string|max:255',
-            'employees.*.level' => 'required|string|max:255',
-            'employees.*.positionID' => 'required|string|max:255',
-            'employees.*.itemNo' => 'required|string|max:255',
-            'employees.*.pageNo' => 'required|string|max:255',
-        ]);
+
+    public function store(addEmployeeRequest $request)
+    {
+        $validated = $request->validated(
+            // 'employees' => 'required|array',
+            // 'employees.*.ControlNo' => 'required|string',
+            // 'employees.*.name' => 'required|string|max:255',
+            // // 'employees.*.position_id' => 'required|exists:positions,id',
+            // 'employees.*.office_id' => 'required|exists:offices,id',
+            // 'employees.*.office' => 'nullable|string|max:255',
+            // 'employees.*.position' => 'required|string|max:255', // changed from 'designation' to 'position'
+            // 'employees.*.office2' => 'nullable|string|max:255',
+            // 'employees.*.group' => 'nullable|string|max:255',
+            // 'employees.*.division' => 'nullable|string|max:255',
+            // 'employees.*.section' => 'nullable|string|max:255',
+            // 'employees.*.unit' => 'nullable|string|max:255',
+            // 'employees.*.rank' => 'nullable|in:Supervisor,Employee,Rank-in-File,Managerial,Section-Head,Office-Head,Division-Head',
+
+            // 'employees.*.tblStructureID' => 'required|string|max:255',
+            // 'employees.*.sg' => 'required|string|max:255',
+            // 'employees.*.level' => 'required|string|max:255',
+            // 'employees.*.positionID' => 'required|string|max:255',
+            // 'employees.*.itemNo' => 'required|string|max:255',
+            // 'employees.*.pageNo' => 'required|string|max:255',
+        );
 
         $createdEmployees = [];
 
@@ -61,7 +64,7 @@ class EmployeeController extends Controller
                         'name' => $employee->name,
                         // 'position_id' => $employee->position_id,
                         'rank' => $employee->rank,
-                    'designation' => $employee->designation,
+                        'designation' => $employee->designation,
                         'office' => $employee->office,
                         'division' => $employee->division,
                         'section' => $employee->section,
@@ -89,6 +92,80 @@ class EmployeeController extends Controller
             ], 500);
         }
     }
+    // public function store(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'employees' => 'required|array',
+    //         'employees.*.ControlNo' => 'required|string',
+    //         'employees.*.name' => 'required|string|max:255',
+    //         // 'employees.*.position_id' => 'required|exists:positions,id',
+    //         'employees.*.office_id' => 'required|exists:offices,id',
+    //         'employees.*.office' => 'nullable|string|max:255',
+    //         'employees.*.position' => 'required|string|max:255', // changed from 'designation' to 'position'
+    //         'employees.*.office2' => 'nullable|string|max:255',
+    //         'employees.*.group' => 'nullable|string|max:255',
+    //         'employees.*.division' => 'nullable|string|max:255',
+    //         'employees.*.section' => 'nullable|string|max:255',
+    //         'employees.*.unit' => 'nullable|string|max:255',
+    //         'employees.*.rank' => 'nullable|in:Supervisor,Employee,Rank-in-File,Managerial,Section-Head,Office-Head,Division-Head',
+
+    //         'employees.*.tblStructureID' => 'required|string|max:255',
+    //         'employees.*.sg' => 'required|string|max:255',
+    //         'employees.*.level' => 'required|string|max:255',
+    //         'employees.*.positionID' => 'required|string|max:255',
+    //         'employees.*.itemNo' => 'required|string|max:255',
+    //         'employees.*.pageNo' => 'required|string|max:255',
+    //     ]);
+
+    //     $createdEmployees = [];
+
+    //     // Use a transaction to ensure data integrity
+    //     DB::beginTransaction();
+    //     try {
+    //         foreach ($validated['employees'] as $employeeData) {
+    //             // Set default rank to Employee if not provided
+    //             if (!isset($employeeData['rank'])) {
+    //                 $employeeData['rank'] = 'Employee';
+    //             }
+
+    //             $employee = Employee::create($employeeData);
+
+    //             // Enhanced activity logging
+    //             activity()
+    //                 ->performedOn($employee)
+    //                 ->causedBy(Auth::user())
+    //                 ->withProperties([
+    //                     'name' => $employee->name,
+    //                     // 'position_id' => $employee->position_id,
+    //                     'rank' => $employee->rank,
+    //                 'designation' => $employee->designation,
+    //                     'office' => $employee->office,
+    //                     'division' => $employee->division,
+    //                     'section' => $employee->section,
+    //                     'unit' => $employee->unit,
+    //                     'office_id' => $employee->office_id
+    //                 ])
+    //                 ->log('Employee Created');
+
+    //             $createdEmployees[] = $employee;
+    //         }
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Employees created successfully',
+    //             'employees' => $createdEmployees
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to create employees',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
     // public function index_position()
     // {
@@ -755,10 +832,15 @@ class EmployeeController extends Controller
     public function deleteEmployee($employeeId){
 
         $employee = Employee::findOrFail($employeeId);
+
         $employee->delete();
-        return response()->json(['message' => 'Employee deleted successfully']);
-
-
+        
+        return response()->json(
+            [
+                'success' => true,
+                'message' => 'Employee deleted successfully'
+            ]
+        );
     }
 
 

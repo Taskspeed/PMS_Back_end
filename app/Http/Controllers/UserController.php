@@ -12,7 +12,7 @@ class UserController extends Controller
 {
     //
 
-    public function get_user_data()
+    public function getUserData()
     {
         $user = Auth::user();
         $office = $user->office;
@@ -21,7 +21,7 @@ class UserController extends Controller
 
         $result = [
             'user' => $user,
-     
+
         ];
 
 
@@ -30,7 +30,7 @@ class UserController extends Controller
 
 
 
-    public function get_user_info()
+    public function getUserInfo()
     {
         $users = vwActive::where('Surname', 'LIKE', '%mahusay%')->get();
         return response()->json([

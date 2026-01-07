@@ -21,7 +21,6 @@ class DashboardController extends Controller
         // $semester = $request->input('semester');   // example: January-June / July-December
         // $year = $request->input('year');           // example: 2025
 
-
         // Assuming you have an Employee model with an 'office_code' field
         $totalEmployees = \App\Models\Employee::where('office_id', $officeId)->count();
 

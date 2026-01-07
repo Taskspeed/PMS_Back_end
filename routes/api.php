@@ -24,11 +24,9 @@ use App\Http\Controllers\VwplantillastructureController;
 use App\Http\Controllers\Planning\Planning_Unit_work_planController;
 use App\Http\Controllers\office\DashboardController as OfficeDashboardController;
 
-Route::post('/user_login', [AuthController::class, 'login']);  // change route login
-Route::get('/user_info', [UserController::class, 'get_user_info']);
+Route::post('/login', [AuthController::class, 'login']);  // change route login
+// Route::get('/user_info', [UserController::class, 'getUserInfo']);
 
-Route::get('/ipcr/employee/unit_work_plan', [IpcrController::class, 'getEmployeesWithUnitWorkPlans']);
-// Route::get('/ipcr/employee/{ControlNo}/{year}/{semester}', [IpcrController::class, 'getIpcr']); // allow any characters, including leading zeros
 
 
 
@@ -37,9 +35,9 @@ Route::get('/ipcr/employee/unit_work_plan', [IpcrController::class, 'getEmployee
 
 
 // Route::get('/fetch_office', [OfficeController::class, 'getOffices']);
-Route::get('/fetch_f_category', [FCategoryController::class, 'index']);
-Route::get('/fetch_mfo', [MfoController::class, 'index_data']);
-Route::get('/Outputs', [FOutpotController::class, 'Outputs']);
+// Route::get('/fetch_f_category', [FCategoryController::class, 'index']);
+// Route::get('/fetch_mfo', [MfoController::class, 'index_data']);
+// Route::get('/Outputs', [FOutpotController::class, 'Outputs']);
 
 
 
@@ -64,15 +62,26 @@ Route::middleware('auth:sanctum')->group(function () {
 
     });
 
+    Route::get('/ipcr/employee/{ControlNo}/{year}/{semester}', [IpcrController::class, 'getIpcr']); // allow any characters, including leading zeros
+    // Route::get('/ipcr/employee/unit_work_plan', [IpcrController::class, 'getEmployeesWithUnitWorkPlans']);
+    Route::put('ipcr/employee/target-periods/{controlNo}/{semester}/{year}',[IpcrController::class, 'approveIpcrEmployee']);
 
 
 
-    Route::post('/user_assign', [AuthController::class, 'register']); // change route name
-    Route::post('/user_logout', [AuthController::class, 'logout']);
-    Route::get('/user_data', [UserController::class, 'get_user_data']);
-    Route::get('/my-unit-workplans', [UserController::class, 'getUserUnitWorkPlans']);
-    Route::get('/user_account', [AuthController::class, 'user_account']);
-    Route::post('/user/update/credentials/{id}', [AuthController::class, 'update']);
+    Route::prefix('user')->group(function(){
+        Route::get('/', [UserController::class, 'getUserData']);
+        Route::post('/register', [AuthController::class, 'register']); // change route name
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/update/credentials/{id}', [AuthController::class, 'update']);
+        Route::get('/account', [AuthController::class, 'userAccount']);
+    });
+
+    // Route::post('/user_assign', [AuthController::class, 'register']); // change route name
+    // Route::post('/user_logout', [AuthController::class, 'logout']);
+    // Route::get('/user_data', [UserController::class, 'get_user_data']);
+    // Route::get('/my-unit-workplans', [UserController::class, 'getUserUnitWorkPlans']);
+    // Route::get('/user_account', [AuthController::class, 'user_account']);
+
 
 
 
@@ -162,11 +171,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     });
 
+    // unit work plan of the employee
     Route::prefix('unit_work_plan')->group(function () {
-
         Route::post('/store', [UnitWorkPlanController::class, 'storeUnitWorkPlan']);
         Route::put('/update/{controlNo}/{semester}/{year}', [UnitWorkPlanController::class, 'updateUnitWorkPlan']);
-        
+        Route::delete('/delete/{controlNo}/{semester}/{year}', [UnitWorkPlanController::class, 'deleteUnitWorkPlan']);
     });
 
 
@@ -174,7 +183,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('employee')->group(function () {
 
         Route::get('/', [EmployeeController::class, 'getEmployee']);
-        Route::get('/office-employee/{office_name}', [vwActiveController::class, 'getOfficeEmployee']);
+        // Route::get('/office-employee/{office_name}', [vwActiveController::class, 'getOfficeEmployee']);
+        Route::get('/office-employee', [vwActiveController::class, 'getOfficeEmployee']);
+
         Route::get('/by-office', [EmployeeController::class, 'show_employee']); // fetch employees by office
         Route::post('/store', [EmployeeController::class, 'store']);
         Route::post('/rank/{id}', [EmployeeController::class, 'updateRank']);
