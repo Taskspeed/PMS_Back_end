@@ -30,8 +30,10 @@ Route::post('/login', [AuthController::class, 'login']);  // change route login
 
 
 // Rating
-Route::get('employee/target-periods/{control_no}', [EmployeeRatingController::class, 'targetPeriodEmployee']);
+Route::get('employee/target-periods/{controlNo}', [EmployeeRatingController::class, 'targetPeriodEmployee']);
 Route::get('employee/target-periods/details/{targetperiodId}', [EmployeeRatingController::class, 'targetPeriodDetails']);
+Route::post('employee/store/rating', [EmployeeRatingController::class, 'performanceRatingStore']);
+
 
 
 
