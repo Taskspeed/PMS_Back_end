@@ -20,7 +20,7 @@ class AuthController extends Controller
     public function userAccount()
     {
         // Fetch users with office data and format date using Carbon
-        $data = User::with('office:id,Office','role:id,name')
+        $data = User::with('office:id,name','role:id,name')
             ->select('office_id', 'role_id','name', 'created_at')
             ->orderBy('created_at', 'desc') // Add this line to sort by newest first
             ->get()
@@ -28,7 +28,7 @@ class AuthController extends Controller
                 return [
                     'name' => $user->name,
                     'password' => $user->password,
-                    'office_name' => $user->office->Office ?? 'N/A',
+                    'office_name' => $user->office->name ?? 'N/A',
                     'role_name' => $user->role->name ?? 'N/A',
                 'role_id' => $user->role_id, // <-- Add this line
                 'datecreated' => Carbon::parse($user->created_at)->format('F d, Y'),

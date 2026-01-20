@@ -24,14 +24,12 @@ class DatabaseSeeder extends Seeder
         //     'role'=>'admin',
         //     'office'=> 'OFFICE OF THE CITY HUMAN RESOURCE MANAGEMENT OFFICER'
         // ]);
-            $this->call([ OfficeSeeder::class]);
+            $this->call([OfficeSeeder::class]);
             $this->call([RoleSeeder::class]);
             $this->call([UserSeeder::class]);
             $this->call([F_CategorySeeder::class]);
-            $this->call([LeadershipSeeder::class]);
-            $this->call([TechnicalSeeder::class]);
             $this->call([CoreSeeder::class]);
-            $this->call([PositionSeeder::class]);
+
 
     }
 }

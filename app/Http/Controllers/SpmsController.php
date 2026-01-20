@@ -34,11 +34,12 @@ class SpmsController extends BaseController
 
         if (!$officeId) return response()->json([]);
 
-        $officeName = DB::table('vwofficearrangement')->where('id', $officeId)->value('Office');
+        $officeName = DB::table('offices')->where('id', $officeId)->value('name');
         if (!$officeName) return response()->json([]);
 
         // BASE RESULT STRUCTURE
         $officeData = [
+            'officeId' => $officeId,
             'office' => $officeName,
             'office2' => []
         ];
@@ -482,41 +483,41 @@ class SpmsController extends BaseController
         return response()->json($result);
     }
 
-    // getting the employee target period by control no on there structure
-    public function getEmployeeHaveUnitWorkPlan(Request $request, $control_no)
-    {
-        $user = Auth::user();
-        $officeId = $user->office_id;
+    // // getting the employee target period by control no on there structure
+    // public function getEmployeeHaveUnitWorkPlan(Request $request, $control_no)
+    // {
+    //     $user = Auth::user();
+    //     $officeId = $user->office_id;
 
-        // Convert "011900,001090" → ['011900', '001090']
-        $controlNos = explode(',', $control_no);
+    //     // Convert "011900,001090" → ['011900', '001090']
+    //     $controlNos = explode(',', $control_no);
 
-        // Fetch all employees by control_no (even without target periods)
-        $employees = Employee::where('office_id', $officeId)
-            ->whereIn('ControlNo', $controlNos)
-            ->with([
-                'targetPeriods' => function ($query) use ($controlNos) {
-                    $query->whereIn('control_no', $controlNos);
-                },
-                'targetPeriods.performanceStandards',
-                'targetPeriods.standardOutcomes'
+    //     // Fetch all employees by control_no (even without target periods)
+    //     $employees = Employee::where('office_id', $officeId)
+    //         ->whereIn('ControlNo', $controlNos)
+    //         ->with([
+    //             'targetPeriods' => function ($query) use ($controlNos) {
+    //                 $query->whereIn('control_no', $controlNos);
+    //             },
+    //             'targetPeriods.performanceStandards',
+    //             'targetPeriods.standardOutcomes'
 
-            ])
-            ->get();
+    //         ])
+    //         ->get();
 
-        if ($employees->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Employees not found.'
-            ], 404);
-        }
+    //     if ($employees->isEmpty()) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Employees not found.'
+    //         ], 404);
+    //     }
 
-        // Add targetPeriod flag to each employee
-        $employees->transform(function ($employee) {
-            $employee->targetPeriod = $employee->targetPeriods->isNotEmpty();
-            return $employee;
-        });
+    //     // Add targetPeriod flag to each employee
+    //     $employees->transform(function ($employee) {
+    //         $employee->targetPeriod = $employee->targetPeriods->isNotEmpty();
+    //         return $employee;
+    //     });
 
-        return response()->json($employees);
-    }
+    //     return response()->json($employees);
+    // }
 }

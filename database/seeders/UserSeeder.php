@@ -32,7 +32,7 @@ class UserSeeder extends Seeder
         User::create([
             'name' => 'deniel',
             'password' => static::$password ??= Hash::make('admin'),
-            'office_id' => 1, // Ensure this office exists in the offices table
+            'office_id' => 16, // Ensure this office exists in the offices table
             'role_id' => 1, // Ensure this role exists in the roles table
             'remember_token' => Str::random(24),
         ]);

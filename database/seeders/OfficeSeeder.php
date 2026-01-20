@@ -2,25 +2,16 @@
 
 namespace Database\Seeders;
 
-use App\Models\office;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Office;
 use Illuminate\Database\Seeder;
 
 class OfficeSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $offices = [
-            'OFFICE OF THE CITY MAYOR',
-            'OFFICE OF THE CITY VICE MAYOR / SANGGUNIANG PANLUNGSOD',
-            'OFFICE OF THE CITY VICE MAYOR (SP LEGISLATIVE)',
-            'OFFICE OF THE SANGGUNIANG PANLUNGSOD',
-            'OFFICE OF THE SECRETARY TO THE SANGGUNIAN',
-            'OFFICE OF THE CITY ADMINISTRATOR',
             'OFFICE OF THE CITY ACCOUNTANT',
+            'OFFICE OF THE CITY ADMINISTRATOR',
             'OFFICE OF THE CITY AGRICULTURIST',
             'OFFICE OF THE CITY ARCHITECT',
             'OFFICE OF THE CITY ASSESSOR',
@@ -36,17 +27,21 @@ class OfficeSeeder extends Seeder
             'OFFICE OF THE CITY HUMAN RESOURCE MANAGEMENT OFFICER',
             'OFFICE OF THE CITY INFORMATION AND COMMUNICATIONS TECHNOLOGY MANAGEMENT OFFICER',
             'OFFICE OF THE CITY LEGAL OFFICER',
+            'OFFICE OF THE CITY MAYOR',
             'OFFICE OF THE CITY PLANNING AND DEVELOPMENT COORDINATOR',
             'OFFICE OF THE CITY PUBLIC EMPLOYMENT SERVICES AND CAPABILITY DEVELOPMENT OFFICER',
             'OFFICE OF THE CITY SOCIAL WELFARE AND DEVELOPMENT OFFICER',
             'OFFICE OF THE CITY TOURISM, ARTS, CULTURE AND HERITAGE MANAGEMENT OFFICER',
             'OFFICE OF THE CITY TREASURER',
             'OFFICE OF THE CITY VETERINARIAN',
+            'OFFICE OF THE CITY VICE MAYOR / SANGGUNIANG PANLUNGSOD',
+            'OFFICE OF THE SANGGUNIANG PANLUNGSOD',
+            'OFFICE OF THE SECRETARY TO THE SANGGUNIAN',
         ];
 
         foreach ($offices as $officeName) {
             Office::create([
-                'name' => $officeName
+                'name' => $officeName,
             ]);
         }
     }

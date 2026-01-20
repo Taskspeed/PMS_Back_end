@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class F_outpot extends Model
 {
-   use LogsActivity, SoftDeletes;
+   use LogsActivity;
 
     protected $fillable = ['name', 'mfo_id', 'f_category_id', 'office_id'];
 

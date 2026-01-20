@@ -7,33 +7,39 @@ use Illuminate\Database\Eloquent\Model;
 class opcr extends Model
 {
     //
-    protected $fillable=[
 
-        'employee_id',
-        'target_period',
-        'year',
-        'strategic function',
-        'core function',
-        'support function',
-        'core',
-        'technical',
-        'leadership',
-        'alloted budget',
-        'actual accomplishment',
+    protected  $table = 'opcrs';
+
+    protected $fillable = [
+
+        'office_id',
+        'performance_standard_id',
+        'competency',
+        'budget',
+        'accountable',
+        'accomplishment',
         'rating_q',
         'rating_e',
         'rating_t',
-         'rating_a',
-         'profiency result',
-         'remarks',
-         'office_id'
+        'rating_a',
+        'profiency',
+        'remarks',
 
     ];
 
+    // protected $casts = [
+    //     'office_id' => 'integer',
+    //     'employee_id' => 'integer',
+
+    // ];
     protected $casts = [
-        'office_id' => 'integer',
-        'employee_id' => 'integer',
-
+        'compentency' => 'array',
+        'profiency'   => 'array',
     ];
+
+    public function performanceStandard()
+    {
+        return $this->belongsTo(performanceStandard::class, 'performance_standard_id');
+    }
 
 }

@@ -12,7 +12,7 @@ class OfficeController extends Controller
     // getting the all office on the office table but need to change on the vwofficearrangement
     public function getOffices(){
 
-        $data = DB::table('vwofficearrangement')->select('id','Office as name')->get();
+        $data = DB::table('offices')->select('id','name')->get();
 
         return response()->json($data);
     }
@@ -25,9 +25,9 @@ class OfficeController extends Controller
             return response()->json([]);
         }
 
-        $officeName = DB::table('vwofficearrangement')
+        $officeName = DB::table('offices')
             ->where('id', $user->office_id)
-            ->value('Office');
+            ->value('name');
 
         if (!$officeName) {
             return response()->json([]);
@@ -40,7 +40,7 @@ class OfficeController extends Controller
         ];
 
         // FETCH ALL RECORDS FOR THIS OFFICE
-        $allUnits = DB::table('vwplantillastructure')
+        $allUnits = DB::table('vwplantillaStructure')
             ->where('office', $officeName)
             ->orderBy('office2')
             ->orderBy('group')

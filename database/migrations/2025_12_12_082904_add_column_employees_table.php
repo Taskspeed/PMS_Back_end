@@ -28,7 +28,7 @@ return new class extends Migration
     {
         Schema::table('employees', function (Blueprint $table) {
 
-            $table->dropColumn(['TblID', 'positionID', 'itemNo', 'pageNo', 'sg', 'level']);
+            $table->dropColumn(['tblStructureID', 'positionID', 'itemNo', 'pageNo', 'sg', 'level']);
         });
     }
 };

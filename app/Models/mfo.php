@@ -10,7 +10,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class mfo extends Model
 {
- use LogsActivity, SoftDeletes;
+ use LogsActivity;
     //
      protected $fillable =[
         'office_id',
@@ -41,10 +41,10 @@ class mfo extends Model
         return $this->hasMany(F_outpot::class);
     }
 
-    public function unitWorkPlans()
-    {
-        return $this->hasMany(Unit_work_plan::class);
-    }
+    // public function unitWorkPlans()
+    // {
+    //     return $this->hasMany(Unit_work_plan::class);
+    // }
 
     public function getActivitylogOptions(): LogOptions
     {

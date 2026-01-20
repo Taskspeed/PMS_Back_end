@@ -2,173 +2,157 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\opcrRequest;
 use App\Models\opcr;
 use App\Models\Employee;
-use App\Models\Unit_work_plan;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
-
-class OpcrController extends Controller
+use Illuminate\Routing\Controller as BaseController;
+class OpcrController extends BaseController
 {
-    public function index()
+
+
+    protected $user;
+    protected $officeId;
+
+    public function __construct()
     {
-        $user = Auth::user();
-        if (!$user || !$user->office_id) {
-            return response()->json(['message' => 'Unauthorized or no office assigned'], 403);
-        }
+        $this->middleware(function ($request, $next) {
+            $this->user = Auth::user();
+            $this->officeId = $this->user->office_id;
 
-        // Get unique divisions with work plans for this office
-        $divisions = Unit_work_plan::where('office_id', $user->office_id)
-            ->select('division', 'target_period', 'year', 'status', DB::raw('MAX(created_at) as created_at'))
-            ->groupBy('division', 'target_period', 'year', 'status')
-            ->orderBy('division')
-            ->orderBy('year')
-            ->orderBy('target_period')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'division' => $item->division,
-                    'targetPeriod' => $item->target_period . ' ' . $item->year,
-                    'dateCreated' => $item->created_at->format('F j, Y'),
-                    'status' => $item->status ?? 'Draft'
-                ];
-            });
-
-        return response()->json($divisions);
+            return $next($request);
+        });
     }
+    // public function getOpcr($controlNo,$year,$semester) //
+    // {
+    //     $employeeOpcr = Employee::select('id', 'ControlNo', 'name')
+    //         ->where('ControlNo', $controlNo)
+    //         ->with([
+    //             'targetPeriods' => function ($queryTargetPeriod) use($year, $semester) {
+    //                 $queryTargetPeriod
+    //                     ->select('id', 'control_no', 'semester', 'year', 'status')
+    //                     ->where('semester',$semester)
+    //                     ->where('year',$year)
+    //                     ->with([
+    //                         'performanceStandards' => function ($queryPerformanceStandard) {
+    //                             $queryPerformanceStandard
+    //                                 ->select(
+    //                                     'id',
+    //                                     'target_period_id', // REQUIRED FK
+    //                                     'category',
+    //                                     'mfo',
+    //                                     'output',
+    //                                     // 'output_name',
+    //                                     // 'performance_indicator',
+    //                                     'success_indicator',
+    //                                     // 'required_output'
+    //                                 );
+                                    // ->with([
+                                    //     'standardOutcomes' => function ($queryStandardOutcomes) {
+                                    //         $queryStandardOutcomes->select(
+                                    //             'id',
+                                    //             'performance_standard_id', // REQUIRED FK
+                                    //             'rating',
+                                    //             'quantity_target',
+                                    //             'effectiveness_criteria',
+                                    //             'timeliness_range'
+                                    //         );
+                                    //     }
+                                    // ]);
+    //                         }
+    //                     ]);
+    //             }
+    //         ])
+    //         ->first();
 
-    public function getOfficeHeadFunctions($officeId)
+    //     return response()->json($employeeOpcr);
+    // }
+
+    public function getOpcr($controlNo, $semester, $year) // get the opcr of the office head
     {
-        // Get office head employee with position relationship
-        $officeHead = Employee::with('position')
-            ->where('office_id', $officeId)
-            ->where(function ($query) {
-                $query->where('rank', 'like', '%office-head%')
-                    ->orWhereHas('position', function ($q) {
-                        $q->where('name', 'like', '%head%');
-                    });
+        $employeeOpcr = Employee::select('id', 'ControlNo', 'name')
+            ->where('ControlNo', $controlNo)
+
+            ->whereHas('targetPeriods', function ($q) use ($year, $semester) {
+                $q->where('year', $year)
+                    ->where('semester', $semester);
             })
+
+            ->with([
+                'targetPeriods' => function ($queryTargetPeriod) use ($year, $semester) {
+                    $queryTargetPeriod
+                        ->select('id', 'control_no', 'semester', 'year', 'status')
+                        ->where('year', $year)
+                        ->where('semester', $semester)
+                        ->with([
+                            'performanceStandards' => function ($queryPerformanceStandard) {
+                                $queryPerformanceStandard->select(
+                                    'id',
+                                    'target_period_id',
+                                    'category',
+                                    'mfo',
+                                    'output',
+                                    'success_indicator'
+                                )
+                                       ->with([
+                                        'opcr' => function ($queryopcr) {
+                                                  $queryopcr->select(
+                                                'id',
+                                                'performance_standard_id', // REQUIRED FK
+                                                'competency',
+                                                'budget',
+                                                'accountable',
+                                                'accomplishment',
+                                                'rating_q',
+                                                'rating_e',
+                                                'rating_t',
+                                                'rating_a',
+                                                'profiency',
+                                                'remarks',
+
+                                            );
+                                        }
+                                    ]);
+                            }
+                        ]);
+                }
+            ])
             ->first();
 
-        if (!$officeHead) {
-            return response()->json(['message' => 'Office head not found'], 404);
+        if (!$employeeOpcr) {
+            return response()->json([
+                'message' => 'No OPCR found for the specified year and semester.'
+            ], 404);
         }
 
-        // Get the office head's work plans grouped by category
-        $functions = Unit_work_plan::where('employee_id', $officeHead->id)
-            ->select(
-                'category',
-                'mfo',
-                'output',
-                'success_indicator',
-                'required_output',
-                'core',
-                'technical',
-                'leadership',
-                'standard_outcomes'
-            )
-            ->get()
-            ->groupBy('category')
-            ->map(function ($items, $category) {
-                // For Strategic and Core functions, only include MFOs
-                if (
-                    str_starts_with($category, 'A. STRATEGIC FUNCTION') ||
-                    str_starts_with($category, 'B. CORE FUNCTION')
-                ) {
-                    return [
-                        'category' => $category,
-                        'items' => $items->unique('mfo')->map(function ($item) {
-                            return [
-                                'mfo' => $item->mfo,
-                                'core_competency' => json_decode($item->core, true),
-                                'technical_competency' => json_decode($item->technical, true),
-                                'leadership_competency' => json_decode($item->leadership, true)
-                            ];
-                        })->values()
-                    ];
-                }
-                // For Support functions, only include Outputs
-                else if (str_starts_with($category, 'C. SUPPORT FUNCTION')) {
-                    return [
-                        'category' => $category,
-                        'items' => $items->unique('output')->map(function ($item) {
-                            return [
-                                'output' => $item->output,
-                                'core_competency' => json_decode($item->core, true),
-                                'technical_competency' => json_decode($item->technical, true),
-                                'leadership_competency' => json_decode($item->leadership, true)
-                            ];
-                        })->values()
-                    ];
-                }
-            });
-
-        return response()->json([
-            'strategic_function' => $functions->get('A. STRATEGIC FUNCTION', []),
-            'core_function' => $functions->filter(function ($item, $key) {
-                return str_starts_with($key, 'B. CORE FUNCTION');
-            })->values(),
-            'support_function' => $functions->get('C. SUPPORT FUNCTION', [])
-        ]);
+        return response()->json($employeeOpcr);
     }
 
-    public function saveOpcr(Request $request)
-    {
-        $user = Auth::user();
+        // save the opcr
+    public function storeOpcr(opcrRequest $request){
 
-        if (!$user || !$user->office_id) {
-            return response()->json(['message' => 'Unauthorized or no office assigned'], 403);
-        }
+      // validated
+      $validated = $request->validated();
 
-        // Get office head employee
-        $officeHead = Employee::where('office_id', $user->office_id)
-            ->where(function ($query) {
-                $query->where('rank', 'like', '%office-head%')
-                    ->orWhereHas('position', function ($q) {
-                        $q->where('name', 'like', '%head%');
-                    });
-            })
-            ->first();
+      // create
+      $opcr  = opcr::create([
+            'office_id' => $this->officeId,
+            'performance_standard_id' => $validated['performance_standard_id'],
+            'compentency' => $validated['compentency'],
+            'budget' => $validated['budget'],
+            'accountable' => $validated['accountable'],
+            'accomplishment' => $validated['accomplishment'],
+            'rating_q' => $validated['rating_q'],
+            'rating_e' => $validated['rating_e'],
+            'rating_t' => $validated['rating_t'],
+            'rating_a' => $validated['rating_a'],
+            'profiency' => $validated['profiency'],
+            'remarks' => $validated['remarks'],
 
-        if (!$officeHead) {
-            return response()->json(['message' => 'Office head not found'], 404);
-        }
-
-        // Get the latest unit work plan for this office head
-        $unitWorkPlan = Unit_work_plan::where('employee_id', $officeHead->id)
-            ->orderBy('created_at', 'desc')
-            ->first();
-
-        if (!$unitWorkPlan) {
-            return response()->json(['message' => 'No unit work plan found for office head'], 404);
-        }
-
-        $validated = $request->validate([
-            'strategic_function' => 'required|array',
-            'core_function' => 'required|array',
-            'support_function' => 'required|array'
         ]);
 
-        $opcr = Opcr::create([
-            'office_id' => $user->office_id,
-            'employee_id' => $officeHead->id,
-            'target_period' => $unitWorkPlan->target_period,
-            'year' => $unitWorkPlan->year,
-            'strategic function' => json_encode($validated['strategic_function']),
-            'core function' => json_encode($validated['core_function']),
-            'support function' => json_encode($validated['support_function']),
+      return response()->json($opcr);
 
-            'status' => 'draft'
-        ]);
 
-        return response()->json([
-            'message' => 'OPCR saved successfully',
-            'data' => $opcr
-        ]);
     }
-
-
-
 }

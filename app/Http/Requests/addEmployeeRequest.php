@@ -36,12 +36,12 @@ class addEmployeeRequest extends FormRequest
             'employees.*.unit' => 'nullable|string|max:255',
             'employees.*.rank' => 'nullable|in:Supervisor,Employee,Rank-in-File,Managerial,Section-Head,Office-Head,Division-Head',
 
-            'employees.*.tblStructureID' => 'required|string|max:255',
-            'employees.*.sg' => 'required|string|max:255',
-            'employees.*.level' => 'required|string|max:255',
-            'employees.*.positionID' => 'required|string|max:255',
-            'employees.*.itemNo' => 'required|string|max:255',
-            'employees.*.pageNo' => 'required|string|max:255',
+            'employees.*.tblStructureID' => 'nullable|string|max:255',
+            'employees.*.sg' => 'nullable|string|max:255',
+            'employees.*.level' => 'nullable|string|max:255',
+            'employees.*.positionID' => 'nullable|string|max:255',
+            'employees.*.itemNo' => 'nullable|string|max:255',
+            'employees.*.pageNo' => 'nullable|string|max:255',
         ];
     }
 }

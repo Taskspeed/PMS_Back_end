@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class office extends Model
 {
 
-     protected $table = 'vwofficearrangement';
+     protected $table = 'offices';
 
 
     //  protected $fillable =['name'];

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\office;
 use App\Models\vwActive;
 use Illuminate\Http\Request;
@@ -12,23 +13,6 @@ use Illuminate\Support\Facades\Auth;
 class vwActiveController extends Controller
 {
 
-    // public function getOfficeEmployee(Request $request,$office_name)
-    // {
-    //     $query = DB::table('vwActive')->select(
-
-    //         'ControlNo',
-    //         'BirthDate',
-    //         'Office',
-    //         // Make sure this field matches your database column name
-    //         'name4',
-    //         'Designation',
-    //         'status'
-    //     )  ->where('Office',$office_name);  // Match the exact office name
-
-    //     $data = $query->get();
-
-    //     return response()->json($data);
-    // }
 
     public function getOfficeEmployee(Request $request)
     {
@@ -40,6 +24,11 @@ class vwActiveController extends Controller
             ], 422);
         }
 
+        // kunin lahat ng control_no sa users table
+        $existingUsers = User::whereNotNull('control_no')
+            ->pluck('control_no')
+            ->toArray();
+
         $data = DB::table('vwActive')
             ->select(
                 'ControlNo',
@@ -50,6 +39,7 @@ class vwActiveController extends Controller
                 'status'
             )
             ->where('Office', $office_name)
+            ->whereNotIn('ControlNo', $existingUsers)
             ->get();
 
         return response()->json($data);

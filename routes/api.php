@@ -21,6 +21,7 @@ use App\Http\Controllers\office\FCategoryController;
 use App\Http\Controllers\office\UnitWorkPlanController;
 use App\Http\Controllers\Hr\Hr_Unit_work_planController;
 use App\Http\Controllers\VwplantillastructureController;
+use App\Http\Controllers\office\EmployeeRatingController;
 use App\Http\Controllers\Planning\Planning_Unit_work_planController;
 use App\Http\Controllers\office\DashboardController as OfficeDashboardController;
 
@@ -28,7 +29,9 @@ Route::post('/login', [AuthController::class, 'login']);  // change route login
 // Route::get('/user_info', [UserController::class, 'getUserInfo']);
 
 
-
+// Rating
+Route::get('employee/target-periods/{control_no}', [EmployeeRatingController::class, 'targetPeriodEmployee']);
+Route::get('employee/target-periods/details/{targetperiodId}', [EmployeeRatingController::class, 'targetPeriodDetails']);
 
 
 
@@ -93,7 +96,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/mfos', [MfoController::class, 'index']);
     Route::get('/mfos/soft-deleted', [MfoController::class, 'getSoftDeleted']);
     Route::post('/mfos/{id}', [MfoController::class, 'update']);
-    Route::delete('/mfos/{id}', [MfoController::class, 'softDelete']);
+    Route::delete('/mfos/{id}', [MfoController::class, 'delete']);
     Route::patch('/mfos/restore/{id}', [MfoController::class, 'restore']);
 
     Route::post('/add_output', [FOutpotController::class, 'store']);
@@ -122,10 +125,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/user_activity_log', [Activity_log_Controller::class, 'index']);
 
-    Route::get('/opcr/divisions', [OpcrController::class, 'index']);
-    Route::get('/opcr/office-head-functions/{officeId}', [OpcrController::class, 'getOfficeHeadFunctions']);
-    Route::post('/opcr/save', [OpcrController::class, 'saveOpcr']);
-    Route::get('/opcr/view/{officeId}', [OpcrController::class, 'view']);
+    // Route::get('/opcr/divisions', [OpcrController::class, 'index']);
+    // Route::get('/opcr/office-head-functions/{officeId}', [OpcrController::class, 'getOfficeHeadFunctions']);
+    // Route::post('/opcr/save', [OpcrController::class, 'saveOpcr']);
+    Route::get('/opcr/{controlNo}/{semester}/{year}', [OpcrController::class, 'getOpcr']); // get the opcr of office
+    Route::post('/opcr/store', [OpcrController::class, 'storeOpcr']); // save the opcr
+
 
     // HR Routes
     Route::prefix('hr')->group(function () {
@@ -167,12 +172,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/office/structure', [SpmsController::class, 'plantillaStructureSpms']);
         Route::get('/target_periods/semester-year', [SpmsController::class, 'getTargetPeriodsSemesterYear']); // geting the year and semester
         Route::get('/employee/{ControlNo}/{semester}/{year}', [UnitWorkPlanController::class, 'getUnitworkplan']); // allow any characters, including leading zeros
-        Route::get('/employee/{control_no}', [SpmsController::class, 'getEmployeeHaveUnitWorkPlan']); // geting the year and semester
+        // Route::get('/employee/{control_no}', [SpmsController::class, 'getEmployeeHaveUnitWorkPlan']); // geting the year and semester
 
     });
 
     // unit work plan of the employee
     Route::prefix('unit_work_plan')->group(function () {
+        Route::post('/', [UnitWorkPlanController::class, 'getUniWorkPlanOfficeOrganization']);
         Route::post('/store', [UnitWorkPlanController::class, 'storeUnitWorkPlan']);
         Route::put('/update/{controlNo}/{semester}/{year}', [UnitWorkPlanController::class, 'updateUnitWorkPlan']);
         Route::delete('/delete/{controlNo}/{semester}/{year}', [UnitWorkPlanController::class, 'deleteUnitWorkPlan']);
@@ -192,6 +198,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/search', [EmployeeController::class, 'searchEmployees']);
         Route::delete('/delete/{id}', [EmployeeController::class, 'deleteEmployee']);
         Route::get('/{controlNo}', [UnitWorkPlanController::class, 'findEmployee']);
+
     });
 
    // Target Period Library

@@ -15,12 +15,12 @@ class TargetPeriod extends Model
         'control_no',
         'semester',
         'year',
-        'office',
-        'office2',
-        'group',
-        'division',
-        'section',
-        'unit',
+        // 'office',
+        // 'office2',
+        // 'group',
+        // 'division',
+        // 'section',
+        // 'unit',
         'status'
 
 

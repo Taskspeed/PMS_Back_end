@@ -37,9 +37,19 @@ class PerformanceStandard extends Model
     {
         return $this->belongsTo(TargetPeriod::class);
     }
+    public function standardOutcomes()
+    {
+        return $this->hasMany(StandardOutcome::class, 'performance_standard_id');
+    }
+
 
     public function configurations()
     {
-        return $this->hasMany(Configuration::class, 'performance_standard_id');
+        return $this->hasMany(PerformanceConfigurations::class, 'performance_standard_id');
+    }
+
+    public function opcr()
+    {
+        return $this->hasOne(Opcr::class, 'performance_standard_id');
     }
 }

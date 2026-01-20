@@ -178,7 +178,7 @@ class EmployeeController extends Controller
 
     {
         $validated = $request->validate([
-            'rank' => 'required|in:Supervisor,Employee,Managerial,Rank-in-File,Section-Head,Office-Head,Division-Head'
+            'rank' => 'required|string'
         ]);
 
         $employee = Employee::findOrFail($id);
@@ -302,66 +302,68 @@ class EmployeeController extends Controller
     // }
 
     // //search employees by name or designation
-    // public function searchEmployees(Request $request)
-    // {
-    //     $searchTerm = $request->query('search');
-    //     $unassignedOnly = $request->query('unassigned_only', false);
+    public function searchEmployees(Request $request)
+    {
+        $searchTerm = $request->query('search');
+        $unassignedOnly = $request->query('unassigned_only', false);
 
-    //     if (empty($searchTerm)) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Search term is required'
-    //         ], 400);
-    //     }
+        if (empty($searchTerm)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Search term is required'
+            ], 400);
+        }
 
-    //     try {
-    //         $query = vwActive::select(
-    //             'vwActive.Name4 as name',
-    //             'vwActive.Office as office',
+        try {
+            $query = vwActive::select(
+                'vwActive.Name4 as name',
+                'vwActive.Office as office',
 
-    //             'vwActive.Designation as position',
-    //             'vwActive.ControlNo',
-    //             'vwplantillaStructure.ItemNo',
-    //             'vwplantillaStructure.PageNo',
-    //             'vwplantillaStructure.PositionID',
-    //             'vwplantillaStructure.ID as tblStructureID',
-    //             // 'vwplantillalevel.ID as tblStructureID',
-    //             'vwplantillalevel.SG',
-    //             'vwplantillalevel.SGLevel',
-    //         )
-    //             ->leftJoin('vwplantillaStructure', 'vwActive.ControlNo', '=', 'vwplantillaStructure.ControlNo')
-    //             ->leftJoin('vwplantillalevel', 'vwplantillalevel.ID', '=', 'vwplantillaStructure.ID')
-    //             ->where(function ($q) use ($searchTerm) {
-    //                 $q->where('vwActive.Name4', 'LIKE', "%{$searchTerm}%")
-    //                     ->orWhere('vwActive.Designation', 'LIKE', "%{$searchTerm}%");
-    //             });
+                'vwActive.Designation as position',
+                'vwActive.ControlNo',
+                'vwplantillaStructure.ItemNo',
+                'vwplantillaStructure.PageNo',
+                'vwplantillaStructure.PositionID',
+                'vwplantillaStructure.ID as tblStructureID',
+                // 'vwplantillalevel.ID as tblStructureID',
+                'vwplantillalevel.SG',
+                'vwplantillalevel.Level as SGLevel',
+            )
+                ->leftJoin('vwplantillaStructure', 'vwActive.ControlNo', '=', 'vwplantillaStructure.ControlNo')
+                ->leftJoin('vwplantillalevel', 'vwplantillalevel.ID', '=', 'vwplantillaStructure.ID')
+                ->where(function ($q) use ($searchTerm) {
+                    $q->where('vwActive.Name4', 'LIKE', "%{$searchTerm}%")
+                        ->orWhere('vwActive.Designation', 'LIKE', "%{$searchTerm}%");
+                });
 
-    //         if ($unassignedOnly) {
-    //             $query->whereNotExists(function ($q) {
-    //                 $q->select(DB::raw(1))
-    //                     ->from('employees')
-    //                     ->whereRaw('vwActive.Name4 = employees.name');
-    //             });
-    //         }
+            if ($unassignedOnly) {
+                $query->whereNotExists(function ($q) {
+                    $q->select(DB::raw(1))
+                        ->from('employees')
+                        ->whereRaw('vwActive.Name4 = employees.name');
+                });
+            }
 
-    //         $employees = $query->get();
+            $employees = $query->get();
 
-    //         return response()->json([
-    //             'success' => true,
-    //             'data' => $employees
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Search failed: ' . $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
+            return response()->json([
+                'success' => true,
+                'data' => $employees
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Search failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
     public function show_employee(Request $request)
     {
         $user = Auth::user();
 
-        if (!$user || !$user->Office) {
+        if (!$user || !$user->name) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized or no office assigned.'
@@ -370,7 +372,7 @@ class EmployeeController extends Controller
 
         try {
             // Get the user's office name
-            $officeName = $user->Office->Office;
+            $officeName = $user->Office->name;
 
             // Build query with LEFT JOIN
             $query = vwActive::select(
@@ -383,7 +385,8 @@ class EmployeeController extends Controller
                 'vwplantillaStructure.PositionID',
                 'vwplantillaStructure.ID as tblStructureID',
                 'vwplantillalevel.SG',
-                'vwplantillalevel.SGLevel'
+                // 'vwplantillalevel.SGLevel'
+                'vwplantillalevel.Level as SGLevel'
             )
                 ->leftJoin('vwplantillaStructure', 'vwActive.ControlNo', '=', 'vwplantillaStructure.ControlNo')
                 ->leftJoin('vwplantillalevel', 'vwplantillalevel.ID', '=', 'vwplantillaStructure.ID');
@@ -834,7 +837,7 @@ class EmployeeController extends Controller
         $employee = Employee::findOrFail($employeeId);
 
         $employee->delete();
-        
+
         return response()->json(
             [
                 'success' => true,

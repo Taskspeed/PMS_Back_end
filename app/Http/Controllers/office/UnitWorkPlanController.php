@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\addEmployeeUnitWorkPlanRequest;
 use App\Models\Configuration;
+use App\Models\PerformanceConfigurations;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Routing\Controller as BaseController;
 
@@ -40,53 +41,59 @@ class UnitWorkPlanController extends BaseController
 
 
     // unit work plan store function
-    public function storeUnitWorkPlan(addEmployeeUnitWorkPlanRequest $request) //  old working store function
+    public function storeUnitWorkPlan(Request $request) //  old working store function
     {
-        $validated = $request->validate(
+        $validated = $request->validate([
 
-            // 'employees' => 'required|array|min:1',
+            'employees' => 'required|array|min:1',
 
-            // // employee details
-            // 'employees.*.control_no' => 'required|string',
-            // 'employees.*.office' => 'required|string',
-            // 'employees.*.office2' => 'nullable|string',
-            // 'employees.*.group' => 'nullable|string',
-            // 'employees.*.division' => 'nullable|string',
-            // 'employees.*.section' => 'nullable|string',
-            // 'employees.*.unit' => 'nullable|string',
+            // employee details
+            'employees.*.control_no' => 'required|string',
+            'employees.*.office' => 'required|string',
+            'employees.*.office2' => 'nullable|string',
+            'employees.*.group' => 'nullable|string',
+            'employees.*.division' => 'nullable|string',
+            'employees.*.section' => 'nullable|string',
+            'employees.*.unit' => 'nullable|string',
 
-            // // semester and year
-            // 'employees.*.semester' => 'required|string',
-            // 'employees.*.year' => 'required|integer',
+            // semester and year
+            'employees.*.semester' => 'required|string',
+            'employees.*.year' => 'required|integer',
 
-            // // performance standards
-            // 'employees.*.performance_standards' => 'required|array|min:1',
-            // 'employees.*.performance_standards.*.category' => 'required|string',
-            // 'employees.*.performance_standards.*.mfo' => 'required|string',
-            // 'employees.*.performance_standards.*.output' => 'required|string',
-            // 'employees.*.performance_standards.*.core_competency' => 'nullable|array',
-            // 'employees.*.performance_standards.*.technical_competency' => 'nullable|array',
-            // 'employees.*.performance_standards.*.leadership_competency' => 'nullable|array',
-            // 'employees.*.performance_standards.*.success_indicator' => 'required|string',
-            // 'employees.*.performance_standards.*.performance_indicator' => 'required|string',
-            // 'employees.*.performance_standards.*.required_output' => 'required|string',
+            // performance standards
+            'employees.*.performance_standards' => 'required|array|min:1',
+            'employees.*.performance_standards.*.category' => 'required|string',
+            'employees.*.performance_standards.*.mfo' => 'nullable|string',
+            'employees.*.performance_standards.*.output' => 'nullable|string',
+            'employees.*.performance_standards.*.output_name' => 'nullable|string',
+            'employees.*.performance_standards.*.core_competency' => 'nullable|array',
+            'employees.*.performance_standards.*.technical_competency' => 'nullable|array',
+            'employees.*.performance_standards.*.leadership_competency' => 'nullable|array',
+            'employees.*.performance_standards.*.success_indicator' => 'required|string',
+            'employees.*.performance_standards.*.performance_indicator' => 'required|string',
+            'employees.*.performance_standards.*.required_output' => 'required|string',
 
-            // // standatd outcomes / ratings
-            // 'employees.*.performance_standards.*.ratings' => 'required|array|min:1',
-            // 'employees.*.performance_standards.*.ratings.*.rating' => 'nullable|integer',
-            // 'employees.*.performance_standards.*.ratings.*.quantity' => 'nullable|string',
-            // 'employees.*.performance_standards.*.ratings.*.effectiveness' => 'nullable|string',
-            // 'employees.*.performance_standards.*.ratings.*.timeliness' => 'nullable|string',
+            // standatd outcomes / ratings
+            'employees.*.performance_standards.*.ratings' => 'required|array|min:1',
+            'employees.*.performance_standards.*.ratings.*.rating' => 'nullable|integer',
+            'employees.*.performance_standards.*.ratings.*.quantity' => 'nullable|string',
+            'employees.*.performance_standards.*.ratings.*.effectiveness' => 'nullable|string',
+            'employees.*.performance_standards.*.ratings.*.timeliness' => 'nullable|string',
 
-            // 'employees.*.performance_standards.*.config' => 'required|array',
-            // 'employees.*.performance_standards.*.config.*.quantity' => 'required|string',
-            // 'employees.*.performance_standards.*.config.*.timeliness' => 'required|string',
-            // 'employees.*.performance_standards.*.config.*.type' => 'required|string',
+            // CONFIG (single object)
+            'employees.*.performance_standards.*.config' => 'required|array',
+            'employees.*.performance_standards.*.config.target_output' => 'required|string',
+            'employees.*.performance_standards.*.config.quantity_indicator' => 'required|string',
+            'employees.*.performance_standards.*.config.timeliness_indicator' => 'required|string',
+
+            'employees.*.performance_standards.*.config.timelinessType' => 'required|array',
+            'employees.*.performance_standards.*.config.timelinessType.range' => 'required|boolean',
+            'employees.*.performance_standards.*.config.timelinessType.date' => 'required|boolean',
+            'employees.*.performance_standards.*.config.timelinessType.description' => 'required|boolean',
 
 
 
-
-        );
+        ]);
 
         DB::beginTransaction(); // Start transaction
 
@@ -123,9 +130,10 @@ class UnitWorkPlanController extends BaseController
                         'category' => $standard['category'],
                         'mfo' => $standard['mfo'],
                         'output' => $standard['output'],
-                        'core' => $standard['core_competency'] ?? [],
-                        'technical' => $standard['technical_competency'] ?? [],
-                        'leadership' => $standard['leadership_competency'] ?? [],
+                        'output_name' => $standard['output_name'],
+                        'core' => $standard['core_competency'] ?? NULL,
+                        'technical' => $standard['technical_competency'] ?? NULL,
+                        'leadership' => $standard['leadership_competency'] ??  NULL,
                         'performance_indicator' => $standard['performance_indicator'],
                         'success_indicator' => $standard['success_indicator'],
                         'required_output' => $standard['required_output'],
@@ -133,7 +141,7 @@ class UnitWorkPlanController extends BaseController
 
                     foreach ($standard['ratings'] as $rating) {
                         StandardOutcome::create([
-                            'target_period_id' => $targetPeriod->id,
+                            'performance_standard_id' => $performanceStandard->id,
                             'rating' => $rating['rating'],
                             'quantity_target' => $rating['quantity'],
                             'effectiveness_criteria' => $rating['effectiveness'],
@@ -141,14 +149,19 @@ class UnitWorkPlanController extends BaseController
                         ]);
                     }
 
-                    foreach ($standard['config'] as $config) {
-                        Configuration::create([
-                            'performance_standard_id' => $performanceStandard->id,
-                            'quantity' => $config['quantity'],
-                            'timeliness' => $config['timeliness'],
-                            'type' => $config['type'],
-                        ]);
-                    }
+
+
+                    $config = $standard['config']; // single object
+
+                    PerformanceConfigurations::create([
+                        'performance_standard_id' => $performanceStandard->id,
+                        'target_output' => $config['target_output'],
+                        'quantity_indicator' => $config['quantity_indicator'],
+                        'timeliness_indicator' => $config['timeliness_indicator'],
+                        'timeliness_range' => $config['timelinessType']['range'],
+                        'timeliness_date' => $config['timelinessType']['date'],
+                        'timeliness_description' => $config['timelinessType']['description'],
+                    ]);
                 }
             }
 
@@ -178,7 +191,8 @@ class UnitWorkPlanController extends BaseController
             'performance_standards' => 'required|array|min:1',
             'performance_standards.*.category' => 'required|string',
             'performance_standards.*.mfo' => 'required|string',
-            'performance_standards.*.output' => 'required|string',
+            'performance_standards.*.output' => 'nullable|string',
+            'performance_standards.*.output_name' => 'required|string', // ✅ Should match store
             'performance_standards.*.core_competency' => 'nullable|array',
             'performance_standards.*.technical_competency' => 'nullable|array',
             'performance_standards.*.leadership_competency' => 'nullable|array',
@@ -193,9 +207,14 @@ class UnitWorkPlanController extends BaseController
             'performance_standards.*.ratings.*.timeliness' => 'nullable|string',
 
             'performance_standards.*.config' => 'required|array',
-            'performance_standards.*.config.*.quantity' => 'required|string',
-            'performance_standards.*.config.*.timeliness' => 'required|string',
-            'performance_standards.*.config.*.type' => 'required|string',
+            'performance_standards.*.config.target_output' => 'required|string',
+            'performance_standards.*.config.quantity_indicator' => 'required|string',
+            'performance_standards.*.config.timeliness_indicator' => 'required|string',
+
+            'performance_standards.*.config.timelinessType' => 'required|array',
+            'performance_standards.*.config.timelinessType.range' => 'required|boolean',
+            'performance_standards.*.config.timelinessType.date' => 'required|boolean',
+            'performance_standards.*.config.timelinessType.description' => 'required|boolean',
         ]);
 
         DB::beginTransaction();
@@ -239,34 +258,41 @@ class UnitWorkPlanController extends BaseController
                 'status' => 'pending',
             ]);
 
-            // ✅ DELETE CHILD RECORDS IN CORRECT ORDER
-            Configuration::whereIn(
+            // ✅ DELETE CHILD RECORDS IN CORRECT ORDER (reverse dependency)
+            // 1. Delete PerformanceConfigurations first
+            PerformanceConfigurations::whereIn(
                 'performance_standard_id',
                 PerformanceStandard::where('target_period_id', $targetPeriod->id)->pluck('id')
             )->delete();
 
-            StandardOutcome::where('target_period_id', $targetPeriod->id)->delete();
+            // 2. Delete StandardOutcome
+            StandardOutcome::whereIn(
+                'performance_standard_id',
+                PerformanceStandard::where('target_period_id', $targetPeriod->id)->pluck('id')
+            )->delete();
+
+            // 3. Delete PerformanceStandard last
             PerformanceStandard::where('target_period_id', $targetPeriod->id)->delete();
 
             // ✅ RE-CREATE PERFORMANCE STANDARDS
             foreach ($validated['performance_standards'] as $standard) {
-
                 $performanceStandard = PerformanceStandard::create([
                     'target_period_id' => $targetPeriod->id,
                     'category' => $standard['category'],
                     'mfo' => $standard['mfo'],
                     'output' => $standard['output'],
-                    'core' => $standard['core_competency'] ?? null,
-                    'technical' => $standard['technical_competency'] ?? null,
-                    'leadership' => $standard['leadership_competency'] ?? null,
+                    'output_name' => $standard['output_name'], // ✅ ADDED - was missing
+                    'core' => $standard['core_competency'] ??  NULL,
+                    'technical' => $standard['technical_competency'] ??  NULL,
+                    'leadership' => $standard['leadership_competency'] ??  NULL,
                     'performance_indicator' => $standard['performance_indicator'],
                     'success_indicator' => $standard['success_indicator'],
                     'required_output' => $standard['required_output'],
                 ]);
 
+                // ✅ Create ratings (StandardOutcome)
                 foreach ($standard['ratings'] as $rating) {
                     StandardOutcome::create([
-                        'target_period_id' => $targetPeriod->id,
                         'performance_standard_id' => $performanceStandard->id,
                         'rating' => $rating['rating'],
                         'quantity_target' => $rating['quantity'],
@@ -275,14 +301,18 @@ class UnitWorkPlanController extends BaseController
                     ]);
                 }
 
-                foreach ($standard['config'] as $config) {
-                    Configuration::create([
-                        'performance_standard_id' => $performanceStandard->id,
-                        'quantity' => $config['quantity'],
-                        'timeliness' => $config['timeliness'],
-                        'type' => $config['type'],
-                    ]);
-                }
+                // ✅ Create config
+                $config = $standard['config'];
+
+                PerformanceConfigurations::create([
+                    'performance_standard_id' => $performanceStandard->id,
+                    'target_output' => $config['target_output'],
+                    'quantity_indicator' => $config['quantity_indicator'],
+                    'timeliness_indicator' => $config['timeliness_indicator'],
+                    'timeliness_range' => $config['timelinessType']['range'],
+                    'timeliness_date' => $config['timelinessType']['date'],
+                    'timeliness_description' => $config['timelinessType']['description'],
+                ]);
             }
 
             DB::commit();
@@ -329,9 +359,13 @@ class UnitWorkPlanController extends BaseController
             ->where('office_id', $this->officeId)
             ->with([
                 'targetPeriods' => function ($q) use ($year, $semester) {
-                    $q->where('year', $year)
+                    $q->select('id','control_no','year','semester','status')
+                        ->where('year', $year)
                         ->where('semester', $semester)
-                        ->with(['performanceStandards.configurations', 'standardOutcomes']);
+                        ->with([
+                            'performanceStandards.configurations',
+                            'performanceStandards.standardOutcomes:id,performance_standard_id,rating,quantity_target as quantity,effectiveness_criteria as effectiveness,timeliness_range as timeliness'
+                        ]);
                 }
             ])
             ->first();
@@ -341,28 +375,41 @@ class UnitWorkPlanController extends BaseController
         }
 
         // Transform the response
-        // Transform the response
         $employee = $employee->toArray();
-
         foreach ($employee['target_periods'] as &$period) {
-
-            $configs = [];
 
             foreach ($period['performance_standards'] as &$ps) {
 
-                if (!empty($ps['configurations'])) {
-                    $configs = array_merge($configs, $ps['configurations']);
+                // Rename standard_outcomes → ratings
+                if (isset($ps['standard_outcomes'])) {
+                    $ps['ratings'] = $ps['standard_outcomes'];
+                    unset($ps['standard_outcomes']);
                 }
 
-                // ✅ properly remove configurations inside performance_standards
+                // Attach config PER performance standard
+                if (!empty($ps['configurations'])) {
+                    $config = $ps['configurations'][0]; // usually 1 per PS
+
+                    $ps['config'] = [
+                        'targetOutput' => $config['target_output'],
+                        'quantityIndicator' => $config['quantity_indicator'],
+                        'timelinessIndicator' => $config['timeliness_indicator'],
+                        'timelinessType' => [
+                            'range' => (bool) $config['timeliness_range'],
+                            'date' => (bool) $config['timeliness_date'],
+                            'description' => (bool) $config['timeliness_description'],
+                        ],
+                    ];
+                } else {
+                    $ps['config'] = null;
+                }
+
+                // remove raw configurations
                 unset($ps['configurations']);
             }
-
-            // ✅ assign configurations only once at target_period level
-            $period['configurations'] = $configs;
         }
 
-        unset($period, $ps); // good practice
+        unset($period, $ps);
 
 
         return response()->json($employee);
@@ -406,468 +453,429 @@ class UnitWorkPlanController extends BaseController
     }
 
 
-    // public function getUnitworkplan($controlNo, $semester, $year)
+
+    //     public function plantilla(Request $request)
     // {
-    //     $employee = Employee::where('ControlNo', $controlNo)
-    //         ->with([
-    //             'targetPeriods' => function ($q) use ($year, $semester) {
-    //                 $q->where('year', $year)
-    //                     ->where('semester', $semester)
-    //                     ->with(['performanceStandards.configurations', 'standardOutcomes', ]);
-    //             }
-    //         ])
-    //         ->first();
 
-    //     if (!$employee) {
-    //         return response()->json(['message' => 'Employee not found'], 404);
-    //     }
-
-    //     return response()->json($employee);
-    // }
-
-
-
-
-    // public function storeUnitWorkPlan(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'employees' => 'required|array|min:1',
-    //         'employees.*.control_no' => 'required|string',
-    //         'employees.*.office' => 'required|string',
-    //         'employees.*.office2' => 'nullable|string',
-    //         'employees.*.group' => 'nullable|string',
-    //         'employees.*.division' => 'nullable|string',
-    //         'employees.*.section' => 'nullable|string',
-    //         'employees.*.unit' => 'nullable|string',
-    //         'employees.*.semester' => 'required|string',
-    //         'employees.*.year' => 'required|integer',
-    //         'employees.*.performance_standards' => 'required|array|min:1',
-    //         'employees.*.performance_standards.*.category' => 'required|string',
-    //         'employees.*.performance_standards.*.mfo' => 'required|string',
-    //         'employees.*.performance_standards.*.output' => 'required|string',
-    //         'employees.*.performance_standards.*.core_competency' => 'nullable|array',
-    //         'employees.*.performance_standards.*.technical_competency' => 'nullable|array',
-    //         'employees.*.performance_standards.*.leadership_competency' => 'nullable|array',
-    //         'employees.*.performance_standards.*.success_indicator' => 'required|string',
-    //         'employees.*.performance_standards.*.performance_indicator' => 'required|string',
-    //         'employees.*.performance_standards.*.required_output' => 'required|string',
-    //         'employees.*.performance_standards.*.ratings' => 'required|array|min:1',
-    //         'employees.*.performance_standards.*.ratings.*.rating' => 'nullable|integer',
-    //         'employees.*.performance_standards.*.ratings.*.quantity' => 'nullable|string',
-    //         'employees.*.performance_standards.*.ratings.*.effectiveness' => 'nullable|string',
-    //         'employees.*.performance_standards.*.ratings.*.timeliness' => 'nullable|string',
-    //     ]);
-
-    //     foreach ($validated['employees'] as $employeeData) {
-
-    //         // UPDATE OR CREATE TARGET PERIOD
-    //         $targetPeriod = TargetPeriod::updateOrCreate(
-    //             [
-    //                 'control_no' => $employeeData['control_no'],
-    //                 'semester' => $employeeData['semester'],
-    //                 'year' => $employeeData['year'],
-    //             ],
-    //             [
-    //                 'office' => $employeeData['office'],
-    //                 'office2' => $employeeData['office2'] ?? null,
-    //                 'group' => $employeeData['group'] ?? null,
-    //                 'division' => $employeeData['division'] ?? null,
-    //                 'section' => $employeeData['section'] ?? null,
-    //                 'unit' => $employeeData['unit'] ?? null,
-    //                 'status' => 'pending', // always set to pending
-    //             ]
-    //         );
-
-    //         // DELETE existing performance standards and outcomes to replace with new data
-    //         $targetPeriod->performanceStandards()->delete();
-
-    //         $targetPeriod->standardOutcomes()->delete();
-
-    //         // CREATE MULTIPLE PERFORMANCE STANDARDS
-    //         foreach ($employeeData['performance_standards'] as $standard) {
-    //             $performanceStandard = PerformanceStandard::create([
-    //                 'target_period_id' => $targetPeriod->id,
-    //                 'category' => $standard['category'],
-    //                 'mfo' => $standard['mfo'],
-    //                 'output' => $standard['output'],
-    //                 'core' => $standard['core_competency'] ?? NULL,
-    //                 'technical' => $standard['technical_competency'] ?? NULL,
-    //                 'leadership' => $standard['leadership_competency'] ?? NULL,
-    //                 'performance_indicator' => $standard['performance_indicator'],
-    //                 'success_indicator' => $standard['success_indicator'],
-    //                 'required_output' => $standard['required_output'],
+    //             $request->validate([
+    //             'officeId' => 'required|integer|exists:offices,id',
+    //             'office_name' => 'required',
+    //             'organization' => 'required',
+    //               'year' => 'required',
+    //               'semester' => 'required'
     //             ]);
 
-    //             foreach ($standard['ratings'] as $rating) {
-    //                 StandardOutcome::create([
-    //                     'target_period_id' => $targetPeriod->id,
-    //                     'rating' => $rating['rating'],
-    //                     'quantity_target' => $rating['quantity'],
-    //                     'effectiveness_criteria' => $rating['effectiveness'],
-    //                     'timeliness_range' => $rating['timeliness'],
-    //                 ]);
-    //             }
-    //         }
-    //     }
 
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Unit Work Plans for all employees created or updated successfully.'
-    //     ]);
-    // }
+    //         $rows = DB::table('employees as e')
+    //             ->leftJoin('vwActive as a', 'a.ControlNo', '=', 'e.ControlNo')
+    //             ->leftJoin('offices as o', 'o.Office', '=', 'e.office') // or actual related column
 
+    //             // ->leftJoin('offices as o', 'o.name', '=', 'e.office')
+
+    //             ->select(
+    //                 'e.*',
+    //                 'a.Birthdate as birthdate',
+    //                 'a.Surname as lastname',
+    //                 'a.Firstname as firstname',
+    //                 'a.MIddlename as middlename',
+    //                 'e.rank',
+    //                 'e.ControlNo as controlNo',
+    //                 'o.id as office_id'   // ✅ FETCH OFFICE ID
 
 
-    // Add a new endpoint for getting counts
-    // public function getEmployeeCountAndUnitworkplan(Request $request)
-    // {
-    //     $user = Auth::user();
-    //     $officeId = $user->office_id;
-
-    //     if (!$officeId) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Office ID is required'
-    //         ], 400);
-    //     }
-
-    //     // Helper: Only return counts (NO employee list)
-    //     $addWorkplanInfo = function ($grouped) {
-    //         return $grouped->map(function ($group) {
-    //             $total = $group->count();
-    //             $withWorkplan = $group->filter(function ($emp) {
-    //                 return \App\Models\TargetPeriod::where('control_no', $emp->ControlNo)->exists();
-    //             })->count();
-
-    //             return [
-    //                 'unitWorkPlan' => "$withWorkplan/$total"
-    //             ];
-    //         });
-    //     };
-
-    //     // OFFICE (no division/section/unit)
-    //     $officeEmployees = Employee::where('office_id', $officeId)
-    //         ->whereNull('division')
-    //         ->whereNull('section')
-    //         ->whereNull('unit')
-    //         ->select('id', 'name', 'ControlNo')
-    //         ->get();
-
-    //     $officeWorkplan = $officeEmployees->filter(function ($emp) {
-    //         return TargetPeriod::where('control_no', $emp->ControlNo)->exists();
-    //     })->count();
-
-    //     // DIVISIONS
-    //     $divisionData = Employee::where('office_id', $officeId)
-    //         ->whereNotNull('division')
-    //         ->whereNull('section')
-    //         ->whereNull('unit')
-    //         ->select('division', 'ControlNo')
-    //         ->get()
-    //         ->groupBy('division');
-
-    //     $divisionData = $addWorkplanInfo($divisionData);
-
-    //     // SECTIONS
-    //     $sectionData = Employee::where('office_id', $officeId)
-    //         ->whereNotNull('section')
-    //         ->whereNull('unit')
-    //         ->select('section', 'ControlNo')
-    //         ->get()
-    //         ->groupBy('section');
-
-    //     $sectionData = $addWorkplanInfo($sectionData);
-
-    //     // UNITS
-    //     $unitData = Employee::where('office_id', $officeId)
-    //         ->whereNotNull('unit')
-    //         ->select('unit', 'ControlNo')
-    //         ->get()
-    //         ->groupBy('unit');
-
-    //     $unitData = $addWorkplanInfo($unitData);
-
-    //     // GROUPS
-    //     $groupData = Employee::where('office_id', $officeId)
-    //         ->whereNotNull('group')
-    //         ->select('group', 'ControlNo')
-    //         ->get()
-    //         ->groupBy('group');
-
-    //     $groupData = $addWorkplanInfo($groupData);
-
-    //     // OFFICE2
-    //     $office2Data = Employee::where('office_id', $officeId)
-    //         ->whereNotNull('office2')
-    //         ->select('office2', 'ControlNo')
-    //         ->get()
-    //         ->groupBy('office2');
-
-    //     $office2Data = $addWorkplanInfo($office2Data);
-
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'data' => [
-    //             'office' => [
-    //                 'unitWorkPlan' => $officeWorkplan . "/" . $officeEmployees->count()
-    //             ],
-    //             'divisions' => $divisionData,
-    //             'sections' => $sectionData,
-    //             'units' => $unitData,
-    //             'groups' => $groupData,
-    //             'office2' => $office2Data
-    //         ]
-    //     ]);
-    // }
-    //     public function getEmployeeCountAndUnitworkplan(Request $request)
-    //     {
-    //         $user = Auth::user();
-    //         $officeId = $user->office_id;
-
-    //         if (!$officeId) {
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'message' => 'Office ID is required'
-    //             ], 400);
-    //         }
-
-    //         // 1. Get office name
-    //         $officeName = DB::table('offices')->where('id', $officeId)->value('name');
-    //         if (!$officeName) {
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'message' => 'Office not found'
-    //             ], 404);
-    //         }
-
-    //         // 2. Fetch plantilla structure records
-    //         $plantilla = DB::table('vwplantillastructure')
-    //             ->where('office', $officeName)
-    //             ->orderBy('office2')
-    //             ->orderBy('group')
-    //             ->orderBy('division')
-    //             ->orderBy('section')
-    //             ->orderBy('unit')
+    //             )
+    //             ->where('o.id', $request->officeId) // Filter here
+    //             ->orderBy('e.office2')
+    //             ->orderBy('e.group')
+    //             ->orderBy('e.division')
+    //             ->orderBy('e.section')
+    //             ->orderBy('e.unit')
+    //             // ->orderBy('p.itemNo')
     //             ->get();
 
-    //         // 3. Helper count function
-    //         $countWorkplan = function ($query) {
-    //             $total = $query->count();
-    //             $with = $query->filter(function ($emp) {
-    //                 return TargetPeriod::where('control_no', $emp->ControlNo)->exists();
-    //             })->count();
 
-    //             return "$with/$total";
-    //         };
+    //         if ($rows->isEmpty()) {
+    //             return response()->json([]);
+    //         }
 
-    //         // 4. Preload all employees of this office (1 query only)
-    //         $employees = Employee::where('office_id', $officeId)
-    //             ->select('ControlNo', 'office2', 'group', 'division', 'section', 'unit')
-    //             ->get();
 
-    //         // 5. Start final output - FIX: Use filter instead of where for null checks
-    //         $result = [
-    //             "office" => [
-    //                 "name" => $officeName,
-    //                 "unitWorkPlan" => $countWorkplan($employees->filter(function ($e) {
-    //                     return is_null($e->division) && is_null($e->section) && is_null($e->unit);
-    //                 }))
-    //             ],
-    //             "office2" => []
-    //         ];
+    //         $result = [];
 
-    //         /* ============================================================
-    //    LOOP OFFICE2
-    // ============================================================ */
-    //         foreach ($plantilla->unique('office2') as $o2) {
+    //         foreach ($rows->groupBy('office') as $officeName => $officeRows) {
 
-    //             $office2Name = $o2->office2;
-    //             $office2Employees = $employees->where('office2', $office2Name);
-
-    //             $office2Block = [
-    //                 "office2" => $office2Name,
-    //                 "unitWorkPlan" => $countWorkplan($office2Employees),
-    //                 "group" => []
+    //             // $officeLevel = $officeRows->first()->level;
+    //             $officeId = $officeRows->first()->office_id; // ✅ HERE
+    //             $officeData = [
+    //                 'office_id' => (int) $officeId,   // ✅ Correct integer cast
+    //                 'office_name'      => $officeName,
+    //                 // 'level'       => $officeLevel,
+    //                 'employees'   => [],
+    //                 'office2'     => []
     //             ];
 
-    //             /* ============================================================
-    //        LOOP GROUP
-    //     ============================================================ */
-    //             foreach ($plantilla->where('office2', $office2Name)->unique('group') as $grp) {
+    //             $officeEmployees = $officeRows->filter(
+    //                 fn($r) =>
+    //                 is_null($r->office2) &&
+    //                     is_null($r->group) &&
+    //                     is_null($r->division) &&
+    //                     is_null($r->section) &&
+    //                     is_null($r->unit)
+    //             );
+    //             $officeData['employees'] = $officeEmployees
+    //                 ->sortBy('ItemNo')
+    //                 // ->map(fn($r) => $this->mapEmployee($r, $xServiceByControl))
+    //                 ->map(fn($r) => $this->mapEmployee($r))
 
-    //                 $groupName = $grp->group;
-    //                 $groupEmployees = $office2Employees->where('group', $groupName);
+    //                 ->values();
 
-    //                 $groupBlock = [
-    //                     "group" => $groupName,
-    //                     "unitWorkPlan" => $countWorkplan($groupEmployees),
-    //                     "divisions" => [],
-    //                     "sections_without_division" => [],
-    //                     "units_without_division" => []
+    //             $remainingOfficeRows = $officeRows->reject(
+    //                 fn($r) =>
+    //                 is_null($r->office2) &&
+    //                     is_null($r->group) &&
+    //                     is_null($r->division) &&
+    //                     is_null($r->section) &&
+    //                     is_null($r->unit)
+    //             );
+
+    //             foreach ($remainingOfficeRows->groupBy('office2') as $office2Name => $office2Rows) {
+    //                 $office2Data = [
+    //                     'office2'   => $office2Name,
+    //                     'employees' => [],
+    //                     'groups'    => []
     //                 ];
 
-    //                 /* ============================================================
-    //            DIVISIONS
-    //         ============================================================ */
-    //                 $divisions = $plantilla
-    //                     ->where('office2', $office2Name)
-    //                     ->where('group', $groupName)
-    //                     ->whereNotNull('division')
-    //                     ->unique('division');
+    //                 $office2Employees = $office2Rows->filter(
+    //                     fn($r) =>
+    //                     is_null($r->group) &&
+    //                         is_null($r->division) &&
+    //                         is_null($r->section) &&
+    //                         is_null($r->unit)
+    //                 );
+    //                 $office2Data['employees'] = $office2Employees
+    //                     ->sortBy('ItemNo')
+    //                     // ->map(fn($r) => $this->mapEmployee($r, $xServiceByControl))
+    //                     ->map(fn($r) => $this->mapEmployee($r))
 
-    //                 foreach ($divisions as $div) {
-    //                     $divisionName = $div->division;
-    //                     $divisionEmployees = $groupEmployees->where('division', $divisionName);
-
-    //                     $divisionBlock = [
-    //                         "division" => $divisionName,
-    //                         "unitWorkPlan" => $countWorkplan($divisionEmployees),
-    //                         "sections" => [],
-    //                         "units_without_section" => []
-    //                     ];
-
-    //                     // Sections under this division
-    //                     $sections = $plantilla
-    //                         ->where('division', $divisionName)
-    //                         ->whereNotNull('section')
-    //                         ->unique('section');
-
-    //                     foreach ($sections as $sec) {
-    //                         $sectionName = $sec->section;
-    //                         $sectionEmployees = $divisionEmployees->where('section', $sectionName);
-
-    //                         $sectionBlock = [
-    //                             "section" => $sectionName,
-    //                             "unitWorkPlan" => $countWorkplan($sectionEmployees),
-    //                             "units" => []
-    //                         ];
-
-    //                         // Units under this section
-    //                         $units = $plantilla
-    //                             ->where('division', $divisionName)
-    //                             ->where('section', $sectionName)
-    //                             ->pluck('unit')
-    //                             ->unique()
-    //                             ->filter()
-    //                             ->values();
-
-    //                         foreach ($units as $unitName) {
-    //                             $unitEmployees = $sectionEmployees->where('unit', $unitName);
-
-    //                             $sectionBlock["units"][] = [
-    //                                 "unit" => $unitName,
-    //                                 "unitWorkPlan" => $countWorkplan($unitEmployees)
-    //                             ];
-    //                         }
-
-    //                         $divisionBlock["sections"][] = $sectionBlock;
-    //                     }
-
-    //                     // Units without section - FIX: Use filter for null checks
-    //                     $unitsWithoutSection = $plantilla
-    //                         ->where('division', $divisionName)
-    //                         ->filter(function ($item) {
-    //                             return is_null($item->section);
-    //                         })
-    //                         ->pluck('unit')
-    //                         ->unique()
-    //                         ->filter()
-    //                         ->values();
-
-    //                     foreach ($unitsWithoutSection as $u) {
-    //                         $unitEmployees = $divisionEmployees->filter(function ($emp) use ($u) {
-    //                             return is_null($emp->section) && $emp->unit == $u;
-    //                         });
-    //                         $divisionBlock["units_without_section"][] = [
-    //                             "unit" => $u,
-    //                             "unitWorkPlan" => $countWorkplan($unitEmployees)
-    //                         ];
-    //                     }
-
-    //                     $groupBlock["divisions"][] = $divisionBlock;
-    //                 }
-
-    //                 /* ============================================================
-    //            SECTIONS WITHOUT DIVISION
-    //         ============================================================ */
-    //                 $sectionsWithoutDivision = $plantilla
-    //                     ->filter(function ($item) {
-    //                         return is_null($item->division);
-    //                     })
-    //                     ->whereNotNull('section')
-    //                     ->where('group', $groupName)
-    //                     ->where('office2', $office2Name)
-    //                     ->unique('section');
-
-    //                 foreach ($sectionsWithoutDivision as $sec) {
-
-    //                     $sectionName = $sec->section;
-    //                     // FIX: Use filter for null checks on collections
-    //                     $sectionEmployees = $groupEmployees->filter(function ($emp) use ($sectionName) {
-    //                         return is_null($emp->division) && $emp->section == $sectionName;
-    //                     });
-
-    //                     $sectionBlock = [
-    //                         "section" => $sectionName,
-    //                         "unitWorkPlan" => $countWorkplan($sectionEmployees),
-    //                         "units" => []
-    //                     ];
-
-    //                     $units = $plantilla
-    //                         ->where('section', $sectionName)
-    //                         ->filter(function ($item) {
-    //                             return is_null($item->division);
-    //                         })
-    //                         ->pluck('unit')
-    //                         ->unique()
-    //                         ->filter()
-    //                         ->values();
-
-    //                     foreach ($units as $u) {
-    //                         $unitEmployees = $sectionEmployees->where('unit', $u);
-    //                         $sectionBlock["units"][] = [
-    //                             "unit" => $u,
-    //                             "unitWorkPlan" => $countWorkplan($unitEmployees)
-    //                         ];
-    //                     }
-
-    //                     $groupBlock["sections_without_division"][] = $sectionBlock;
-    //                 }
-
-    //                 /* ============================================================
-    //            UNITS WITHOUT DIVISION & SECTION
-    //         ============================================================ */
-    //                 $unitsWithoutDiv = $plantilla
-    //                     ->filter(function ($item) {
-    //                         return is_null($item->division) && is_null($item->section);
-    //                     })
-    //                     ->where('group', $groupName)
-    //                     ->pluck('unit')
-    //                     ->unique()
-    //                     ->filter()
     //                     ->values();
 
-    //                 foreach ($unitsWithoutDiv as $u) {
-    //                     $unitEmployees = $groupEmployees->filter(function ($emp) use ($u) {
-    //                         return is_null($emp->division) && is_null($emp->section) && $emp->unit == $u;
-    //                     });
-    //                     $groupBlock["units_without_division"][] = [
-    //                         "unit" => $u,
-    //                         "unitWorkPlan" => $countWorkplan($unitEmployees)
+    //                 $remainingOffice2Rows = $office2Rows->reject(
+    //                     fn($r) =>
+    //                     is_null($r->group) &&
+    //                         is_null($r->division) &&
+    //                         is_null($r->section) &&
+    //                         is_null($r->unit)
+    //                 );
+
+    //                 foreach ($remainingOffice2Rows->groupBy('group') as $groupName => $groupRows) {
+    //                     $groupData = [
+    //                         'group'     => $groupName,
+    //                         'employees' => [],
+    //                         'divisions' => []
     //                     ];
+
+    //                     $groupEmployees = $groupRows->filter(
+    //                         fn($r) =>
+    //                         is_null($r->division) &&
+    //                             is_null($r->section) &&
+    //                             is_null($r->unit)
+    //                     );
+    //                     $groupData['employees'] = $groupEmployees
+    //                         ->sortBy('ItemNo')
+    //                         // ->map(fn($r) => $this->mapEmployee($r, $xServiceByControl))
+    //                         ->map(fn($r) => $this->mapEmployee($r))
+
+    //                         ->values();
+
+    //                     $remainingGroupRows = $groupRows->reject(
+    //                         fn($r) =>
+    //                         is_null($r->division) &&
+    //                             is_null($r->section) &&
+    //                             is_null($r->unit)
+    //                     );
+
+    //                     // ----- SORT HERE by divordr -----
+    //                     foreach ($remainingGroupRows->sortBy('divordr')->groupBy('division') as $divisionName => $divisionRows) {
+    //                         $divisionData = [
+    //                             'division'  => $divisionName,
+    //                             'employees' => [],
+    //                             'sections'  => []
+    //                         ];
+
+    //                         $divisionEmployees = $divisionRows->filter(
+    //                             fn($r) =>
+    //                             is_null($r->section) &&
+    //                                 is_null($r->unit)
+    //                         );
+    //                         $divisionData['employees'] = $divisionEmployees
+    //                             ->sortBy('ItemNo')
+    //                             // ->map(fn($r) => $this->mapEmployee($r, $xServiceByControl))
+    //                             ->map(fn($r) => $this->mapEmployee($r))
+
+    //                             ->values();
+
+    //                         $remainingDivisionRows = $divisionRows->reject(
+    //                             fn($r) =>
+    //                             is_null($r->section) &&
+    //                                 is_null($r->unit)
+    //                         );
+
+    //                         // ----- SORT HERE by secordr -----
+    //                         foreach ($remainingDivisionRows->sortBy('secordr')->groupBy('section') as $sectionName => $sectionRows) {
+    //                             $sectionData = [
+    //                                 'section'   => $sectionName,
+    //                                 'employees' => [],
+    //                                 'units'     => []
+    //                             ];
+
+    //                             $sectionEmployees = $sectionRows->filter(
+    //                                 fn($r) =>
+    //                                 is_null($r->unit)
+    //                             );
+    //                             $sectionData['employees'] = $sectionEmployees
+    //                                 ->sortBy('ItemNo')
+    //                                 // ->map(fn($r) => $this->mapEmployee($r, $xServiceByControl))
+    //                                 ->map(fn($r) => $this->mapEmployee($r))
+
+    //                                 ->values();
+
+    //                             $remainingSectionRows = $sectionRows->reject(
+    //                                 fn($r) =>
+    //                                 is_null($r->unit)
+    //                             );
+
+    //                             // ----- SORT HERE by unitordr -----
+    //                             foreach ($remainingSectionRows->sortBy('unitordr')->groupBy('unit') as $unitName => $unitRows) {
+    //                                 $sectionData['units'][] = [
+    //                                     'unit'      => $unitName,
+    //                                     'employees' => $unitRows
+    //                                         ->sortBy('ItemNo')
+    //                                         // ->map(fn($r) => $this->mapEmployee($r, $xServiceByControl))
+    //                                         ->map(fn($r) => $this->mapEmployee($r))
+
+    //                                         ->values()
+    //                                 ];
+    //                             }
+
+    //                             $divisionData['sections'][] = $sectionData;
+    //                         }
+
+    //                         $groupData['divisions'][] = $divisionData;
+    //                     }
+
+    //                     $office2Data['groups'][] = $groupData;
     //                 }
 
-    //                 $office2Block["group"][] = $groupBlock;
+    //                 $officeData['office2'][] = $office2Data;
     //             }
 
-    //             $result["office2"][] = $office2Block;
+    //             $result[] = $officeData;
     //         }
+
+
 
     //         return response()->json($result);
     //     }
 
+    //     private function mapEmployee($row)
+    //     {
+    //         return [
+    //             'controlNo'   => $row->controlNo, // ✅ FIX
+    //             'lastname'    => $row->lastname,
+    //             'firstname'   => $row->firstname,
+    //             'middlename'  => $row->middlename,
+    //             'rank'   => $row->rank, // ✅ FIX
+
+    //         ];
+    //     }
 
 
 
+    // fetch unit work plan of the division base on the division and other organization
+    public function getUniWorkPlanOfficeOrganization(Request $request)
+    {
+        $request->validate([
+            'office_name' => 'required|string',
+            'organization' => 'required|string',
+            'semester' => 'required',
+            'year' => 'required',
+        ]);
+
+        /**
+         * =====================================
+         * 0️⃣ VALIDATE ORGANIZATION BELONGS TO OFFICE
+         * =====================================
+         */
+        $orgExistsInOffice = DB::table('employees')
+            ->where('office', $request->office_name)
+            ->where(function ($q) use ($request) {
+                $q->where('office2', $request->organization)
+                    ->orWhere('group', $request->organization)
+                    ->orWhere('division', $request->organization)
+                    ->orWhere('section', $request->organization)
+                    ->orWhere('unit', $request->organization);
+            })
+            ->exists();
+
+        if (!$orgExistsInOffice) {
+            return response()->json([
+                // 'message' => 'Invalid organization. The organization does not belong to the selected office.'
+                'message' => 'There are no employees assigned to the selected organization in this office.'
+
+            ], 422);
+        }
+
+        /**
+         * ===============================
+         * 1️⃣ OFFICE HEAD
+         * ===============================
+         */
+        $officeEmployee = DB::table('employees')
+            ->where('office', $request->office_name)
+            ->whereNull('division')
+            ->whereNull('section')
+            ->whereNull('unit')
+            ->select('ControlNo', 'name', 'rank', 'position')
+            ->first();
+
+        if (!$officeEmployee) {
+            return response()->json([
+                'message' => 'Office head not found.'
+            ], 404);
+        }
+
+        /**
+         * ===============================
+         * 2️⃣ ORGANIZATION EMPLOYEES
+         * ===============================
+         */
+        $employees = DB::table('employees')
+            ->where('office', $request->office_name)
+            ->where(function ($q) use ($request) {
+                $q->where('office2', $request->organization)
+                    ->orWhere('group', $request->organization)
+                    ->orWhere('division', $request->organization)
+                    ->orWhere('section', $request->organization)
+                    ->orWhere('unit', $request->organization);
+            })
+            ->select('ControlNo', 'name', 'rank','position')
+            ->get();
+
+        $controlNos = $employees->pluck('ControlNo');
+
+        $organizationTargetPeriods = TargetPeriod::select('id','control_no','semester','year','status')->with([
+            'employee:ControlNo,name,rank,position',
+            'performanceStandards.standardOutcomes' => function ($query) {
+                $query->select(
+                    'id',
+                    'performance_standard_id',
+                    'rating',
+                    'quantity_target',
+                    'effectiveness_criteria',
+                    'timeliness_range'
+                );
+            },
+        ])
+            ->whereIn('control_no', $controlNos)
+            ->where('semester', $request->semester)
+            ->where('year', $request->year)
+            ->get();
+
+        /**
+         * ===============================
+         * 3️⃣ GET ORGANIZATION MFOs
+         * ===============================
+         */
+        // Extract unique MFOs from organization employees
+        $organizationMFOs = $organizationTargetPeriods
+            ->pluck('performanceStandards')
+            ->flatten()
+            ->pluck('mfo')
+            ->unique()
+            ->values()
+            ->toArray();
+
+        /**
+         * ===============================
+         * 4️⃣ FETCH OFFICE HEAD TARGET PERIOD WITH FILTERED MFOs
+         * ===============================
+         */
+        $officeTargetPeriod = TargetPeriod::select('id','control_no','semester','year','status')->with([
+            'employee:ControlNo,name,rank,position', // this maps via control_no
+            'performanceStandards' => function ($query) use ($organizationMFOs) {
+                $query->select('id','target_period_id','mfo','output', 'core as core_competencies', 'technical as technical_competencies', 'leadership as leadership_competencies','required_output')->whereIn('mfo', $organizationMFOs);
+            },
+            'performanceStandards.standardOutcomes' => function ($query) {
+                $query->select(
+                    'id',
+                    'performance_standard_id',
+                    'rating',
+                    'quantity_target',
+                    'effectiveness_criteria',
+                    'timeliness_range'
+                );
+            },
+        ])
+            ->where('control_no', $officeEmployee->ControlNo)
+            ->where('semester', $request->semester)
+            ->where('year', $request->year)
+            ->first();
+
+
+        /**
+         * ===============================
+         * FINAL RESPONSE
+         * ===============================
+         */
+        return response()->json([
+            'office' => [
+                'name' => $request->office_name,
+                'employee' => [
+                    'ControlNo' => $officeEmployee->ControlNo,
+                    'name'      => $officeEmployee->name,
+                    'rank'      => $officeEmployee->rank,
+                    'position'  => $officeEmployee->position,
+                ],
+                'target_periods' => $officeTargetPeriod
+                    ? collect([$officeTargetPeriod])->map(function ($tp) {
+                        return [
+                            'id' => $tp->id,
+                            'control_no' => $tp->control_no,
+                            'semester' => $tp->semester,
+                            'year' => $tp->year,
+                            'status' => $tp->status,
+                            'performance_standards' => $tp->performanceStandards,
+                        ];
+                    })
+                    : []
+            ],
+
+            'organization' => [
+                'name' => $request->organization,
+                'employees' => $organizationTargetPeriods
+                    ->groupBy('control_no')
+                    ->map(function ($periods) {
+                        $employee = $periods->first()->employee;
+
+                        return [
+                            'employee' => [
+                                'ControlNo' => $employee->ControlNo,
+                                'name' => $employee->name,
+                                'rank' => $employee->rank,
+                                'position' => $employee->position,
+                            ],
+                            'target_periods' => $periods->map(function ($tp) {
+                                return [
+                                    'id' => $tp->id,
+                                    'control_no' => $tp->control_no,
+                                    'semester' => $tp->semester,
+                                    'year' => $tp->year,
+                                    'status' => $tp->status,
+                                    'performance_standards' => $tp->performanceStandards,
+                                ];
+                            })->values()
+                        ];
+                    })->values()
+            ]
+        ]);
+    }
 }

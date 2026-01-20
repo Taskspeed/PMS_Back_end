@@ -68,4 +68,16 @@ class Employee extends Model
             ->useLogName('Employee')
             ->logOnlyDirty();
     }
+
+    // public function performanceStandards()
+    // {
+    //     return $this->hasManyThrough(
+    //         PerformanceStandard::class,
+    //         TargetPeriod::class,
+    //         'control_no',        // FK on target_periods
+    //         'target_period_id',  // FK on performance_standards
+    //         'ControlNo',         // Local key on employees
+    //         'id'                 // Local key on target_periods
+    //     );
+    // }
 }

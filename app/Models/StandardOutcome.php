@@ -11,7 +11,7 @@ class StandardOutcome extends Model
 
 
     protected $fillable = [
-        'target_period_id',
+        'performance_standard_id',
         'rating',
         'quantity_target',
         'effectiveness_criteria',
@@ -19,9 +19,9 @@ class StandardOutcome extends Model
 
 
     ];
-    public function targetPeriod()
+    public function performanceStandards()
     {
-        return $this->belongsTo(TargetPeriod::class);
+        return $this->belongsTo(PerformanceStandard::class);
     }
 
 }

@@ -14,7 +14,7 @@ class F_CategorySeeder extends Seeder
     public function run(): void
     {
         //
-        F_category::create([ 'name'=>'A. STRATEGIC FUNCTION']);
+        F_category::create(['name'=>'A. STRATEGIC FUNCTION']);
         F_category::create(['name' => 'B. CORE FUNCTION',]);
         F_category::create(['name' => 'C. SUPPORT FUNCTION', ]);
     }

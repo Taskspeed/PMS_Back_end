@@ -121,24 +121,24 @@ class MfoController extends Controller
     }
 
 
-     // Fetch only active (non-deleted) mfo
-         public function index(){
+    //  // Fetch only active (non-deleted) mfo
+    //      public function index(){
 
-          $mfos = mfo::whereNull('deleted_at')->get();
+    //       $mfos = mfo::whereNull('deleted_at')->get();
 
-        return response()->json($mfos);
-    }
+    //     return response()->json($mfos);
+    // }
 
-    // fetch_mfo_SoftDeleted
-    public function getSoftDeleted(){
+    // // fetch_mfo_SoftDeleted
+    // public function getSoftDeleted(){
 
-        $mfos = mfo::onlyTrashed()->get();
+    //     $mfos = mfo::onlyTrashed()->get();
 
-        return response()->json($mfos);
-    }
+    //     return response()->json($mfos);
+    // }
 
     // softDelete for MFO
-    public function softDelete($id){
+    public function delete($id){
 
         $mfos = mfo::findOrFail($id);
         $mfos->delete();
@@ -153,18 +153,18 @@ class MfoController extends Controller
 
     }
 
-    // restore soft-deleted data
-    public function restore($id){
+    // // restore soft-deleted data
+    // public function restore($id){
 
-        $mfos = mfo::onlyTrashed()->findOrFail($id);
-        $mfos->restore();
+    //     $mfos = mfo::onlyTrashed()->findOrFail($id);
+    //     $mfos->restore();
 
-        activity()
-            ->performedOn($mfos)
-            ->causedBy(Auth::user())
-            ->withProperties(['name' =>  $mfos->name])
-            ->log('MFO restored');
+    //     activity()
+    //         ->performedOn($mfos)
+    //         ->causedBy(Auth::user())
+    //         ->withProperties(['name' =>  $mfos->name])
+    //         ->log('MFO restored');
 
-        return response()->json(['message' => 'MFO restored successfully']);
-    }
+    //     return response()->json(['message' => 'MFO restored successfully']);
+    // }
 }
