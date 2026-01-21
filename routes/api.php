@@ -32,6 +32,8 @@ Route::post('/login', [AuthController::class, 'login']);  // change route login
 // Rating
 Route::get('employee/target-periods/{controlNo}', [EmployeeRatingController::class, 'targetPeriodEmployee']);
 Route::get('employee/target-periods/details/{targetperiodId}', [EmployeeRatingController::class, 'targetPeriodDetails']);
+Route::get('employee/list/rated/{control_no}', [EmployeeRatingController::class, 'getListOfRatingEmployee']);
+
 Route::post('employee/store/rating', [EmployeeRatingController::class, 'performanceRatingStore']);
 
 
@@ -67,10 +69,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
     });
 
-    Route::get('/ipcr/employee/{ControlNo}/{year}/{semester}', [IpcrController::class, 'getIpcr']); // allow any characters, including leading zeros
-    // Route::get('/ipcr/employee/unit_work_plan', [IpcrController::class, 'getEmployeesWithUnitWorkPlans']);
-    Route::put('ipcr/employee/target-periods/{controlNo}/{semester}/{year}',[IpcrController::class, 'approveIpcrEmployee']);
 
+    Route::prefix('ipcr')->group(function(){
+        Route::get('/employee/{ControlNo}/{year}/{semester}', [IpcrController::class, 'getIpcr']); // allow any characters, including leading zeros
+        Route::get('/performance-standard/{targerperiodId}', [IpcrController::class, 'getPerformanceStandard']); // allow any characters, including leading zeros
+        Route::get('/monthly-performance/{targerperiodId}', [IpcrController::class, 'getMonthlyRate']); // allow any characters, including leading zeros
+        Route::get('/summary-monthly-performance/{targerperiodId}', [IpcrController::class, 'getSummaryMonthlyRate']); // allow any characters, including leading zeros
+
+        Route::put('/employee/target-periods/{controlNo}/{semester}/{year}', [IpcrController::class, 'approveIpcrEmployee']);
+
+    });
 
 
     Route::prefix('user')->group(function(){

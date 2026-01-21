@@ -29,6 +29,9 @@ class performanceRatingStoreRequest extends FormRequest
             'performance_rate.*.quantity_target_rate' => 'required|string',
             'performance_rate.*.effectiveness_criteria_rate' => 'required|string',
             'performance_rate.*.timeliness_range_rate' => 'required|string',
+            'performance_rate.*.quantity_actual' => 'required|string',
+            'performance_rate.*.effectiveness_actual' => 'required|string',
+            'performance_rate.*.timeliness_actual' => 'required|string',
         ];
     }
 
@@ -57,6 +60,15 @@ class performanceRatingStoreRequest extends FormRequest
 
             'performance_rate.*.timeliness_range_rate.required' =>
             'Timeliness rating is required.',
+
+            'performance_rate.*.quantity_actual.required' =>
+            'Quantity actual is required.',
+
+            'performance_rate.*.effectiveness_actual.required' =>
+            'Effectiveness actual is required.',
+
+            'performance_rate.*.timeliness_actual.required' =>
+            'Timeliness actual  is required.',
         ];
     }
 }

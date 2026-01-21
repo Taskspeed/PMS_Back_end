@@ -32,11 +32,19 @@ class PerformanceStandard extends Model
         'technical' => 'array',
         'leadership' => 'array',
     ];
+ 
+
 
     public function targetPeriod()
     {
         return $this->belongsTo(TargetPeriod::class);
     }
+
+    public function performanceRating()
+    {
+        return $this->hasMany(PerformanceRating::class);
+    }
+
     public function standardOutcomes()
     {
         return $this->hasMany(StandardOutcome::class, 'performance_standard_id');

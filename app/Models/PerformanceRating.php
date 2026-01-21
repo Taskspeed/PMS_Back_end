@@ -19,7 +19,17 @@ class PerformanceRating extends Model
         'date',
         'quantity_target_rate',
         'effectiveness_criteria_rate',
-        'timeliness_range_rate'
+        'timeliness_range_rate',
+        'quantity_actual',
+        'effectiveness_actual',
+        'timeliness_actual',
+
 
     ];
+
+
+    public function performanceStandard()
+    {
+        return $this->belongsTo(PerformanceStandard::class,);
+    }
 }
