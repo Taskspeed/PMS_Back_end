@@ -70,7 +70,7 @@ class UnitWorkPlanController extends BaseController
             'employees.*.performance_standards.*.technical_competency' => 'nullable|array',
             'employees.*.performance_standards.*.leadership_competency' => 'nullable|array',
             'employees.*.performance_standards.*.success_indicator' => 'required|string',
-            'employees.*.performance_standards.*.performance_indicator' => 'required|string',
+            'employees.*.performance_standards.*.performance_indicator' => 'required|array',
             'employees.*.performance_standards.*.required_output' => 'required|string',
 
             // standatd outcomes / ratings
@@ -197,7 +197,7 @@ class UnitWorkPlanController extends BaseController
             'performance_standards.*.technical_competency' => 'nullable|array',
             'performance_standards.*.leadership_competency' => 'nullable|array',
             'performance_standards.*.success_indicator' => 'required|string',
-            'performance_standards.*.performance_indicator' => 'required|string',
+            'performance_standards.*.performance_indicator' => 'required|array',
             'performance_standards.*.required_output' => 'required|string',
 
             'performance_standards.*.ratings' => 'required|array|min:1',
@@ -246,12 +246,12 @@ class UnitWorkPlanController extends BaseController
             }
 
             // OPTIONAL: prevent update if approved
-            if ($targetPeriod->status === 'approve') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Approved Unit Work Plan cannot be edited.'
-                ], 403);
-            }
+            // if ($targetPeriod->status === 'approve') {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'Approved Unit Work Plan cannot be edited.'
+            //     ], 403);
+            // }
 
             // ✅ Reset status
             $targetPeriod->update([
@@ -332,6 +332,9 @@ class UnitWorkPlanController extends BaseController
         }
     }
 
+
+
+
     // find employee
     public function findEmployee(Request $request, $controlNo)
     {
@@ -359,7 +362,7 @@ class UnitWorkPlanController extends BaseController
             ->where('office_id', $this->officeId)
             ->with([
                 'targetPeriods' => function ($q) use ($year, $semester) {
-                    $q->select('id','control_no','year','semester','status')
+                    $q->select('id', 'control_no', 'year', 'semester', 'status')
                         ->where('year', $year)
                         ->where('semester', $semester)
                         ->with([
@@ -422,7 +425,7 @@ class UnitWorkPlanController extends BaseController
         // ✅ STEP 1: Find employee with office restriction
         $employee = Employee::where('ControlNo', $controlNo)
             ->where('office_id', $this->officeId)
-            ->first();
+            ->firstOrFail();
 
         if (!$employee) {
             return response()->json([
@@ -734,7 +737,7 @@ class UnitWorkPlanController extends BaseController
             ->whereNull('division')
             ->whereNull('section')
             ->whereNull('unit')
-            ->select('ControlNo', 'name', 'rank', 'position')
+            ->select('ControlNo', 'name', 'rank', 'position','sg','level')
             ->first();
 
         if (!$officeEmployee) {
@@ -757,13 +760,13 @@ class UnitWorkPlanController extends BaseController
                     ->orWhere('section', $request->organization)
                     ->orWhere('unit', $request->organization);
             })
-            ->select('ControlNo', 'name', 'rank','position')
+            ->select('ControlNo', 'name', 'rank', 'position', 'sg', 'level')
             ->get();
 
         $controlNos = $employees->pluck('ControlNo');
 
-        $organizationTargetPeriods = TargetPeriod::select('id','control_no','semester','year','status')->with([
-            'employee:ControlNo,name,rank,position',
+        $organizationTargetPeriods = TargetPeriod::select('id', 'control_no', 'semester', 'year', 'status')->with([
+            'employee:ControlNo,name,rank,position,sg,level',
             'performanceStandards.standardOutcomes' => function ($query) {
                 $query->select(
                     'id',
@@ -799,10 +802,10 @@ class UnitWorkPlanController extends BaseController
          * 4️⃣ FETCH OFFICE HEAD TARGET PERIOD WITH FILTERED MFOs
          * ===============================
          */
-        $officeTargetPeriod = TargetPeriod::select('id','control_no','semester','year','status')->with([
+        $officeTargetPeriod = TargetPeriod::select('id', 'control_no', 'semester', 'year', 'status')->with([
             'employee:ControlNo,name,rank,position', // this maps via control_no
             'performanceStandards' => function ($query) use ($organizationMFOs) {
-                $query->select('id','target_period_id','mfo','output', 'core as core_competencies', 'technical as technical_competencies', 'leadership as leadership_competencies','required_output')->whereIn('mfo', $organizationMFOs);
+                $query->select('id', 'target_period_id', 'mfo', 'output', 'core as core_competencies', 'technical as technical_competencies', 'leadership as leadership_competencies', 'required_output','success_indicator')->whereIn('mfo', $organizationMFOs);
             },
             'performanceStandards.standardOutcomes' => function ($query) {
                 $query->select(
@@ -834,6 +837,8 @@ class UnitWorkPlanController extends BaseController
                     'name'      => $officeEmployee->name,
                     'rank'      => $officeEmployee->rank,
                     'position'  => $officeEmployee->position,
+                    'sg'  => $officeEmployee->sg,
+                    'level'  => $officeEmployee->level,
                 ],
                 'target_periods' => $officeTargetPeriod
                     ? collect([$officeTargetPeriod])->map(function ($tp) {
@@ -862,6 +867,8 @@ class UnitWorkPlanController extends BaseController
                                 'name' => $employee->name,
                                 'rank' => $employee->rank,
                                 'position' => $employee->position,
+                                'sg'  => $employee->sg,
+                                'level'  => $employee->level,
                             ],
                             'target_periods' => $periods->map(function ($tp) {
                                 return [

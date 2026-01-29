@@ -11,24 +11,24 @@ use Illuminate\Routing\Controller as BaseController;
 
 class IpcrController extends BaseController
 {
-    protected $user;
-    protected $officeId;
+    // protected $user;
+    // protected $officeId;
 
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            $this->user     = Auth::user();
-            $this->officeId = $this->user->office_id;
+    // public function __construct()
+    // {
+    //     $this->middleware(function ($request, $next) {
+    //         $this->user     = Auth::user();
+    //         $this->officeId = $this->user->office_id;
 
-            return $next($request);
-        });
-    }
+    //         return $next($request);
+    //     });
+    // }
 
     // getting the ipcr of the employee based on controlno and year
     public function getIpcr($controlNo, $year, $semester)
     {
         $employee = Employee::where('ControlNo', $controlNo)
-            ->where('office_id', $this->officeId) // ✅ OFFICE RESTRICTION
+            // ->where('office_id', $this->officeId) // ✅ OFFICE RESTRICTION
             ->with([
                 'targetPeriods' => function ($q) use ($year, $semester) {
                     $q->where('year', $year)
@@ -94,7 +94,7 @@ class IpcrController extends BaseController
 
         // Get employee with office restriction
         $employee = Employee::where('ControlNo', $controlNo)
-            ->where('office_id', $this->officeId)
+            // ->where('office_id', $this->officeId)
             ->first();
 
         if (! $employee) {

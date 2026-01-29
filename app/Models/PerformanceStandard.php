@@ -31,8 +31,9 @@ class PerformanceStandard extends Model
         'core' => 'array',
         'technical' => 'array',
         'leadership' => 'array',
+        'performance_indicator' => 'array',
     ];
- 
+
 
 
     public function targetPeriod()

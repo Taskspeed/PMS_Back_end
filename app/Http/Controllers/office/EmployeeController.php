@@ -375,11 +375,13 @@ class EmployeeController extends Controller
             $officeName = $user->Office->name;
 
             // Build query with LEFT JOIN
-            $query = vwActive::select(
+           $query = vwActive::select(
                 'vwActive.Office as office',
                 'vwActive.Name4 as name',
                 'vwActive.Designation as position',
                 'vwActive.ControlNo',
+                'vwActive.Status',
+                'vwActive.Grades',
                 'vwplantillaStructure.ItemNo',
                 'vwplantillaStructure.PageNo',
                 'vwplantillaStructure.PositionID',
@@ -390,6 +392,9 @@ class EmployeeController extends Controller
             )
                 ->leftJoin('vwplantillaStructure', 'vwActive.ControlNo', '=', 'vwplantillaStructure.ControlNo')
                 ->leftJoin('vwplantillalevel', 'vwplantillalevel.ID', '=', 'vwplantillaStructure.ID');
+            // if the employee is CASUAL use his grade to Convert  this sg and get his level
+
+
 
             // Only filter by office if show_all is false
             $showAll = $request->query('show_all', false);
@@ -408,6 +413,59 @@ class EmployeeController extends Controller
             }
 
             $employees = $query->get();
+            $employees->transform(function ($emp) {
+
+                // Only CASUAL employees
+                if ($emp->Status === 'CASUAL' && !empty($emp->Grades)) {
+
+                    // Grade → SG mapping
+                    $map = [
+                        'C1' => '10',
+                        'C2' => '11',
+                        'C3' => '12',
+                        'C4' => '13',
+                        'C5' => '14',
+                        'C6' => '15',
+                        'C7' => '16',
+                        'C8' => '17',
+                        'C9' => '18',
+                        'D1' => '11',
+                        'D2' => '12',
+                        'D3' => '13',
+                        'D4' => '14',
+                        'D5' => '15',
+                        'D6' => '16',
+                        'D7' => '17',
+                        'D8' => '18',
+                        'D9' => '19',
+                        'E1' => '21',
+                        'E2' => '22',
+                        'E3' => '23',
+                        'E4' => '24',
+                        'E5' => '25',
+                        'E6' => '26',
+                        'E7' => '27',
+                        'E8' => '28',
+                        'E9' => '29',
+                    ];
+
+                    $grade = strtoupper(trim($emp->Grades));
+
+                    if (isset($map[$grade])) {
+
+                        // Set SG from grade
+                        $emp->SG = $map[$grade];
+
+                        // Compute level
+                        // SG 1–10 = Level 1
+                        // SG 11–30 = Level 2
+                        $emp->SGLevel = ($emp->SG <= 10) ? '1' : '2';
+                    }
+                }
+
+                return $emp;
+            });
+
 
             return response()->json([
                 'success' => true,
@@ -421,6 +479,45 @@ class EmployeeController extends Controller
             ], 500);
         }
     }
+
+    // private function SgLeveL(){ // for  casual status only
+    //     // this is the convert to sg example is the employee are have C1 on his grade  is means he got sg 10
+    //     $C1 =  10;
+    //     $C2 =  2;
+    //     $C3 =  3;
+    //     $C4 =  4;
+    //     $C5 =  5;
+    //     $C6 =  6;
+    //     $C7 =  7;
+    //     $C8 =  8;
+    //     $C9 =  9;
+
+    //     $D1 = 11;
+    //     $D2 = 12;
+    //     $D3 = 13;
+    //     $D4 = 14;
+    //     $D5 = 15;
+    //     $D6 = 16;
+    //     $D7 = 17;
+    //     $D8 = 18;
+    //     $D9 = 19;
+
+    //     $E1 = 21;
+    //     $E2 = 22;
+    //     $E3 = 23;
+    //     $E4 = 24;
+    //     $E5 = 25;
+    //     $E6 = 26;
+    //     $E7 = 27;
+    //     $E8 = 28;
+    //     $E9 = 29;
+
+    //     // to get the level to all sg 1-10 = 1 and sg 11-30  = 2
+
+
+
+
+    // }
 
 
     // // Search employees by name or designation
