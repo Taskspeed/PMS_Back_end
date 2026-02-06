@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\office;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Library\OutputRequest;
+
+use App\Http\Requests\Library\OutputUpdateRequest;
 use App\Models\F_outpot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,14 +15,13 @@ class FOutpotController extends Controller
 {
 
 
-
-    public function store(Request $request)
+    public function storeOutput(OutputRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'f_category_id' => 'required|exists:f_categories,id',
-            'office_id' => 'required|exists:offices,id'
-        ]);
+        // $request->validate([
+        //     'name' => 'required|string|max:255',
+        //     'f_category_id' => 'required|exists:f_categories,id',
+        //     'office_id' => 'required|exists:offices,id'
+        // ]);
 
         $outputData = [
             'f_category_id' => $request->f_category_id,
@@ -48,13 +50,13 @@ class FOutpotController extends Controller
     }
 
 
-    public function update(Request $request, $id)
+    public function updateOutput(OutputUpdateRequest $request, $id)
     {
         // Validate the request
-        $request->validate([
-            // 'mfo_id' => 'required|exists:mfos,id',
-            'name' => 'required|string|max:255',
-        ]);
+        // $request->validate([
+        //     // 'mfo_id' => 'required|exists:mfos,id',
+        //     'name' => 'required|string|max:255',
+        // ]);
 
         // Find the output by ID
         $output = F_outpot::findOrFail($id);
@@ -77,23 +79,23 @@ class FOutpotController extends Controller
 
 
     // Fetch only active (non-deleted) outputs
-    public function index()
-    {
-        $outputs = F_outpot::whereNull('deleted_at')->get(); // Only fetch non-deleted data
-        return response()->json($outputs);
-    }
+    // public function index()
+    // {
+    //     $outputs = F_outpot::whereNull('deleted_at')->get(); // Only fetch non-deleted data
+    //     return response()->json($outputs);
+    // }
 
     // fetch_output_SoftDeleted
-    public function getSoftDeleted()
-    {
-        $outputs = F_outpot::onlyTrashed()->get(); // Fetch only soft-deleted records
+    // public function getSoftDeleted()
+    // {
+    //     $outputs = F_outpot::onlyTrashed()->get(); // Fetch only soft-deleted records
 
-        return response()->json($outputs);
-    }
+    //     return response()->json($outputs);
+    // }
 
 
     // softDelete for outputs
-    public function softDelete($id)
+    public function deleteOutput($id)
     {
         $output = F_outpot::findOrFail($id); // Ensure the model uses SoftDeletes
         $output->delete(); // Soft deletes the record
@@ -110,19 +112,19 @@ class FOutpotController extends Controller
 
 
     // Restore soft-deleted data
-    public function restore($id)
-    {
-        $output = F_outpot::onlyTrashed()->findOrFail($id);
-        $output->restore();
+    // public function restore($id)
+    // {
+    //     $output = F_outpot::onlyTrashed()->findOrFail($id);
+    //     $output->restore();
 
-        activity()
-            ->performedOn($output)
-            ->causedBy(Auth::user())
-            ->withProperties(['name' => $output->name])
-            ->log('Output restored');
+    //     activity()
+    //         ->performedOn($output)
+    //         ->causedBy(Auth::user())
+    //         ->withProperties(['name' => $output->name])
+    //         ->log('Output restored');
 
-        return response()->json(['message' => 'Output restored successfully']);
-    }
+    //     return response()->json(['message' => 'Output restored successfully']);
+    // }
 
 
 

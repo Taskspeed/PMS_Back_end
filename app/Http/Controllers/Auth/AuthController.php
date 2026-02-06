@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Auth_api;
+namespace App\Http\Controllers\Auth;
 
 
 use Carbon\Carbon;
@@ -9,9 +9,11 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\addEmployeeRequest;
-use App\Http\Requests\registerRequest;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\addEmployeeRequest;
+use App\Http\Requests\Auth\ChangePasswordRequest;
+use App\Http\Requests\Auth\RegisterRequest;
 
 
 class AuthController extends Controller
@@ -39,12 +41,12 @@ class AuthController extends Controller
     }
 
 
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string',
-            'password' => 'required|string',
-        ]);
+        // $request->validate([
+        //     'name' => 'required|string',
+        //     'password' => 'required|string',
+        // ]);
 
         // Attempt to find the user
         $user = User::with('office', 'role')->where('name', $request->name)->first();
@@ -84,7 +86,7 @@ class AuthController extends Controller
     }
 
 
-    public function register(registerRequest $request)
+    public function register(RegisterRequest $request) // creating user account
     {
         try {
             // $request->validate([
@@ -158,12 +160,12 @@ class AuthController extends Controller
 
 
     // Add this method to your AuthController.php
-    public function update(Request $request)
+    public function changePassword(ChangePasswordRequest $request)
     {
-        $request->validate([
-            'oldPassword' => 'required|string',
-            'newPassword' => 'nullable|string|min:6|different:oldPassword',
-        ]);
+        // $request->validate([
+        //     'oldPassword' => 'required|string',
+        //     'newPassword' => 'nullable|string|min:6|different:oldPassword',
+        // ]);
 
         try {
             $user = $request->user();

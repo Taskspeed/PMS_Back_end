@@ -14,7 +14,7 @@ use App\Http\Controllers\Hr\dashboardController;
 use App\Http\Controllers\Hr\IndicatorController;
 use App\Http\Controllers\TargetPeriodController;
 use App\Http\Controllers\Activity_log_Controller;
-use App\Http\Controllers\Auth_api\AuthController;
+use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\office\FOutpotController;
 use App\Http\Controllers\office\EmployeeController;
 use App\Http\Controllers\office\FCategoryController;
@@ -44,6 +44,10 @@ Route::prefix('ipcr')->group(function () {
     Route::get('/summary-monthly-performance/{targerperiodId}', [IpcrController::class, 'getSummaryMonthlyRate']); // allow any characters, including leading zeros
 
     Route::put('/employee/target-periods/{controlNo}/{semester}/{year}', [IpcrController::class, 'approveIpcrEmployee']);
+
+    // plantilla strtucture
+    // Route::post('/structure', [IpcrController::class, 'getStructure']);
+
 });
 
 
@@ -86,7 +90,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [UserController::class, 'getUserData']);
         Route::post('/register', [AuthController::class, 'register']); // change route name
         Route::post('/logout', [AuthController::class, 'logout']);
-        Route::post('/update/credentials/{id}', [AuthController::class, 'update']);
+        Route::post('/update/credentials/{id}', [AuthController::class, 'changePassword']);
         Route::get('/account', [AuthController::class, 'userAccount']);
     });
 
@@ -103,18 +107,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     //office
-    Route::post('/add_mfo', [MfoController::class, 'store']);
+    Route::post('/add_mfo', [MfoController::class, 'storeMfo']);
     Route::get('/mfos', [MfoController::class, 'index']);
     Route::get('/mfos/soft-deleted', [MfoController::class, 'getSoftDeleted']);
     Route::post('/mfos/{id}', [MfoController::class, 'update']);
     Route::delete('/mfos/{id}', [MfoController::class, 'delete']);
     Route::patch('/mfos/restore/{id}', [MfoController::class, 'restore']);
 
-    Route::post('/add_output', [FOutpotController::class, 'store']);
-    Route::get('/outputs/soft-deleted', [FOutpotController::class, 'getSoftDeleted']);
-    Route::post('/outputs/{id}', [FOutpotController::class, 'update']);
-    Route::delete('/outputs/{id}', [FOutpotController::class, 'softDelete']);
-    Route::patch('/outputs/restore/{id}', [FOutpotController::class, 'restore']);
+    Route::post('/add_output', [FOutpotController::class, 'storeOutput']);
+    // Route::get('/outputs/soft-deleted', [FOutpotController::class, 'getSoftDeleted']);
+    Route::post('/outputs/{id}', [FOutpotController::class, 'updateOutput']);
+    Route::delete('/outputs/{id}', [FOutpotController::class, 'deleteOutput']);
+    // Route::patch('/outputs/restore/{id}', [FOutpotController::class, 'restore']);
 
 
     // Route::get('/employees-by-office', [EmployeeController::class, 'show_employee']); // fetch employees by office

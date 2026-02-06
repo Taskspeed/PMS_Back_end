@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Hr;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Library\IndicatorStoreRequest;
+use App\Http\Requests\Library\IndicatorUpdateRequest;
 use App\Models\Indicator;
 use Illuminate\Http\Request;
 
@@ -19,30 +21,30 @@ class IndicatorController extends Controller
      }
 
     // store
-    public function storeIndicator(Request $request)
+    public function storeIndicator(IndicatorStoreRequest $request)
     {
-        $validation = $request->validate([
-            'indicator_name' => 'required|string'
-        ]);
+        // $validation = $request->validate([
+        //     'indicator_name' => 'required|string'
+        // ]);
 
         $indicator = Indicator::create([
-            'indicator_name' => $validation['indicator_name']
+            'indicator_name' => $request->indicator_name
         ]);
 
         return response()->json($indicator);
     }
   // update
-    public function updateIndicator($indicatorId, Request $request)
+    public function updateIndicator($indicatorId, IndicatorUpdateRequest $request)
     {
         $indicator = Indicator::findOrFail($indicatorId);
 
         // Validate the incoming data
-        $validated = $request->validate([
-            'indicator_name' => 'required|string'
-        ]);
+        // $validated = $request->validate([
+        //     'indicator_name' => 'required|string'
+        // ]);
 
         // Update using validated data
-        $indicator->update($validated);
+        $indicator->update(['indicator_name' => $request->indicator_name]);
 
 
         return response()->json([

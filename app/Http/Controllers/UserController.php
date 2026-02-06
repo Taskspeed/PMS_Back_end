@@ -30,12 +30,12 @@ class UserController extends Controller
 
 
 
-    public function getUserInfo()
-    {
-        $users = vwActive::where('Surname', 'LIKE', '%mahusay%')->get();
-        return response()->json([
-            'status' => 'success',
-            'data' => $users
-        ]);
-    }
+    // public function getUserInfo()
+    // {
+    //     $users = vwActive::where('Surname', 'LIKE', '%mahusay%')->get();
+    //     return response()->json([
+    //         'status' => 'success',
+    //         'data' => $users
+    //     ]);
+    // }
 }

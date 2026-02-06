@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Library;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class registerRequest extends FormRequest
+class TargetPeriodUpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,12 +22,9 @@ class registerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'control_no' => 'required|string',
-            'name' => 'required|string|unique:users,name',
-            'password' => 'required|string|min:6',
-            'office_id' => 'required|exists:offices,id',
-            'role_id' => 'required|exists:Roles,id',
-            'designation' => 'required|string',
+            //
+            'semester' => 'required|string',
+            'year' => 'required|integer|digits:4',
         ];
     }
 }

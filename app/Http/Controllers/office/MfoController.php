@@ -7,6 +7,8 @@ use App\Models\User; // Ensure this is the Eloquent User model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Library\MfoStoreRequest;
+use App\Http\Requests\Library\MfoUpdateRequest;
 use App\Models\F_category;
 
 class MfoController extends Controller
@@ -62,14 +64,14 @@ class MfoController extends Controller
 
 
     // Handle MFO Creation
-    public function store(Request $request)  // store
+    public function storeMfo(MfoStoreRequest $request)  // store
     {
         // Validate the request
-        $request->validate([
-            'office_id' => 'required|exists:offices,id',
-            'name' => 'required|string|max:255',
-            'f_category_id' => 'required|exists:f_categories,id',
-        ]);
+        // $request->validate([
+        //     'office_id' => 'required|exists:offices,id',
+        //     'name' => 'required|string|max:255',
+        //     'f_category_id' => 'required|exists:f_categories,id',
+        // ]);
 
         $mfo = Mfo::create([
             'office_id' => $request->office_id,
@@ -88,14 +90,14 @@ class MfoController extends Controller
 
 
 
-    public function update(Request $request, $id) // update
+    public function updateMfo(MfoUpdateRequest $request, $id) // update
     {
         // validate the request
-        $request->validate([
-            'office_id' => 'required|exists:offices,id',
-            'name' => 'required|string|max:255',
-            'f_category_id' => 'required|exists:f_categories,id',
-        ]);
+        // $request->validate([
+        //     'office_id' => 'required|exists:offices,id',
+        //     'name' => 'required|string|max:255',
+        //     'f_category_id' => 'required|exists:f_categories,id',
+        // ]);
 
         // find the MFO by id
         $mfo = Mfo::findOrFail($id);

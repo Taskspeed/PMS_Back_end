@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Library;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class TargerPeriodRequest extends FormRequest
+class MfoUpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +22,9 @@ class TargerPeriodRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
-            'semester' => 'required|string',
-            'year' => 'required|integer|digits:4',
+          'office_id' => 'required|exists:offices,id',
+          'name' => 'required|string|max:255',
+            'f_category_id' => 'required|exists:f_categories,id',
         ];
     }
 }

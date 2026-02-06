@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Library\TargetPeriodStoreRequest;
+use App\Http\Requests\Library\TargetPeriodUpdateRequest;
 use App\Http\Requests\TargerPeriodRequest;
 use Illuminate\Http\Request;
 use App\Models\TargetPeriodLib;
@@ -9,7 +11,7 @@ use App\Models\TargetPeriodLib;
 class TargetPeriodController extends Controller
 {
     //crud
-    
+
     // fetch target periods
     public function getTargetPeriods()
     {
@@ -20,7 +22,7 @@ class TargetPeriodController extends Controller
     }
 
     // store target period
-    public function storeTargetPeriod(TargerPeriodRequest $request)
+    public function storeTargetPeriod(TargetPeriodStoreRequest $request)
     {
         $validated = $request->validated();
 
@@ -35,7 +37,7 @@ class TargetPeriodController extends Controller
     }
 
     // updating target period
-    public function updateTargetPeriod(TargerPeriodRequest $request , $targetPeriodId)
+    public function updateTargetPeriod(TargetPeriodUpdateRequest $request , $targetPeriodId)
     {
         $validated = $request->validated();
 

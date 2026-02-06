@@ -11,7 +11,6 @@ class RankController extends Controller
 
 
 
-
     // fetch rank
     public function getRank()
     {

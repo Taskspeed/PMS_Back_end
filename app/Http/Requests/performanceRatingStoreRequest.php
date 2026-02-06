@@ -29,9 +29,9 @@ class performanceRatingStoreRequest extends FormRequest
             'performance_rate.*.quantity_target_rate' => 'required|string',
             'performance_rate.*.effectiveness_criteria_rate' => 'required|string',
             'performance_rate.*.timeliness_range_rate' => 'required|string',
-            'performance_rate.*.quantity_actual' => 'required|string',
-            'performance_rate.*.effectiveness_actual' => 'required|string',
-            'performance_rate.*.timeliness_actual' => 'required|string',
+            'performance_rate.*.quantity_actual' => 'nullable|string',
+            'performance_rate.*.effectiveness_actual' => 'nullable|string',
+            'performance_rate.*.timeliness_actual' => 'nullable|string',
         ];
     }
 
