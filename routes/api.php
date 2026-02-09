@@ -7,6 +7,7 @@ use App\Http\Controllers\SpmsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\Hr\RankController;
+use App\Http\Controllers\Hr\SpmsController as HrSpmsController;
 use App\Http\Controllers\vwActiveController;
 use App\Http\Controllers\office\MfoController;
 use App\Http\Controllers\office\IpcrController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\office\EmployeeController;
 use App\Http\Controllers\office\FCategoryController;
 use App\Http\Controllers\office\UnitWorkPlanController;
 use App\Http\Controllers\Hr\Hr_Unit_work_planController;
+use App\Http\Controllers\Hr\UnitWorkPlanController as HrUnitWorkPlanController;
 use App\Http\Controllers\VwplantillastructureController;
 use App\Http\Controllers\office\EmployeeRatingController;
 use App\Http\Controllers\Planning\Planning_Unit_work_planController;
@@ -28,6 +30,7 @@ use App\Http\Controllers\office\DashboardController as OfficeDashboardController
 Route::post('/login', [AuthController::class, 'login']);  // change route login
 // Route::get('/user_info', [UserController::class, 'getUserInfo']);
 
+// Route::get('/spms/office/structure', [HrUnitWorkPlanController::class, 'getOfficePlantilla']);
 
 // Rating
 Route::get('employee/target-periods/{controlNo}', [EmployeeRatingController::class, 'targetPeriodEmployee']);
@@ -38,10 +41,13 @@ Route::post('employee/store/rating', [EmployeeRatingController::class, 'performa
 
 
 Route::prefix('ipcr')->group(function () {
-    Route::get('/employee/{ControlNo}/{year}/{semester}', [IpcrController::class, 'getIpcr']); // allow any characters, including leading zeros
+    Route::get('/employee/{ControlNo}/{year}/{semester}', [IpcrController::class, 'getIpcrEmployee']); // allow any characters, including leading zeros
     Route::get('/performance-standard/{targerperiodId}', [IpcrController::class, 'getPerformanceStandard']); // allow any characters, including leading zeros
-    Route::get('/monthly-performance/{targerperiodId}', [IpcrController::class, 'getMonthlyRate']); // allow any characters, including leading zeros
-    Route::get('/summary-monthly-performance/{targerperiodId}', [IpcrController::class, 'getSummaryMonthlyRate']); // allow any characters, including leading zeros
+
+    Route::get('/monthly-performance/{targerperiodId}', [IpcrController::class, 'getMonthlyEmployee']); // allow any characters, including leading zeros
+
+    Route::get('/summary-monthly-performance/{targerperiodId}', [IpcrController::class, 'getSummaryMonthlyEmployee']); // allow any characters, including leading zeros
+    // Route::get('v2/summary-monthly-performance/{targerperiodId}', [IpcrController::class, 'getSummaryMonthlyEmployee']); // allow any characters, including leading zeros
 
     Route::put('/employee/target-periods/{controlNo}/{semester}/{year}', [IpcrController::class, 'approveIpcrEmployee']);
 
@@ -149,6 +155,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // HR Routes
     Route::prefix('hr')->group(function () {
+        // Route::get('/spms/office/structure', [HrSpmsController::class, 'getOfficePlantilla']);
 
         Route::get('/unit_work_plan/office', [Hr_Unit_work_planController::class, 'office']);
         Route::get('/unit_work_plan', [Hr_Unit_work_planController::class, 'unit_work_plan']);
@@ -169,6 +176,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/rank/store', [RankController::class, 'storeRank']);
         Route::put('/rank/update/{rankId}', [RankController::class, 'updateRank']);
         Route::delete('/rank/delete/{rankId}', [RankController::class, 'deleteRank']);
+
+
+        //spms plantilla structure
+        // Route::get('/spms/office/structure', [HrUnitWorkPlanController::class, 'getOfficePlantilla']);
     });
 
     // Planning

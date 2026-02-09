@@ -30,6 +30,8 @@ class DatabaseSeeder extends Seeder
             $this->call([F_CategorySeeder::class]);
             $this->call([CoreSeeder::class]);
 
+            // $this->call(PerformanceRatingSeeder::class);
+
 
     }
 }

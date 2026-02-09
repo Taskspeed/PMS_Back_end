@@ -13,13 +13,13 @@ class PerformanceRating extends Model
 
     protected $fillable = [
 
-        'target_period_id',
+        // 'target_period_id',
         'performance_standard_id',
         'control_no',
         'date',
-        'quantity_target_rate',
-        'effectiveness_criteria_rate',
-        'timeliness_range_rate',
+        // 'quantity_target_rate',
+        // 'effectiveness_criteria_rate',
+        // 'timeliness_range_rate',
         'quantity_actual',
         'effectiveness_actual',
         'timeliness_actual',

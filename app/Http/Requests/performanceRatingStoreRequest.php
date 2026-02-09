@@ -26,9 +26,9 @@ class performanceRatingStoreRequest extends FormRequest
             'performance_rate.*.performance_standards' => 'required|exists:performance_standards,id',
             'performance_rate.*.date' => 'required|date_format:m/d/Y',
             'performance_rate.*.control_no' => 'required|string',
-            'performance_rate.*.quantity_target_rate' => 'required|string',
-            'performance_rate.*.effectiveness_criteria_rate' => 'required|string',
-            'performance_rate.*.timeliness_range_rate' => 'required|string',
+            // 'performance_rate.*.quantity_target_rate' => 'required|string',
+            // 'performance_rate.*.effectiveness_criteria_rate' => 'required|string',
+            // 'performance_rate.*.timeliness_range_rate' => 'required|string',
             'performance_rate.*.quantity_actual' => 'nullable|string',
             'performance_rate.*.effectiveness_actual' => 'nullable|string',
             'performance_rate.*.timeliness_actual' => 'nullable|string',
@@ -52,14 +52,14 @@ class performanceRatingStoreRequest extends FormRequest
             'performance_rate.*.control_no.required' =>
             'Employee control number is required.',
 
-            'performance_rate.*.quantity_target_rate.required' =>
-            'Quantity rating is required.',
+            // 'performance_rate.*.quantity_target_rate.required' =>
+            // 'Quantity rating is required.',
 
-            'performance_rate.*.effectiveness_criteria_rate.required' =>
-            'Effectiveness rating is required.',
+            // 'performance_rate.*.effectiveness_criteria_rate.required' =>
+            // 'Effectiveness rating is required.',
 
-            'performance_rate.*.timeliness_range_rate.required' =>
-            'Timeliness rating is required.',
+            // 'performance_rate.*.timeliness_range_rate.required' =>
+            // 'Timeliness rating is required.',
 
             'performance_rate.*.quantity_actual.required' =>
             'Quantity actual is required.',
