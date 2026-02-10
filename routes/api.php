@@ -48,6 +48,7 @@ Route::prefix('ipcr')->group(function () {
 
     Route::get('/summary-monthly-performance/{targerperiodId}', [IpcrController::class, 'getSummaryMonthlyEmployee']); // allow any characters, including leading zeros
     // Route::get('v2/summary-monthly-performance/{targerperiodId}', [IpcrController::class, 'getSummaryMonthlyEmployee']); // allow any characters, including leading zeros
+    Route::post('/attendance', [IpcrController::class, 'attendance']); // late and absent of employee
 
     Route::put('/employee/target-periods/{controlNo}/{semester}/{year}', [IpcrController::class, 'approveIpcrEmployee']);
 

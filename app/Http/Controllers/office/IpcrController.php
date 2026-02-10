@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\office;
 
+use App\Http\Requests\AttendanceRequest;
 use Carbon\Carbon;
 use App\Models\Employee;
 use App\Models\TargetPeriod;
@@ -56,101 +57,93 @@ class IpcrController extends BaseController
             ->with(['standardOutcomes' => function ($query) {
                 $query->select('id', 'performance_standard_id', 'rating', 'quantity_target as quantity', 'effectiveness_criteria as effectiveness', 'timeliness_range as timeliness');
             }])
-
             ->get();
-
         return response()->json($employee);
     }
 
 
 
     // approving the ipcr of the employee
-    public function approveIpcrEmployee($controlNo, $semester, $year, Request $request)
+    public function approveIpcrEmployee($controlNo, $semester, $year, Request $request, IpcrService $ipcrService)
     {
-        $validated = $request->validate([
-            'status' => 'required|in:approve,reject,review',
-        ]);
+        try {
 
-        // Get employee with office restriction
-        $employee = Employee::where('ControlNo', $controlNo)
-            // ->where('office_id', $this->officeId)
-            ->first();
+            $targetPeriod = $ipcrService->approveIpcr($controlNo, $semester, $year, $request);
 
-        if (! $employee) {
             return response()->json([
-                'message' => 'Employee not found or access denied',
-            ], 404);
-        }
-
-        // Get the target period
-        $targetPeriod = $employee->targetPeriods()
-            ->where('year', $year)
-            ->where('semester', $semester)
-            ->first();
-
-        if (! $targetPeriod) {
+                'success' => true,
+                'message' => 'IPCR status updated successfully.',
+                'data'    => $targetPeriod,
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Target period not found',
-            ], 404);
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], $e->getCode() ?: 400);
         }
-
-        // Update only the target period
-        $targetPeriod->update([
-            'status' => $validated['status'],
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'IPCR status updated successfully.',
-            'data'    => $targetPeriod,
-        ]);
     }
 
     // get the monthly rate of employee
     // month - week1, week2, week 3, it depend of the month how many weeks
     // then get the rate of the employee every day  then total
     // the format of the date is mm/dd/yy
-    public function getMonthlyEmployee($targetPeriodId, MonthlyPerformanceService $monthlyPerformanceService)
+    public function getMonthlyEmployee($targetPeriodId, IpcrService $ipcrService)
     {
         // access the MonthlyPerformanceService to get the monthly performance data
-        $monthlyData = $monthlyPerformanceService->getMonthly($targetPeriodId);
+        $monthlyData = $ipcrService->getMonthly($targetPeriodId);
 
-        if ($monthlyData->isEmpty()) {
+        if (empty($monthlyData)) {
             return response()->json([
                 'message' => 'Monthly performance not found'
             ], 404);
         }
 
         // use the MonthlyPerformanceResource to format the response
-        return response()->json(
-            MonthlyPerformanceResource::collection($monthlyData)->resolve()
-        );
+        return response()->json([
+            'standards' => MonthlyPerformanceResource::collection($monthlyData['standards'])->resolve(),
+            'attendance' => $monthlyData['attendance']
+        ]);
     }
 
 
 
     // get the summary-monthly-rate
-    public function getSummaryMonthlyEmployee($targetPeriodId , MonthlyPerformanceService $monthlyPerformanceService)
+    public function getSummaryMonthlyEmployee($targetPeriodId, IpcrService $ipcrService)
     {
 
-        $monthSummaryData = $monthlyPerformanceService->getSummaryMonthly($targetPeriodId);
+        $monthSummaryData = $ipcrService->getSummaryMonthly($targetPeriodId);
 
-        if ($monthSummaryData->isEmpty()) {
+
+        if (empty($monthSummaryData)) {
             return response()->json([
                 'message' => 'Summary monthly performance not found'
             ], 404);
         }
 
-        return response()->json(
-            MonthlyPerformanceSummaryResource::collection($monthSummaryData)->resolve()
-        );
 
+        // use the MonthlyPerformanceSummaryResource to format the response
+        return response()->json([
+            'standards' =>  MonthlyPerformanceSummaryResource::collection($monthSummaryData['standards'])->resolve(),
+            'attendance' => $monthSummaryData['attendance']
+        ]);
     }
 
 
+    public function attendance(AttendanceRequest $request, IpcrService $ipcrService)
+    {
+        try {
+            $attendance = $ipcrService->storeAttendance($request);
 
-
-
-
-
+            return response()->json([
+                'success' => true,
+                'message' => 'Attendance data stored successfully.',
+                'data'    => $attendance,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], $e->getCode() ?: 400);
+        }
+    }
 }

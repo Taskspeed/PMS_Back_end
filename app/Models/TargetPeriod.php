@@ -41,6 +41,11 @@ class TargetPeriod extends Model
         return $this->hasMany(StandardOutcome::class, 'target_period_id');
     }
 
+    public function months()
+    {
+        return $this->hasMany(Month::class, 'target_period_id');
+    }
+
     // public function configurations()
     // {
     //     return $this->hasMany(Configuration::class, 'target_period_id');

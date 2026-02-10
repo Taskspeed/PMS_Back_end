@@ -8,10 +8,11 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class IpcrResource extends JsonResource
 {
     public static $wrap = null;
-    
+
     public function toArray(Request $request): array
     {
         return [
+            // employee details
             'id' => $this->id,
             'control_no' => $this->ControlNo,
             'name'       => $this->name,
@@ -33,7 +34,7 @@ class IpcrResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
-
+            // target periods with nested performance standards
             'target_periods' => $this->targetPeriods->map(function ($period) {
 
                 return [
@@ -50,20 +51,41 @@ class IpcrResource extends JsonResource
                     'created_at' => $period->created_at,
                     'updated_at' => $period->updated_at,
 
+
+                     // performance standards with nested standard outcomes and monthly ratings
                     'performance_standards' => $period->performanceStandards->map(function ($standard) {
                         return [
                             'id' => $standard->id,
                             'target_period_id' => $standard->target_period_id,
                             'category' => $standard->category,
-                            'mfo'      => $standard->mfo,
-                            'output'   => $standard->output,
-                            'success_indicator'   => $standard->success_indicator,
-                            'core'   => $standard->core,
-                            'technical'   => $standard->technical,
-                            'leadership'   => $standard->leadership,
-                            'monthly_ratings' => $standard->monthly_ratings,
+                            'mfo' => $standard->mfo,
+                            'output' => $standard->output,
+                            'success_indicator' => $standard->success_indicator,
+                            'performance_indicator' => $standard->performance_indicator,
+                            'core' => $standard->core,
+                            'technical' => $standard->technical,
+                            'leadership' => $standard->leadership,
+                             'standard_outcomes' => $standard->standardOutcomes,
+
+                            'monthly_ratings' => $standard->monthly_ratings ?? null,
+                            'totals' => $standard->totals,
+                            'ratings' => $standard->ratings ?? null,
+
+
+                            'accomplishment' => $standard->accomplishment ?? [
+                                'quantityTotal' => 0,
+                                'effectiveness_rating' => 0,
+                                'timeliness_rating' => 0,
+                            ],
+
                         ];
-                    })
+                    }),
+
+
+
+
+
+
                 ];
             })
         ];

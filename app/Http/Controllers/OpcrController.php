@@ -92,7 +92,10 @@ class OpcrController extends BaseController
                                     'category',
                                     'mfo',
                                     'output',
-                                    'success_indicator'
+                                    'success_indicator',
+                                    'core',
+                                    'technical',
+                                    'leadership',
                                 )
                                        ->with([
                                         'opcr' => function ($queryopcr) {

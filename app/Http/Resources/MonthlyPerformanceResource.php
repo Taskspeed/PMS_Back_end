@@ -7,7 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class MonthlyPerformanceResource extends JsonResource
 {
-  
+
 
 
     public function toArray(Request $request): array
@@ -19,6 +19,7 @@ class MonthlyPerformanceResource extends JsonResource
             'mfo' => $this->mfo,
             'output' => $this->output,
             'monthly_ratings' => $this->monthly_ratings,
+            // 'attendance' => $this->attendance,
 
         ];
     }

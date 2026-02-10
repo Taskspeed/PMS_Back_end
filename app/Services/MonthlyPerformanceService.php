@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use App\Models\Employee;
 use App\Models\PerformanceStandard;
 use Illuminate\Support\Facades\Log;
 
@@ -16,6 +17,42 @@ class MonthlyPerformanceService
     //     //
     // }
     // public static $wrap = null;
+
+
+    //---------------------------------------------------------------------------- Ipcr Data-----------------------------------------------------------------------------//
+
+    //Ipcr Data of Employee
+    public function getIpcrData($controlNo, $year, $semester)
+    {
+        $employee = Employee::where('ControlNo', $controlNo)
+            ->with([
+                'targetPeriods' => function ($q) use ($year, $semester) {
+                    $q->where('year', $year)
+                        ->where('semester', $semester)
+                        ->with([
+                            'performanceStandards.performanceRating'
+                        ]);
+                }
+            ])
+            ->first();
+
+        if (! $employee) {
+            return null;
+        }
+
+        $employee->targetPeriods->each(function ($period) {
+            $period->performanceStandards->each(function ($standard) {
+                $grouped = $this->groupRatingsByMonthlySummary($standard->performanceRating);
+
+                $standard->monthly_ratings = $grouped;
+                $standard->makeHidden('performanceRating');
+            });
+        });
+
+        return $employee; // ✅ REQUIRED
+    }
+
+    //---------------------------------------------------------------------------- monthly-rate-----------------------------------------------------------------------------//
 
 
     public function getMonthly($targetPeriodId)
@@ -246,7 +283,7 @@ class MonthlyPerformanceService
 
 
 
-
+   // get the monthly rate of employee Timeliness and Effectiveness
     private function getComputationTotalAndRating(array $monthlyRatings, $standardOutcomes)
     {
         $totals = [
@@ -255,6 +292,7 @@ class MonthlyPerformanceService
             'timeliness_total' => 0,
         ];
 
+        // get the total of quantity, effectiveness, and timeliness across all months
         foreach ($monthlyRatings as $month) {
             $totals['quantity_total'] += data_get($month, 'quantity.month_total', 0);
             $totals['effectiveness_total'] += data_get($month, 'effectiveness.month_total', 0);
@@ -264,7 +302,7 @@ class MonthlyPerformanceService
         // 🔹 Prevent division by zero
         $quantityTotal = $totals['quantity_total'] ?: 1;
 
-        // ✅ Calculate quantity_rating based on standard_outcomes
+        // Calculate quantity_rating based on standard_outcomes
         $quantityRating = $this->getQuantityRating($totals['quantity_total'], $standardOutcomes);
 
         return [
@@ -273,19 +311,23 @@ class MonthlyPerformanceService
             //     'quantity_rating' => $quantityRating,'effectiveness_rating' => round( $quantityTotal / $totals['effectiveness_total'], 2),
             //     'timeliness_rating' => round($quantityTotal / $totals['timeliness_total'], 2),
             // ],
+
+           // Timeliness and Effectiveness Rating Calculation
+           // Rating = Total Actual / Total Quantity
             'ratings' => [
                 'quantity_rating' => (int) $quantityRating,
                 'effectiveness_rating' => (int) round(
-                    $quantityTotal / $totals['effectiveness_total']
+                    $totals['effectiveness_total']  /   $quantityTotal
                 ),
                 'timeliness_rating' => (int) round(
-                    $quantityTotal / $totals['timeliness_total']
+                    $totals['timeliness_total'] /   $quantityTotal
                 ),
             ],
 
         ];
     }
 
+    //getting the quantity rating based on the standard outcomes
     private function getQuantityRating($quantityTotal, $standardOutcomes)
     {
         // Sort outcomes by rating descending (5 -> 1)
