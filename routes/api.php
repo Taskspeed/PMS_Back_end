@@ -150,9 +150,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::get('/opcr/divisions', [OpcrController::class, 'index']);
     // Route::get('/opcr/office-head-functions/{officeId}', [OpcrController::class, 'getOfficeHeadFunctions']);
     // Route::post('/opcr/save', [OpcrController::class, 'saveOpcr']);
-    Route::get('/opcr/{controlNo}/{semester}/{year}', [OpcrController::class, 'getOpcr']); // get the opcr of office
-    Route::post('/opcr/store', [OpcrController::class, 'storeOpcr']); // save the opcr
 
+    Route::prefix('opcr')->group(function(){
+        Route::get('/{controlNo}/{semester}/{year}', [OpcrController::class, 'opcr']);
+        Route::post('/store', [OpcrController::class, 'storeOpcr']); // save the opcr
+    });
 
     // HR Routes
     Route::prefix('hr')->group(function () {

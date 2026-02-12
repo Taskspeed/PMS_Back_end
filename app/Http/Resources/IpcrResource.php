@@ -60,15 +60,16 @@ class IpcrResource extends JsonResource
                             'category' => $standard->category,
                             'mfo' => $standard->mfo,
                             'output' => $standard->output,
+                            'output_name' => $standard->output_name,
                             'success_indicator' => $standard->success_indicator,
                             'performance_indicator' => $standard->performance_indicator,
                             'core' => $standard->core,
                             'technical' => $standard->technical,
                             'leadership' => $standard->leadership,
-                             'standard_outcomes' => $standard->standardOutcomes,
+                            'standard_outcomes' => $standard->standardOutcomes,
 
                             'monthly_ratings' => $standard->monthly_ratings ?? null,
-                            'totals' => $standard->totals,
+                            'totals' => $standard->totals ?? null,
                             'ratings' => $standard->ratings ?? null,
 
 

@@ -59,6 +59,6 @@ class PerformanceStandard extends Model
 
     public function opcr()
     {
-        return $this->hasOne(Opcr::class, 'performance_standard_id');
+        return $this->hasOne(Opcr::class);
     }
 }

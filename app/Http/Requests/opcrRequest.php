@@ -22,20 +22,10 @@ class opcrRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
-
-            'performance_standard_id' => 'required|exists:performance_standards,id',
-            'compentency' => 'required|array',
-            'budget' => 'required',
-            'accountable' => 'required',
-            'accomplishment' => 'required',
-            'rating_q' =>  ['required', 'numeric', 'min:0', 'max:10'],
-            'rating_e' =>  ['required', 'numeric', 'min:0', 'max:10'],
-            'rating_t' =>  ['required', 'numeric', 'min:0', 'max:10'],
-            'rating_a' =>  ['required', 'numeric', 'min:0', 'max:10'],
-            'profiency' => 'required|array',
-            'remarks' => 'required',
-
+            '*.performance_standard_id' => 'required|exists:performance_standards,id',
+            '*.budget' => 'required',
+            '*.accountable' => 'required',
+            '*.accomplishment' => 'required',
         ];
     }
 }

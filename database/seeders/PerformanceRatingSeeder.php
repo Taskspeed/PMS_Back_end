@@ -10,7 +10,7 @@ class PerformanceRatingSeeder extends Seeder
 {
     public function run()
     {
-        $performanceStandardIds = 46; // 🔥 CHANGE IF NEEDED
+        $performanceStandardIds = 30; // 🔥 CHANGE IF NEEDED
 
         $data = [
             ['date' => '01/05/2026', 'quantity' => 5],

@@ -35,8 +35,8 @@ class IpcrService
                     $q->where('year', $year)
                         ->where('semester', $semester)
                         ->with([
-                            'performanceStandards.performanceRating:id,performance_standard_id,date,quantity_actual as quantity,effectiveness_actual as effectiveness,timeliness_actual as timeliness',
-                            'performanceStandards.standardOutcomes:performance_standard_id,rating,quantity_target as quantity',
+                    'performanceStandards.performanceRating:id,performance_standard_id,date,quantity_actual as quantity,effectiveness_actual as effectiveness,timeliness_actual as timeliness',
+                    'performanceStandards.standardOutcomes:performance_standard_id,rating,quantity_target as quantity,effectiveness_criteria as effectiveness,timeliness_range as timeliness',
 
 
                         ]); //
@@ -76,11 +76,14 @@ class IpcrService
                     ['average_rating' => $average]
                 );
 
-                    //accomplishment
-                    $accomplishment = $this->accomplishment($standard->id);
+                //accomplishment
+                $accomplishment = $this->accomplishment($standard, $summary);
+                $standard->accomplishment = $accomplishment;
 
-                    // merge get the effectiveness and timeliness rating into accomplishment
-                    $standard->accomplishment = array_merge(
+
+
+                // merge get the effectiveness and timeliness rating into accomplishment
+                $standard->accomplishment = array_merge(
                         $accomplishment,
                         [
                             'effectiveness_rating' => $summary['ratings']['effectiveness_rating'],
@@ -517,28 +520,56 @@ class IpcrService
 
     }
 
-    // getting the accomplishment of employee
-    // QuantityTotal + success_indicator + performance_indicator + standard_outcomes
-    private function accomplishment($performanceStandardId)
+    // getting the value of standard outcomes based on the rating
+    private function getStandardOutcomeText($standardOutcomes, $rating)
     {
-        // Get all performance ratings for this standard
-        $ratings = PerformanceRating::where('performance_standard_id', $performanceStandardId)
-            ->get();
-
-        // getting the average rating
-
-
-        $quantityTotal = $ratings->sum(function ($rating) {
-            // Only sum numeric values
-            return is_numeric($rating->quantity_actual) ? $rating->quantity_actual : 0;
-        });
+        $outcome = $standardOutcomes->firstWhere('rating', (string) $rating);
 
         return [
-            'quantityTotal' => $quantityTotal,
-
+            'effectiveness' => $outcome->effectiveness ?? '',
+            'timeliness'    => $outcome->timeliness ?? '',
         ];
     }
 
+    private function accomplishment($standard, $summary)
+    {
+        $ratings = PerformanceRating::where('performance_standard_id', $standard->id)->get();
+
+        $quantityTotal = $ratings->sum(function ($rating) {
+            return is_numeric($rating->quantity_actual) ? $rating->quantity_actual : 0;
+        });
+
+        // ratings
+        $effectivenessRating = $summary['ratings']['effectiveness_rating'];
+        $timelinessRating    = $summary['ratings']['timeliness_rating'];
+
+        // get text from standard outcomes
+        $outcomeText = $this->getStandardOutcomeText(
+            $standard->standardOutcomes,
+            $effectivenessRating
+        );
+
+        // performance indicators → text
+        $performanceIndicators = collect($standard->performance_indicator ?? [])
+            ->implode(' and ');
+
+        // build sentence
+        $actualAccomplishment = trim(sprintf(
+            '%d %s %s %s %s',
+            $quantityTotal, // quantity total
+            $standard->output_name, // outpput_name
+            $performanceIndicators, // performance indicators
+            $outcomeText['effectiveness'], // standard outcome for effectiveness
+            $outcomeText['timeliness'] // standard outcome for timeliness
+        ));
+
+        return [
+            'quantityTotal'         => $quantityTotal,
+            'effectiveness_rating'  => $effectivenessRating,
+            'timeliness_rating'     => $timelinessRating,
+            'actual_accomplishment' => $actualAccomplishment,
+        ];
+    }
 
 
 
