@@ -198,7 +198,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('spms')->group(function () {
         Route::get('/fetch_employees', [SpmsController::class, 'fetchEmployees']);
         Route::get('/count', [SpmsController::class, 'getEmployeeCountAndUnitworkplan']); // Count unit work plan
-        Route::get('/office/structure', [SpmsController::class, 'plantillaStructureSpms']);
+        Route::get('/office/structure', [SpmsController::class, 'officePlantilla']); // structure of office
         Route::get('/target_periods/semester-year', [SpmsController::class, 'getTargetPeriodsSemesterYear']); // geting the year and semester
         Route::get('/employee/{ControlNo}/{semester}/{year}', [UnitWorkPlanController::class, 'getUnitworkplan']); // allow any characters, including leading zeros
         // Route::get('/employee/{control_no}', [SpmsController::class, 'getEmployeeHaveUnitWorkPlan']); // geting the year and semester
