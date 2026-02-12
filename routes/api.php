@@ -196,7 +196,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // SPMS
     Route::prefix('spms')->group(function () {
-        Route::get('/fetch_employees', [SpmsController::class, 'fetchEmployees']);
+        Route::get('/fetch_employees', [SpmsController::class, 'getEmployees']);
+        // Route::get('v2/fetch_employees', [SpmsController::class, 'getEmployees']);
+
         Route::get('/count', [SpmsController::class, 'getEmployeeCountAndUnitworkplan']); // Count unit work plan
         Route::get('/office/structure', [SpmsController::class, 'officePlantilla']); // structure of office
         Route::get('/target_periods/semester-year', [SpmsController::class, 'getTargetPeriodsSemesterYear']); // geting the year and semester

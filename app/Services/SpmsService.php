@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class SpmsService
 {
@@ -170,4 +172,46 @@ class SpmsService
 
         return [$officeData];
     }
+
+
+
+    // fetch employee belong to the office
+    public function employees($request){
+
+        $user = Auth::user();
+        $officeId = $user->office_id;
+
+
+        // Get semester & year from request
+        $semester = $request->input('semester');   // example: January-June / July-December
+        $year = $request->input('year');           // example: 2025
+
+        if (!$semester || !$year) {
+            return response()->json([
+                'message' => 'Please provide semester and year'
+            ], 422);
+        }
+
+        $employees = Employee::where('office_id', $officeId)
+            ->get()
+            ->map(function ($emp) use ($semester, $year) {
+
+                // Look for target period based on user request
+                $existing = $emp->targetPeriods()
+                    ->where('semester', $semester)
+                    ->where('year', $year)
+                    ->first();
+
+                $emp->has_target_period = $existing ? true : false;
+                $emp->existing_target_period = $existing;
+
+                // Remove auto-loaded relation if exists
+                unset($emp->target_periods);
+
+                return $emp;
+            });
+
+        return $employees;
+    }
+
 }
