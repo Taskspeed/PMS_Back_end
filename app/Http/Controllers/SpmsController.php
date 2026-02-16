@@ -195,6 +195,7 @@ class SpmsController extends BaseController
     public function officePlantilla(SpmsService $structure, Request $request)
     {
         $plantilla = $structure->structure($request);
+
         return response()->json($plantilla);
     }
 
@@ -238,6 +239,17 @@ class SpmsController extends BaseController
     public function getEmployees(Request $request, SpmsService $employee)
     {
         $employees = $employee->employees($request);
+
+        return response()->json($employees);
+    }
+
+
+    // fetch the employee  base on the office and  the target peroid of the employee
+    public function getEmployeeRequested(Request $request, SpmsService $employee)
+    {
+
+        $employees = $employee->employeesRequest($request);
+
         return response()->json($employees);
     }
 

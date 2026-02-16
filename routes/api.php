@@ -198,6 +198,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // SPMS
     Route::prefix('spms')->group(function () {
+
+        Route::get('/employees-requested', [SpmsController::class, 'getEmployeeRequested']);
         Route::get('/fetch_employees', [SpmsController::class, 'getEmployees']);
         // Route::get('v2/fetch_employees', [SpmsController::class, 'getEmployees']);
 

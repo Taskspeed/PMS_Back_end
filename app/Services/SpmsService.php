@@ -214,4 +214,41 @@ class SpmsService
         return $employees;
     }
 
+    // fetch employee request by the HR
+    public function employeesRequest($request)
+    {
+
+        // Get semester & year from request
+        $semester = $request->input('semester');   // example: January-June / July-December
+        $year = $request->input('year');           // example: 2025
+        $officeIdRequested = $request->input('office_id');
+
+        if (!$semester || !$year) {
+            return response()->json([
+                'message' => 'Please provide semester and year'
+            ], 422);
+        }
+
+        $employees = Employee::where('office_id', $officeIdRequested)
+            ->get()
+            ->map(function ($emp) use ($semester, $year) {
+
+                // Look for target period based on user request
+                $existing = $emp->targetPeriods()
+                    ->where('semester', $semester)
+                    ->where('year', $year)
+                    ->first();
+
+                $emp->has_target_period = $existing ? true : false;
+                $emp->existing_target_period = $existing;
+
+                // Remove auto-loaded relation if exists
+                unset($emp->target_periods);
+
+                return $emp;
+            });
+
+        return $employees;
+    }
+
 }
