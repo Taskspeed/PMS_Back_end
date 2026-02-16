@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\Employee;
+use App\Models\Month;
+use App\Models\PerformanceStandard;
+use App\Models\StandardOutcome;
 use Illuminate\Database\Eloquent\Model;
 
 class TargetPeriod extends Model

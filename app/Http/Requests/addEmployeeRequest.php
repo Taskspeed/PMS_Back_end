@@ -42,6 +42,8 @@ class addEmployeeRequest extends FormRequest
             'employees.*.positionID' => 'nullable|string|max:255',
             'employees.*.itemNo' => 'nullable|string|max:255',
             'employees.*.pageNo' => 'nullable|string|max:255',
+
+            'employees.*.status' => 'required|string|max:255',
         ];
     }
 }

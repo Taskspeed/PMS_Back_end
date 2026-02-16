@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\office;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\addEmployeeRequest;
 use App\Models\office;
 use App\Models\Employee;
 use App\Models\Position;
 use App\Models\vwActive;
 use Illuminate\Http\Request;
+use App\Services\EmployeeService;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\addEmployeeRequest;
 
 class EmployeeController extends Controller
 {
@@ -20,28 +21,7 @@ class EmployeeController extends Controller
 
     public function store(addEmployeeRequest $request)
     {
-        $validated = $request->validated(
-            // 'employees' => 'required|array',
-            // 'employees.*.ControlNo' => 'required|string',
-            // 'employees.*.name' => 'required|string|max:255',
-            // // 'employees.*.position_id' => 'required|exists:positions,id',
-            // 'employees.*.office_id' => 'required|exists:offices,id',
-            // 'employees.*.office' => 'nullable|string|max:255',
-            // 'employees.*.position' => 'required|string|max:255', // changed from 'designation' to 'position'
-            // 'employees.*.office2' => 'nullable|string|max:255',
-            // 'employees.*.group' => 'nullable|string|max:255',
-            // 'employees.*.division' => 'nullable|string|max:255',
-            // 'employees.*.section' => 'nullable|string|max:255',
-            // 'employees.*.unit' => 'nullable|string|max:255',
-            // 'employees.*.rank' => 'nullable|in:Supervisor,Employee,Rank-in-File,Managerial,Section-Head,Office-Head,Division-Head',
-
-            // 'employees.*.tblStructureID' => 'required|string|max:255',
-            // 'employees.*.sg' => 'required|string|max:255',
-            // 'employees.*.level' => 'required|string|max:255',
-            // 'employees.*.positionID' => 'required|string|max:255',
-            // 'employees.*.itemNo' => 'required|string|max:255',
-            // 'employees.*.pageNo' => 'required|string|max:255',
-        );
+        $validated = $request->validated();
 
         $createdEmployees = [];
 
@@ -92,86 +72,23 @@ class EmployeeController extends Controller
             ], 500);
         }
     }
-    // public function store(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'employees' => 'required|array',
-    //         'employees.*.ControlNo' => 'required|string',
-    //         'employees.*.name' => 'required|string|max:255',
-    //         // 'employees.*.position_id' => 'required|exists:positions,id',
-    //         'employees.*.office_id' => 'required|exists:offices,id',
-    //         'employees.*.office' => 'nullable|string|max:255',
-    //         'employees.*.position' => 'required|string|max:255', // changed from 'designation' to 'position'
-    //         'employees.*.office2' => 'nullable|string|max:255',
-    //         'employees.*.group' => 'nullable|string|max:255',
-    //         'employees.*.division' => 'nullable|string|max:255',
-    //         'employees.*.section' => 'nullable|string|max:255',
-    //         'employees.*.unit' => 'nullable|string|max:255',
-    //         'employees.*.rank' => 'nullable|in:Supervisor,Employee,Rank-in-File,Managerial,Section-Head,Office-Head,Division-Head',
 
-    //         'employees.*.tblStructureID' => 'required|string|max:255',
-    //         'employees.*.sg' => 'required|string|max:255',
-    //         'employees.*.level' => 'required|string|max:255',
-    //         'employees.*.positionID' => 'required|string|max:255',
-    //         'employees.*.itemNo' => 'required|string|max:255',
-    //         'employees.*.pageNo' => 'required|string|max:255',
-    //     ]);
+    // add an employee on the plantilla structure
+    public function addEmployee(addEmployeeRequest $request, EmployeeService $employeeStore)
+    {
+        $validated = $request->validated();
 
-    //     $createdEmployees = [];
+        $employee = $employeeStore->storeEmployees($validated);
 
-    //     // Use a transaction to ensure data integrity
-    //     DB::beginTransaction();
-    //     try {
-    //         foreach ($validated['employees'] as $employeeData) {
-    //             // Set default rank to Employee if not provided
-    //             if (!isset($employeeData['rank'])) {
-    //                 $employeeData['rank'] = 'Employee';
-    //             }
+        return response()->json([
+            'success' => true,
+            'message' => 'Employees created successfully',
+            'employees' => $employee
 
-    //             $employee = Employee::create($employeeData);
+           ]);
+    }
 
-    //             // Enhanced activity logging
-    //             activity()
-    //                 ->performedOn($employee)
-    //                 ->causedBy(Auth::user())
-    //                 ->withProperties([
-    //                     'name' => $employee->name,
-    //                     // 'position_id' => $employee->position_id,
-    //                     'rank' => $employee->rank,
-    //                 'designation' => $employee->designation,
-    //                     'office' => $employee->office,
-    //                     'division' => $employee->division,
-    //                     'section' => $employee->section,
-    //                     'unit' => $employee->unit,
-    //                     'office_id' => $employee->office_id
-    //                 ])
-    //                 ->log('Employee Created');
 
-    //             $createdEmployees[] = $employee;
-    //         }
-
-    //         DB::commit();
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Employees created successfully',
-    //             'employees' => $createdEmployees
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Failed to create employees',
-    //             'error' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-
-    // public function index_position()
-    // {
-    //     $positions = Position::all();
-    //     return response()->json($positions);
-    // }
 
     //rank update of employee
     public function updateRank(Request $request, $id) // need to check  this code for review
@@ -230,78 +147,7 @@ class EmployeeController extends Controller
         ]);
     }
 
-
-    // // for fetching employees on the modal
-    // public function show_employee(Request $request)
-    // {
-    //     $user = Auth::user();
-
-    //     if (!$user || !$user->office_id) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Unauthorized or no office assigned.'
-    //         ], 403);
-    //     }
-
-    //     try {
-    //         $office = Office::find($user->office_id);
-    //         if (!$office) {
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'message' => 'Office not found'
-    //             ], 404);
-    //         }
-
-    //         $showAll = $request->query('show_all', false);
-    //         $unassignedOnly = $request->query('unassigned_only', false);
-
-    //         // Build query with LEFT JOIN
-    //         $query = vwActive::select(
-    //             'vwActive.Office as office',
-    //             'vwActive.Name4 as name',
-    //             'vwActive.Designation as position',
-    //             'vwActive.ControlNo',
-    //             'vwplantillaStructure.ItemNo',
-    //             'vwplantillaStructure.PageNo',
-    //             'vwplantillaStructure.PositionID',
-    //             'vwplantillaStructure.ID as tblStructureID',
-    //             // 'vwplantillalevel.ID as tblStructureID',
-    //             'vwplantillalevel.SG',
-    //             'vwplantillalevel.SGLevel',
-    //         )
-    //             ->leftJoin('vwplantillaStructure', 'vwActive.ControlNo', '=', 'vwplantillaStructure.ControlNo')
-    //             ->leftJoin('vwplantillalevel', 'vwplantillalevel.ID', '=', 'vwplantillaStructure.ID');
-
-    //         // Only filter by office if show_all is false
-    //         if (!$showAll) {
-    //             $query->where('vwActive.Office', $office->name); // <- corrected
-    //         }
-
-    //         // Filter for unassigned employees only if requested
-    //         if ($unassignedOnly) {
-    //             $query->whereNotExists(function ($q) {
-    //                 $q->select(DB::raw(1))
-    //                     ->from('employees')
-    //                     ->whereRaw('vwActive.Name4 = employees.name');
-    //             });
-    //         }
-
-    //         $employees = $query->get();
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'data' => $employees,
-    //             'user_office' => $office->name
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Failed to fetch employees: ' . $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-
-    // //search employees by name or designation
+     //search employees by name or designation
     public function searchEmployees(Request $request)
     {
         $searchTerm = $request->query('search');
@@ -318,9 +164,9 @@ class EmployeeController extends Controller
             $query = vwActive::select(
                 'vwActive.Name4 as name',
                 'vwActive.Office as office',
-
                 'vwActive.Designation as position',
                 'vwActive.ControlNo',
+                'vwActive.Status',
                 'vwplantillaStructure.ItemNo',
                 'vwplantillaStructure.PageNo',
                 'vwplantillaStructure.PositionID',
@@ -340,7 +186,7 @@ class EmployeeController extends Controller
                 $query->whereNotExists(function ($q) {
                     $q->select(DB::raw(1))
                         ->from('employees')
-                        ->whereRaw('vwActive.Name4 = employees.name');
+                        ->whereRaw('vwActive.ControlNo = employees.ControlNo');
                 });
             }
 
@@ -358,7 +204,7 @@ class EmployeeController extends Controller
         }
     }
 
-
+    // list of employee in the office
     public function show_employee(Request $request)
     {
         $user = Auth::user();
@@ -408,7 +254,7 @@ class EmployeeController extends Controller
                 $query->whereNotExists(function ($q) {
                     $q->select(DB::raw(1))
                         ->from('employees')
-                        ->whereRaw('vwActive.Name4 = employees.name');
+                        ->whereRaw('vwActive.ControlNo = employees.ControlNo');
                 });
             }
 
@@ -618,5 +464,17 @@ class EmployeeController extends Controller
         $employees = Employee::where('office_id', $officeId)
             ->get();
         return response()->json($employees);
+    }
+
+
+    // list of employee casualm job order and honorarium
+    public function listOfEmployee(Request $request, EmployeeService $employeeList){
+
+
+        $employees = $employeeList->getEmployeebyOffice($request);
+
+        return response()->json($employees);
+
+
     }
 }

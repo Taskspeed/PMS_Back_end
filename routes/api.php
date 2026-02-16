@@ -1,31 +1,32 @@
 
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\OpcrController;
-use App\Http\Controllers\SpmsController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\OfficeController;
-use App\Http\Controllers\Hr\RankController;
-use App\Http\Controllers\Hr\SpmsController as HrSpmsController;
-use App\Http\Controllers\vwActiveController;
-use App\Http\Controllers\office\MfoController;
-use App\Http\Controllers\office\IpcrController;
-use App\Http\Controllers\Hr\dashboardController;
-use App\Http\Controllers\Hr\IndicatorController;
-use App\Http\Controllers\TargetPeriodController;
 use App\Http\Controllers\Activity_log_Controller;
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\office\FOutpotController;
-use App\Http\Controllers\office\EmployeeController;
-use App\Http\Controllers\office\FCategoryController;
-use App\Http\Controllers\office\UnitWorkPlanController;
+use App\Http\Controllers\Hr\dashboardController;
 use App\Http\Controllers\Hr\Hr_Unit_work_planController;
+use App\Http\Controllers\Hr\IndicatorController;
+use App\Http\Controllers\Hr\RankController;
+use App\Http\Controllers\Hr\SpmsController as HrSpmsController;
 use App\Http\Controllers\Hr\UnitWorkPlanController as HrUnitWorkPlanController;
-use App\Http\Controllers\VwplantillastructureController;
-use App\Http\Controllers\office\EmployeeRatingController;
-use App\Http\Controllers\Planning\Planning_Unit_work_planController;
 use App\Http\Controllers\office\DashboardController as OfficeDashboardController;
+use App\Http\Controllers\office\EmployeeController;
+use App\Http\Controllers\office\EmployeeRatingController;
+use App\Http\Controllers\office\FCategoryController;
+use App\Http\Controllers\office\FOutpotController;
+use App\Http\Controllers\office\IpcrController;
+use App\Http\Controllers\office\MfoController;
+use App\Http\Controllers\office\UnitWorkPlanController;
+use App\Http\Controllers\OfficeController;
+use App\Http\Controllers\OpcrController;
+use App\Http\Controllers\Planning\Planning_Unit_work_planController;
+use App\Http\Controllers\QpefController;
+use App\Http\Controllers\SpmsController;
+use App\Http\Controllers\TargetPeriodController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\vwActiveController;
+use App\Http\Controllers\VwplantillastructureController;
+use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);  // change route login
 // Route::get('/user_info', [UserController::class, 'getUserInfo']);
@@ -152,8 +153,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::post('/opcr/save', [OpcrController::class, 'saveOpcr']);
 
     Route::prefix('opcr')->group(function(){
+        // Route::get('/{controlNo}/{semester}/{year}', [OpcrController::class, 'opcr']);
+    Route::post('/store', [OpcrController::class, 'storeOpcr']); // save the opcr
         Route::get('/{controlNo}/{semester}/{year}', [OpcrController::class, 'opcr']);
-        Route::post('/store', [OpcrController::class, 'storeOpcr']); // save the opcr
     });
 
     // HR Routes
@@ -229,6 +231,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/search', [EmployeeController::class, 'searchEmployees']);
         Route::delete('/delete/{id}', [EmployeeController::class, 'deleteEmployee']);
         Route::get('/{controlNo}', [UnitWorkPlanController::class, 'findEmployee']);
+        Route::get('/list-of-employee', [EmployeeController::class, 'listOfEmployee']);
 
     });
 
@@ -238,6 +241,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/store', [TargetPeriodController::class, 'storeTargetPeriod']);
         Route::put('/update/{targetPeriodId}', [TargetPeriodController::class, 'updateTargetPeriod']);
         Route::delete('/delete/{targetPeriodId}', [TargetPeriodController::class, 'deleteTargetPeriod']);
+    });
+
+
+    // Qpef
+    Route::prefix('qpef')->group(function () {
+        Route::get('/{control_no}/{quarterly}/{year}', [QpefController::class, 'employeeQpef']);
+        Route::post('/store', [QpefController::class, 'qpefStore']);
+        Route::put('/update/{qpefId}', [QpefController::class, 'qpefUpdate']);
     });
 
 });
