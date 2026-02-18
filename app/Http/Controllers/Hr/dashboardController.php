@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Hr;
 
 use App\Http\Controllers\Controller;
 use App\Models\vwActive;
-use Illuminate\Http\Request;
 
 class dashboardController extends Controller
 {

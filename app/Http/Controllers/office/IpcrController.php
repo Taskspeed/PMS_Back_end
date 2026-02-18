@@ -3,18 +3,16 @@
 namespace App\Http\Controllers\office;
 
 use App\Http\Requests\AttendanceRequest;
-use Carbon\Carbon;
+
 use App\Models\Employee;
-use App\Models\TargetPeriod;
+
 use Illuminate\Http\Request;
 use App\Services\IpcrService;
-use Illuminate\Support\Facades\DB;
 use App\Models\PerformanceStandard;
-use Illuminate\Support\Facades\Log;
 use App\Http\Resources\IpcrResource;
 use App\Http\Resources\MonthlyPerformanceResource;
 use App\Http\Resources\MonthlyPerformanceSummaryResource;
-use App\Services\MonthlyPerformanceService;
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Routing\Controller as BaseController;
 
@@ -128,7 +126,7 @@ class IpcrController extends BaseController
         ]);
     }
 
-
+    // store attendance
     public function attendance(AttendanceRequest $request, IpcrService $ipcrService)
     {
         try {

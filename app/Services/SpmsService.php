@@ -14,6 +14,8 @@ class SpmsService
     // structure of office plantilla
     public function structure($request)
     {
+
+
         $officeId = $request->input('office_id');
 
         if (!$officeId) return response()->json([]);

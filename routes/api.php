@@ -152,21 +152,16 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::get('/opcr/office-head-functions/{officeId}', [OpcrController::class, 'getOfficeHeadFunctions']);
     // Route::post('/opcr/save', [OpcrController::class, 'saveOpcr']);
 
-    Route::prefix('opcr')->group(function(){
-        // Route::get('/{controlNo}/{semester}/{year}', [OpcrController::class, 'opcr']);
-    Route::post('/store', [OpcrController::class, 'storeOpcr']); // save the opcr
-        Route::get('/{controlNo}/{semester}/{year}', [OpcrController::class, 'opcr']);
-    });
 
     // HR Routes
     Route::prefix('hr')->group(function () {
         // Route::get('/spms/office/structure', [HrSpmsController::class, 'getOfficePlantilla']);
 
-        Route::get('/unit_work_plan/office', [Hr_Unit_work_planController::class, 'office']);
-        Route::get('/unit_work_plan', [Hr_Unit_work_planController::class, 'unit_work_plan']);
-        Route::get('/unit_work_plan/employee', [Hr_Unit_work_planController::class, 'employee']);
-        Route::get('/unit_work_plan/divisions', [Hr_Unit_work_planController::class, 'getDivisionsWithWorkPlans']);
-        Route::get('/unit_work_plan/employees', [Hr_Unit_work_planController::class, 'getEmployeesByDivision']);
+        // Route::get('/unit_work_plan/office', [Hr_Unit_work_planController::class, 'office']);
+        // Route::get('/unit_work_plan', [Hr_Unit_work_planController::class, 'unit_work_plan']);
+        // Route::get('/unit_work_plan/employee', [Hr_Unit_work_planController::class, 'employee']);
+        // Route::get('/unit_work_plan/divisions', [Hr_Unit_work_planController::class, 'getDivisionsWithWorkPlans']);
+        // Route::get('/unit_work_plan/employees', [Hr_Unit_work_planController::class, 'getEmployeesByDivision']);
 
         Route::get('/dashboard', [dashboardController::class, 'dashboard']);
 
@@ -253,6 +248,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/update/{qpefId}', [QpefController::class, 'qpefUpdate']);
     });
 
+
+    Route::prefix('opcr')->group(function () {
+        // Route::get('/{controlNo}/{semester}/{year}', [OpcrController::class, 'opcr']);
+        Route::get('/{controlNo}/{semester}/{year}', [OpcrController::class, 'opcr']);
+        Route::post('/store', [OpcrController::class, 'opcrStore']); // save the opcr
+        Route::put('/update', [OpcrController::class, 'opcrUpdate']); // save the opcr
+
+    });
 });
 
 

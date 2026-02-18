@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class IndicatorController extends Controller
 {
-    //
+
     // fetch
      public function getIndicator(){
 
@@ -33,7 +33,8 @@ class IndicatorController extends Controller
 
         return response()->json($indicator);
     }
-  // update
+
+    // update
     public function updateIndicator($indicatorId, IndicatorUpdateRequest $request)
     {
         $indicator = Indicator::findOrFail($indicatorId);
@@ -54,7 +55,7 @@ class IndicatorController extends Controller
         ]);
     }
 
- // delete
+    // delete
     public function deleteIndicator($indicatorId)
     {
         $indicator = Indicator::findOrFail($indicatorId);

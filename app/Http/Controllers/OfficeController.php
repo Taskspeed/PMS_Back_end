@@ -17,6 +17,13 @@ class OfficeController extends Controller
         return response()->json($data);
     }
 
+    // public function officePlantilla(SpmsService $structure, Request $request)
+    // {
+    //     $plantilla = $structure->structure($request);
+
+    //     return response()->json($plantilla);
+    // }
+
     public function plantillaStructureEmployee(Request $request)
     {
         $user = Auth::user();

@@ -67,13 +67,8 @@ class MfoController extends Controller
     public function storeMfo(MfoStoreRequest $request)  // store
     {
         // Validate the request
-        // $request->validate([
-        //     'office_id' => 'required|exists:offices,id',
-        //     'name' => 'required|string|max:255',
-        //     'f_category_id' => 'required|exists:f_categories,id',
-        // ]);
 
-        $mfo = Mfo::create([
+        $mfo = mfo::create([
             'office_id' => $request->office_id,
             'name'=>$request->name,
             'f_category_id'=>$request->f_category_id,
@@ -100,7 +95,7 @@ class MfoController extends Controller
         // ]);
 
         // find the MFO by id
-        $mfo = Mfo::findOrFail($id);
+        $mfo = mfo::findOrFail($id);
 
         // update the MFO
         $mfo->update([
@@ -123,23 +118,8 @@ class MfoController extends Controller
     }
 
 
-    //  // Fetch only active (non-deleted) mfo
-    //      public function index(){
 
-    //       $mfos = mfo::whereNull('deleted_at')->get();
-
-    //     return response()->json($mfos);
-    // }
-
-    // // fetch_mfo_SoftDeleted
-    // public function getSoftDeleted(){
-
-    //     $mfos = mfo::onlyTrashed()->get();
-
-    //     return response()->json($mfos);
-    // }
-
-    // softDelete for MFO
+    // Delete for MFO
     public function delete($id){
 
         $mfos = mfo::findOrFail($id);
@@ -155,18 +135,5 @@ class MfoController extends Controller
 
     }
 
-    // // restore soft-deleted data
-    // public function restore($id){
 
-    //     $mfos = mfo::onlyTrashed()->findOrFail($id);
-    //     $mfos->restore();
-
-    //     activity()
-    //         ->performedOn($mfos)
-    //         ->causedBy(Auth::user())
-    //         ->withProperties(['name' =>  $mfos->name])
-    //         ->log('MFO restored');
-
-    //     return response()->json(['message' => 'MFO restored successfully']);
-    // }
 }

@@ -78,21 +78,6 @@ class FOutpotController extends Controller
     }
 
 
-    // Fetch only active (non-deleted) outputs
-    // public function index()
-    // {
-    //     $outputs = F_outpot::whereNull('deleted_at')->get(); // Only fetch non-deleted data
-    //     return response()->json($outputs);
-    // }
-
-    // fetch_output_SoftDeleted
-    // public function getSoftDeleted()
-    // {
-    //     $outputs = F_outpot::onlyTrashed()->get(); // Fetch only soft-deleted records
-
-    //     return response()->json($outputs);
-    // }
-
 
     // softDelete for outputs
     public function deleteOutput($id)
@@ -108,23 +93,6 @@ class FOutpotController extends Controller
 
         return response()->json(['message' => 'Output soft deleted successfully']);
     }
-
-
-
-    // Restore soft-deleted data
-    // public function restore($id)
-    // {
-    //     $output = F_outpot::onlyTrashed()->findOrFail($id);
-    //     $output->restore();
-
-    //     activity()
-    //         ->performedOn($output)
-    //         ->causedBy(Auth::user())
-    //         ->withProperties(['name' => $output->name])
-    //         ->log('Output restored');
-
-    //     return response()->json(['message' => 'Output restored successfully']);
-    // }
 
 
 

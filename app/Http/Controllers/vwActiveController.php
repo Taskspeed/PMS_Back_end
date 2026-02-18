@@ -3,12 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\office;
-use App\Models\vwActive;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\vwplantillastructure;
-use Illuminate\Support\Facades\Auth;
+
 
 class vwActiveController extends Controller
 {

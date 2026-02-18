@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Library\TargetPeriodStoreRequest;
 use App\Http\Requests\Library\TargetPeriodUpdateRequest;
-use App\Http\Requests\TargerPeriodRequest;
 use Illuminate\Http\Request;
 use App\Models\TargetPeriodLib;
 
@@ -54,7 +53,7 @@ class TargetPeriodController extends Controller
     }
 
     // delete target period
-    public function deleteTargetPeriod(Request $request, $targetPeriodId)
+    public function deleteTargetPeriod($targetPeriodId)
     {
         $targetPeriod = TargetPeriodLib::findOrFail($targetPeriodId);
 

@@ -16,16 +16,6 @@ class EmployeeRatingController extends Controller
 {
 
 
-    // public function targetPeriodEmployee($controlNo) // fetch the target period of employee
-    // {
-    //     $employeeTargetPeriod = TargetPeriod::where(
-    //         'control_no',
-    //         $controlNo
-    //     )->get();
-
-    //     return response()->json($employeeTargetPeriod);
-    // }
-
     // fetch the target period of employee
     public function targetPeriodEmployee($controlNo)
     {

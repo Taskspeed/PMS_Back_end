@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\opcr;
 use App\Models\Employee;
-use App\Http\Requests\opcrRequest;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -88,7 +88,7 @@ class OpcrService
 
             foreach ($validatedData as $data) {
 
-                $records[] = Opcr::create([
+                $records[] = opcr::create([
                     'office_id' => $officeId,
                     'performance_standard_id' => $data['performance_standard_id'],
                     'budget' => $data['budget'],
@@ -101,6 +101,45 @@ class OpcrService
             DB::commit();
 
             return $records;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    // update AllotedBudget
+    public function updateAllotedBudget($validatedData)
+    {
+        $user = Auth::user();
+        $officeId = $user->office_id;
+
+        DB::beginTransaction();
+
+        try {
+            $records = [];
+
+            foreach ($validatedData as $data) {
+                // ✅ Capture the returned model instance
+                $record = opcr::updateOrCreate(
+                    [
+                        'office_id' => $officeId,
+                        'performance_standard_id' => $data['performance_standard_id'],
+                    ],
+                    [
+                        'budget' => $data['budget'],
+                        'accountable' => $data['accountable'],
+                        'accomplishment' => $data['accomplishment'],
+                    ]
+                );
+
+                // ✅ Add to the records array
+                $records[] = $record;
+            }
+
+            DB::commit();
+
+            return $records; // ✅ Now this will have data!
+
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;

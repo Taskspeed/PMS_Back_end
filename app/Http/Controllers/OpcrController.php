@@ -149,12 +149,27 @@ class OpcrController extends BaseController
     }
 
     // saving the opcr of the office head
-    public function storeOpcr(opcrRequest $request, OpcrService $opcrService)
+    public function opcrStore(opcrRequest $request, OpcrService $opcrService)
     {
         $validated = $request->validated();
 
         $opcr = $opcrService->storeAllotedBudget($validated);
 
         return response()->json($opcr);
+    }
+
+
+    // saving the opcr of the office head
+    public function opcrUpdate(opcrRequest $request, OpcrService $opcrService)
+    {
+        $validated = $request->validated();
+
+        $opcr = $opcrService->updateAllotedBudget($validated);
+
+        return response()->json([
+            'message' => 'Opcr update successfully',
+             'data' =>$opcr
+
+         ]);
     }
 }

@@ -604,6 +604,7 @@ class IpcrService
 
     //---------------------------------------------------------------------------- late and absent -----------------------------------------------------------------------------//
 
+    // storing attendance
     public function storeAttendance(AttendanceRequest $request)
     {
         $validated = $request->validated();
