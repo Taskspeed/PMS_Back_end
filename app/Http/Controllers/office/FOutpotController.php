@@ -18,8 +18,9 @@ class FOutpotController extends Controller
     // storing output
     public function addOutput(OutputRequest $request,OutputService $outputService)
     {
+        $validated = $request->validated();
 
-        $output = $outputService->store($request->validated());
+        $output = $outputService->store($validated);
 
         return response()->json([
             'message' => 'Output created successfully',
@@ -31,14 +32,15 @@ class FOutpotController extends Controller
     public function updateOutput(OutputUpdateRequest $request, $id, OutputService $outputService)
     {
 
-        $output = $outputService->update($request, $id);
+        $validated = $request->validated();
+
+        $output = $outputService->update($validated, $id);
 
         return response()->json([
             'message' => 'Output created successfully',
             'output' => $output
         ]);
     }
-
 
     // Delete for outputs
     public function deleteOutput($id)

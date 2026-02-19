@@ -27,7 +27,7 @@ class MfoController extends Controller
     // addMfo
     public function addMfo(MfoStoreRequest $request,MfoService $mfoService)  // store
     {
-        $validated = $request->validate();
+        $validated = $request->validated();
 
         $mfo = $mfoService->store($validated);
 
@@ -42,7 +42,7 @@ class MfoController extends Controller
     // update mfo
     public function updateMfo(MfoUpdateRequest $request, $id, MfoService $mfoService) // update
     {
-        $validated = $request->validate();
+        $validated = $request->validated();
         // find the MFO by id
 
         $mfo = $mfoService->update($id, $validated);

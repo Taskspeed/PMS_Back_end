@@ -28,7 +28,6 @@ class DashboardController extends Controller
             'total_employees' => $totalEmployees]);
     }
 
-
     //get the total of status of the employee ipcr
     public function getIpcrStatusCounts()
     {
@@ -48,5 +47,5 @@ class DashboardController extends Controller
 
     // unitworkplan status by office2/group/division/section/unit
 
-    
+
 }

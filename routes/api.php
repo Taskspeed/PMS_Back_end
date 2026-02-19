@@ -42,12 +42,6 @@ Route::post('/login', [AuthController::class, 'login']);  // change route login
 
 // Route::get('/spms/office/structure', [HrUnitWorkPlanController::class, 'getOfficePlantilla']);
 
-// Rating
-Route::get('employee/target-periods/{controlNo}', [EmployeeRatingController::class, 'targetPeriodEmployee']);
-Route::get('employee/target-periods/details/{targetperiodId}', [EmployeeRatingController::class, 'targetPeriodDetails']);
-Route::get('employee/list/rated/{control_no}', [EmployeeRatingController::class, 'getListOfRatingEmployee']);
-
-Route::post('employee/store/rating', [EmployeeRatingController::class, 'performanceRating']);
 
 
 Route::prefix('ipcr')->group(function () {
@@ -77,15 +71,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('office')->group(function () {
 
         Route::get('/', [OfficeController::class, 'getOffices']); // fetch all
-
         Route::get('/dashboard/ipcr-status-counts', [OfficeDashboardController::class, 'getIpcrStatusCounts']);
-
         Route::get('/dashboard', [OfficeDashboardController::class, 'getTotalEmployee']);
-
         Route::get('/structure', [OfficeController::class, 'officeStructure']);
-
         Route::get('/structure/count', [VwplantillastructureController::class, 'plantillaStructureEmployeeWithCount']);
-
         Route::get('/mfo', [MfoController::class, 'Mfo']); // getting the mfo of user logged in
 
     });
@@ -99,10 +88,10 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     //office
-    Route::post('/add_mfo', [MfoController::class, 'storeMfo']);
+    Route::post('/add_mfo', [MfoController::class, 'addMfo']);
     Route::get('/mfos', [MfoController::class, 'index']);
     Route::get('/mfos/soft-deleted', [MfoController::class, 'getSoftDeleted']);
-    Route::post('/mfos/{id}', [MfoController::class, 'update']);
+    Route::post('/mfos/{id}', [MfoController::class, 'updateMfo']);
     Route::delete('/mfos/{id}', [MfoController::class, 'delete']);
     Route::patch('/mfos/restore/{id}', [MfoController::class, 'restore']);
 
@@ -151,7 +140,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/fetch_employees', [SpmsController::class, 'getEmployees']);
         // Route::get('v2/fetch_employees', [SpmsController::class, 'getEmployees']);
 
-        Route::get('/count', [SpmsController::class, 'getEmployeeCountAndUnitworkplan']); // Count unit work plan
+        // Route::get('/count', [SpmsController::class, 'getEmployeeCountAndUnitworkplan']); // Count unit work plan
         Route::get('/office/structure', [SpmsController::class, 'officePlantilla']); // structure of office
         Route::get('/target_periods/semester-year', [SpmsController::class, 'getTargetPeriodsSemesterYear']); // geting the year and semester
         Route::get('/employee/{ControlNo}/{semester}/{year}', [UnitWorkPlanController::class, 'getUnitworkplan']); // allow any characters, including leading zeros
@@ -178,7 +167,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/search', [EmployeeController::class, 'searchEmployee']);
         Route::delete('/delete/{id}', [EmployeeController::class, 'deleteEmployee']);
         Route::get('/{controlNo}', [UnitWorkPlanController::class, 'findEmployee']);
-        // Route::get('/list-of-employee', [EmployeeController::class, 'listOfEmployee']);
+
+        // Rating
+        Route::get('/target-periods/{controlNo}', [EmployeeRatingController::class, 'targetPeriodEmployee']);
+        Route::get('/target-periods/details/{targetperiodId}', [EmployeeRatingController::class, 'targetPeriodDetails']);
+        Route::get('/list/rated/{control_no}', [EmployeeRatingController::class, 'getListOfRatingEmployee']);
+        Route::post('store/rating', [EmployeeRatingController::class, 'performanceRating']);
+
 
     });
 

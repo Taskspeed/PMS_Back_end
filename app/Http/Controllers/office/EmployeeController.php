@@ -88,7 +88,6 @@ class EmployeeController extends Controller
         ]);
     }
 
-
     //remove employee on the plantilla
     public function deleteEmployee($employeeId)
     {
@@ -104,7 +103,6 @@ class EmployeeController extends Controller
             ]
         );
     }
-
 
     // fetch employee
     public function getEmployee(Request $request)

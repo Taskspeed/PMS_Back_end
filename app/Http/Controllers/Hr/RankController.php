@@ -9,13 +9,11 @@ use Illuminate\Http\Request;
 class RankController extends Controller
 {
 
-
-
     // fetch rank
     public function getRank()
     {
 
-        $rank = Rank::select('id','rank_name')->get();
+        $rank = Rank::select('id', 'rank_name')->get();
 
         return response()->json($rank);
     }
@@ -33,7 +31,6 @@ class RankController extends Controller
 
         return response()->json($rank);
     }
-
 
     // update
     public function updaterank($rankId, Request $request)

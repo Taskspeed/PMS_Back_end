@@ -264,251 +264,251 @@ class SpmsController extends BaseController
     }
 
 
-    public function getEmployeeCountAndUnitworkplan(Request $request)
-    {
-        // $user = Auth::user();
-        // $officeId = $user->office_id;
+//     public function getEmployeeCountAndUnitworkplan(Request $request)
+//     {
+//         // $user = Auth::user();
+//         // $officeId = $user->office_id;
 
-        if (!$this->officeId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Office ID is required'
-            ], 400);
-        }
+//         if (!$this->officeId) {
+//             return response()->json([
+//                 'success' => false,
+//                 'message' => 'Office ID is required'
+//             ], 400);
+//         }
 
-        // 1. Get office name
-        $officeName = DB::table('offices')->where('id', $this->officeId)->value('name');
-        if (!$officeName) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Office not found'
-            ], 404);
-        }
+//         // 1. Get office name
+//         $officeName = DB::table('offices')->where('id', $this->officeId)->value('name');
+//         if (!$officeName) {
+//             return response()->json([
+//                 'success' => false,
+//                 'message' => 'Office not found'
+//             ], 404);
+//         }
 
-        // 2. Fetch plantilla structure records
-        $plantilla = DB::table('vwplantillastructure')
-            ->where('office', $officeName)
-            ->orderBy('office2')
-            ->orderBy('group')
-            ->orderBy('division')
-            ->orderBy('section')
-            ->orderBy('unit')
-            ->get();
+//         // 2. Fetch plantilla structure records
+//         $plantilla = DB::table('vwplantillastructure')
+//             ->where('office', $officeName)
+//             ->orderBy('office2')
+//             ->orderBy('group')
+//             ->orderBy('division')
+//             ->orderBy('section')
+//             ->orderBy('unit')
+//             ->get();
 
-        // 3. Helper count function
-        $countWorkplan = function ($query) {
-            $total = $query->count();
-            $with = $query->filter(function ($emp) {
-                return TargetPeriod::where('control_no', $emp->ControlNo)->exists();
-            })->count();
+//         // 3. Helper count function
+//         $countWorkplan = function ($query) {
+//             $total = $query->count();
+//             $with = $query->filter(function ($emp) {
+//                 return TargetPeriod::where('control_no', $emp->ControlNo)->exists();
+//             })->count();
 
-            return "$with/$total";
-        };
+//             return "$with/$total";
+//         };
 
-        // 4. Preload all employees of this office (1 query only)
-        $employees = Employee::where('office_id', $this->officeId)
-            ->select('ControlNo', 'office2', 'group', 'division', 'section', 'unit')
-            ->get();
+//         // 4. Preload all employees of this office (1 query only)
+//         $employees = Employee::where('office_id', $this->officeId)
+//             ->select('ControlNo', 'office2', 'group', 'division', 'section', 'unit')
+//             ->get();
 
-        // 5. Start final output - FIX: Use filter instead of where for null checks
-        $result = [
-            "office" => [
-                "name" => $officeName,
-                "unitWorkPlan" => $countWorkplan($employees->filter(function ($e) {
-                    return is_null($e->division) && is_null($e->section) && is_null($e->unit);
-                }))
-            ],
-            "office2" => []
-        ];
+//         // 5. Start final output - FIX: Use filter instead of where for null checks
+//         $result = [
+//             "office" => [
+//                 "name" => $officeName,
+//                 "unitWorkPlan" => $countWorkplan($employees->filter(function ($e) {
+//                     return is_null($e->division) && is_null($e->section) && is_null($e->unit);
+//                 }))
+//             ],
+//             "office2" => []
+//         ];
 
-        /* ============================================================
-   LOOP OFFICE2
-============================================================ */
-        foreach ($plantilla->unique('office2') as $o2) {
+//         /* ============================================================
+//    LOOP OFFICE2
+// ============================================================ */
+//         foreach ($plantilla->unique('office2') as $o2) {
 
-            $office2Name = $o2->office2;
-            $office2Employees = $employees->where('office2', $office2Name);
+//             $office2Name = $o2->office2;
+//             $office2Employees = $employees->where('office2', $office2Name);
 
-            $office2Block = [
-                "office2" => $office2Name,
-                "unitWorkPlan" => $countWorkplan($office2Employees),
-                "group" => []
-            ];
+//             $office2Block = [
+//                 "office2" => $office2Name,
+//                 "unitWorkPlan" => $countWorkplan($office2Employees),
+//                 "group" => []
+//             ];
 
-            /* ============================================================
-       LOOP GROUP
-    ============================================================ */
-            foreach ($plantilla->where('office2', $office2Name)->unique('group') as $grp) {
+//             /* ============================================================
+//        LOOP GROUP
+//     ============================================================ */
+//             foreach ($plantilla->where('office2', $office2Name)->unique('group') as $grp) {
 
-                $groupName = $grp->group;
-                $groupEmployees = $office2Employees->where('group', $groupName);
+//                 $groupName = $grp->group;
+//                 $groupEmployees = $office2Employees->where('group', $groupName);
 
-                $groupBlock = [
-                    "group" => $groupName,
-                    "unitWorkPlan" => $countWorkplan($groupEmployees),
-                    "divisions" => [],
-                    "sections_without_division" => [],
-                    "units_without_division" => []
-                ];
+//                 $groupBlock = [
+//                     "group" => $groupName,
+//                     "unitWorkPlan" => $countWorkplan($groupEmployees),
+//                     "divisions" => [],
+//                     "sections_without_division" => [],
+//                     "units_without_division" => []
+//                 ];
 
-                /* ============================================================
-           DIVISIONS
-        ============================================================ */
-                $divisions = $plantilla
-                    ->where('office2', $office2Name)
-                    ->where('group', $groupName)
-                    ->whereNotNull('division')
-                    ->unique('division');
+//                 /* ============================================================
+//            DIVISIONS
+//         ============================================================ */
+//                 $divisions = $plantilla
+//                     ->where('office2', $office2Name)
+//                     ->where('group', $groupName)
+//                     ->whereNotNull('division')
+//                     ->unique('division');
 
-                foreach ($divisions as $div) {
-                    $divisionName = $div->division;
-                    $divisionEmployees = $groupEmployees->where('division', $divisionName);
+//                 foreach ($divisions as $div) {
+//                     $divisionName = $div->division;
+//                     $divisionEmployees = $groupEmployees->where('division', $divisionName);
 
-                    $divisionBlock = [
-                        "division" => $divisionName,
-                        "unitWorkPlan" => $countWorkplan($divisionEmployees),
-                        "sections" => [],
-                        "units_without_section" => []
-                    ];
+//                     $divisionBlock = [
+//                         "division" => $divisionName,
+//                         "unitWorkPlan" => $countWorkplan($divisionEmployees),
+//                         "sections" => [],
+//                         "units_without_section" => []
+//                     ];
 
-                    // Sections under this division
-                    $sections = $plantilla
-                        ->where('division', $divisionName)
-                        ->whereNotNull('section')
-                        ->unique('section');
+//                     // Sections under this division
+//                     $sections = $plantilla
+//                         ->where('division', $divisionName)
+//                         ->whereNotNull('section')
+//                         ->unique('section');
 
-                    foreach ($sections as $sec) {
-                        $sectionName = $sec->section;
-                        $sectionEmployees = $divisionEmployees->where('section', $sectionName);
+//                     foreach ($sections as $sec) {
+//                         $sectionName = $sec->section;
+//                         $sectionEmployees = $divisionEmployees->where('section', $sectionName);
 
-                        $sectionBlock = [
-                            "section" => $sectionName,
-                            "unitWorkPlan" => $countWorkplan($sectionEmployees),
-                            "units" => []
-                        ];
+//                         $sectionBlock = [
+//                             "section" => $sectionName,
+//                             "unitWorkPlan" => $countWorkplan($sectionEmployees),
+//                             "units" => []
+//                         ];
 
-                        // Units under this section
-                        $units = $plantilla
-                            ->where('division', $divisionName)
-                            ->where('section', $sectionName)
-                            ->pluck('unit')
-                            ->unique()
-                            ->filter()
-                            ->values();
+//                         // Units under this section
+//                         $units = $plantilla
+//                             ->where('division', $divisionName)
+//                             ->where('section', $sectionName)
+//                             ->pluck('unit')
+//                             ->unique()
+//                             ->filter()
+//                             ->values();
 
-                        foreach ($units as $unitName) {
-                            $unitEmployees = $sectionEmployees->where('unit', $unitName);
+//                         foreach ($units as $unitName) {
+//                             $unitEmployees = $sectionEmployees->where('unit', $unitName);
 
-                            $sectionBlock["units"][] = [
-                                "unit" => $unitName,
-                                "unitWorkPlan" => $countWorkplan($unitEmployees)
-                            ];
-                        }
+//                             $sectionBlock["units"][] = [
+//                                 "unit" => $unitName,
+//                                 "unitWorkPlan" => $countWorkplan($unitEmployees)
+//                             ];
+//                         }
 
-                        $divisionBlock["sections"][] = $sectionBlock;
-                    }
+//                         $divisionBlock["sections"][] = $sectionBlock;
+//                     }
 
-                    // Units without section - FIX: Use filter for null checks
-                    $unitsWithoutSection = $plantilla
-                        ->where('division', $divisionName)
-                        ->filter(function ($item) {
-                            return is_null($item->section);
-                        })
-                        ->pluck('unit')
-                        ->unique()
-                        ->filter()
-                        ->values();
+//                     // Units without section - FIX: Use filter for null checks
+//                     $unitsWithoutSection = $plantilla
+//                         ->where('division', $divisionName)
+//                         ->filter(function ($item) {
+//                             return is_null($item->section);
+//                         })
+//                         ->pluck('unit')
+//                         ->unique()
+//                         ->filter()
+//                         ->values();
 
-                    foreach ($unitsWithoutSection as $u) {
-                        $unitEmployees = $divisionEmployees->filter(function ($emp) use ($u) {
-                            return is_null($emp->section) && $emp->unit == $u;
-                        });
-                        $divisionBlock["units_without_section"][] = [
-                            "unit" => $u,
-                            "unitWorkPlan" => $countWorkplan($unitEmployees)
-                        ];
-                    }
+//                     foreach ($unitsWithoutSection as $u) {
+//                         $unitEmployees = $divisionEmployees->filter(function ($emp) use ($u) {
+//                             return is_null($emp->section) && $emp->unit == $u;
+//                         });
+//                         $divisionBlock["units_without_section"][] = [
+//                             "unit" => $u,
+//                             "unitWorkPlan" => $countWorkplan($unitEmployees)
+//                         ];
+//                     }
 
-                    $groupBlock["divisions"][] = $divisionBlock;
-                }
+//                     $groupBlock["divisions"][] = $divisionBlock;
+//                 }
 
-                /* ============================================================
-           SECTIONS WITHOUT DIVISION
-        ============================================================ */
-                $sectionsWithoutDivision = $plantilla
-                    ->filter(function ($item) {
-                        return is_null($item->division);
-                    })
-                    ->whereNotNull('section')
-                    ->where('group', $groupName)
-                    ->where('office2', $office2Name)
-                    ->unique('section');
+//                 /* ============================================================
+//            SECTIONS WITHOUT DIVISION
+//         ============================================================ */
+//                 $sectionsWithoutDivision = $plantilla
+//                     ->filter(function ($item) {
+//                         return is_null($item->division);
+//                     })
+//                     ->whereNotNull('section')
+//                     ->where('group', $groupName)
+//                     ->where('office2', $office2Name)
+//                     ->unique('section');
 
-                foreach ($sectionsWithoutDivision as $sec) {
+//                 foreach ($sectionsWithoutDivision as $sec) {
 
-                    $sectionName = $sec->section;
-                    // FIX: Use filter for null checks on collections
-                    $sectionEmployees = $groupEmployees->filter(function ($emp) use ($sectionName) {
-                        return is_null($emp->division) && $emp->section == $sectionName;
-                    });
+//                     $sectionName = $sec->section;
+//                     // FIX: Use filter for null checks on collections
+//                     $sectionEmployees = $groupEmployees->filter(function ($emp) use ($sectionName) {
+//                         return is_null($emp->division) && $emp->section == $sectionName;
+//                     });
 
-                    $sectionBlock = [
-                        "section" => $sectionName,
-                        "unitWorkPlan" => $countWorkplan($sectionEmployees),
-                        "units" => []
-                    ];
+//                     $sectionBlock = [
+//                         "section" => $sectionName,
+//                         "unitWorkPlan" => $countWorkplan($sectionEmployees),
+//                         "units" => []
+//                     ];
 
-                    $units = $plantilla
-                        ->where('section', $sectionName)
-                        ->filter(function ($item) {
-                            return is_null($item->division);
-                        })
-                        ->pluck('unit')
-                        ->unique()
-                        ->filter()
-                        ->values();
+//                     $units = $plantilla
+//                         ->where('section', $sectionName)
+//                         ->filter(function ($item) {
+//                             return is_null($item->division);
+//                         })
+//                         ->pluck('unit')
+//                         ->unique()
+//                         ->filter()
+//                         ->values();
 
-                    foreach ($units as $u) {
-                        $unitEmployees = $sectionEmployees->where('unit', $u);
-                        $sectionBlock["units"][] = [
-                            "unit" => $u,
-                            "unitWorkPlan" => $countWorkplan($unitEmployees)
-                        ];
-                    }
+//                     foreach ($units as $u) {
+//                         $unitEmployees = $sectionEmployees->where('unit', $u);
+//                         $sectionBlock["units"][] = [
+//                             "unit" => $u,
+//                             "unitWorkPlan" => $countWorkplan($unitEmployees)
+//                         ];
+//                     }
 
-                    $groupBlock["sections_without_division"][] = $sectionBlock;
-                }
+//                     $groupBlock["sections_without_division"][] = $sectionBlock;
+//                 }
 
-                /* ============================================================
-           UNITS WITHOUT DIVISION & SECTION
-        ============================================================ */
-                $unitsWithoutDiv = $plantilla
-                    ->filter(function ($item) {
-                        return is_null($item->division) && is_null($item->section);
-                    })
-                    ->where('group', $groupName)
-                    ->pluck('unit')
-                    ->unique()
-                    ->filter()
-                    ->values();
+//                 /* ============================================================
+//            UNITS WITHOUT DIVISION & SECTION
+//         ============================================================ */
+//                 $unitsWithoutDiv = $plantilla
+//                     ->filter(function ($item) {
+//                         return is_null($item->division) && is_null($item->section);
+//                     })
+//                     ->where('group', $groupName)
+//                     ->pluck('unit')
+//                     ->unique()
+//                     ->filter()
+//                     ->values();
 
-                foreach ($unitsWithoutDiv as $u) {
-                    $unitEmployees = $groupEmployees->filter(function ($emp) use ($u) {
-                        return is_null($emp->division) && is_null($emp->section) && $emp->unit == $u;
-                    });
-                    $groupBlock["units_without_division"][] = [
-                        "unit" => $u,
-                        "unitWorkPlan" => $countWorkplan($unitEmployees)
-                    ];
-                }
+//                 foreach ($unitsWithoutDiv as $u) {
+//                     $unitEmployees = $groupEmployees->filter(function ($emp) use ($u) {
+//                         return is_null($emp->division) && is_null($emp->section) && $emp->unit == $u;
+//                     });
+//                     $groupBlock["units_without_division"][] = [
+//                         "unit" => $u,
+//                         "unitWorkPlan" => $countWorkplan($unitEmployees)
+//                     ];
+//                 }
 
-                $office2Block["group"][] = $groupBlock;
-            }
+//                 $office2Block["group"][] = $groupBlock;
+//             }
 
-            $result["office2"][] = $office2Block;
-        }
+//             $result["office2"][] = $office2Block;
+//         }
 
-        return response()->json($result);
-    }
+//         return response()->json($result);
+//     }
 
 }

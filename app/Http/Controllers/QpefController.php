@@ -10,13 +10,10 @@ use Illuminate\Http\Request;
 class QpefController extends Controller
 {
 
-
-
     // storing qpef of employee
     public function qpefStore(qpefRequest $request, QpefService $qpefService){
 
     $validated = $request->validated();
-
 
         try {
             $qpef = $qpefService->createQpef($validated);

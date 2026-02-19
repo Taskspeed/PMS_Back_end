@@ -17,7 +17,7 @@ class OutputService
     // }
 
 
-    public function store(array $data)
+    public function store($validated)
     {
         // $outputData = [
         //     'f_category_id' => $request->f_category_id,
@@ -31,7 +31,7 @@ class OutputService
         //     $outputData['mfo_id'] = $request->mfo_id;
         // }
 
-        $output = F_outpot::create($data);
+        $output = F_outpot::create($validated);
 
         activity()
             ->performedOn($output)
@@ -44,17 +44,14 @@ class OutputService
     }
 
 
-    public function update($request, $id)
+    public function update($validated, $id)
     {
 
         // Find the output by ID
         $output = F_outpot::findOrFail($id);
 
         // Update the output
-        $output->update([
-            // 'mfo_id' => $request->mfo_id,
-            'name' => $request->name,
-        ]);
+        $output->update($validated);
 
         // Log activity
         activity()

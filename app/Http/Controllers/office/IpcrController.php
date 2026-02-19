@@ -135,7 +135,6 @@ class IpcrController extends BaseController
         }
     }
 
-
     // updating - status ipcr of employee
     public function statusIpcr(Request $request, $targetPeriodId, IpcrService $updatingIpcr){
 

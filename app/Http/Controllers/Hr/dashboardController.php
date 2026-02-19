@@ -14,10 +14,9 @@ class dashboardController extends Controller
     public function currentEmployeeStatus(DashboardService $dashboardService)
     {
 
-    $employee = $dashboardService->currentEmployee();
+        $employee = $dashboardService->currentEmployee();
 
-    return response()->json($employee);
-
+        return response()->json($employee);
     }
 
     // store the status of employee
