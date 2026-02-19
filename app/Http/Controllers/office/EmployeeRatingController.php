@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\office;
 
-use App\Models\TargetPeriod;
-use Illuminate\Http\Request;
-use App\Models\PerformanceRating;
-use Illuminate\Support\Facades\DB;
-use App\Models\PerformanceStandard;
 use App\Http\Controllers\Controller;
+
 use App\Http\Requests\performanceRatingStoreRequest;
 
-use function PHPUnit\Framework\isEmpty;
+use App\Models\PerformanceRating;
+
+use App\Models\TargetPeriod;
+use App\Services\PerformanceRatingService;
+
 
 class EmployeeRatingController extends Controller
 {
@@ -60,28 +60,18 @@ class EmployeeRatingController extends Controller
         return response()->json($targetperiod);
     }
 
+
     // employee store his rate
-    public function performanceRatingStore(performanceRatingStoreRequest $request)
+    public function performanceRating(performanceRatingStoreRequest $request, PerformanceRatingService $performanceRatingService)
     {
         $validated = $request->validated();
 
-        $saveRates = [];  // store in to array
-
-        // save the rating using foreach loop
-        DB::transaction(function () use ($validated, &$saveRates) {
-            foreach ($validated['performance_rate'] as $rateData) {
-
-                $rateData['performance_standard_id'] = $rateData['performance_standards'];
-                unset($rateData['performance_standards']);
-
-                $saveRates[] = PerformanceRating::create($rateData);
-            }
-        });
+        $rating = $performanceRatingService->performanceRatingStore($validated);
 
         return response()->json([
             'status' => true,
             'message' => 'Rate(s) successfully saved',
-            'rates' => $saveRates
+            'rates' => $rating
         ]);
     }
 

@@ -89,14 +89,6 @@ class AuthController extends Controller
     public function register(RegisterRequest $request) // creating user account
     {
         try {
-            // $request->validate([
-            //     'control_no' => 'required|string',
-            //     'name' => 'required|string|unique:users,name',
-            //     'password' => 'required|string|min:6',
-            //     'office_id' => 'required|exists:offices,id',
-            //     'role_id' => 'required|exists:Roles,id',
-            //     'designation'=> 'required|string',
-            // ]);
 
             $user = User::create([
                 'control_no' => $request->control_no,
@@ -162,10 +154,7 @@ class AuthController extends Controller
     // Add this method to your AuthController.php
     public function changePassword(ChangePasswordRequest $request)
     {
-        // $request->validate([
-        //     'oldPassword' => 'required|string',
-        //     'newPassword' => 'nullable|string|min:6|different:oldPassword',
-        // ]);
+     
 
         try {
             $user = $request->user();

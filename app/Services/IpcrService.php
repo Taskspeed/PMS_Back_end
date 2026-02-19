@@ -10,6 +10,7 @@ use App\Models\PerformanceRating;
 use App\Models\PerformanceStandard;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\AttendanceRequest;
+use App\Models\TargetPeriod;
 
 class IpcrService
 {
@@ -97,58 +98,6 @@ class IpcrService
 
         return $employee;
     }
-
-    // public function getIpcrData($controlNo, $year, $semester)
-    // {
-    //     $employee = Employee::where('ControlNo', $controlNo)
-    //         ->with([
-    //             'targetPeriods' => function ($q) use ($year, $semester) {
-    //                 $q->where('year', $year)
-    //                     ->where('semester', $semester)
-    //                     ->with([
-    //                         'performanceStandards.performanceRating'
-    //                     ]);
-    //             }
-    //         ])
-    //         ->first();
-
-    //     if (! $employee) {
-    //         return null;
-    //     }
-
-    //     $employee->targetPeriods->each(function ($period) {
-    //         $period->performanceStandards->each(function ($standard) {
-    //             $grouped = $this->groupRatingsByMonthlySummary($standard->performanceRating);
-
-    //             $standard->monthly_ratings = $grouped;
-    //             $standard->makeHidden('performanceRating');
-    //         });
-    //     });
-
-    //     // $employee->targetPeriods->each(function ($period) {
-    //     //     $period->performanceStandards->each(function ($standard) {
-
-    //     //         $monthly = $this->groupRatingsByMonthlySummary(
-    //     //             $standard->performanceRating
-    //     //         );
-
-    //     //         $summary = $this->getComputationTotalAndRating(
-    //     //             $monthly['monthly'],
-    //     //             $standard->standardOutcomes
-    //     //         );
-
-    //     //         // ✅ attach computed values
-    //     //         $standard->monthly_ratings = $monthly;
-    //     //         $standard->totals = $summary['totals'];
-    //     //         $standard->ratings = $summary['ratings'];
-
-    //     //         $standard->makeHidden('performanceRating');
-    //     //     });
-    //     // });
-
-
-    //     return $employee; // ✅ REQUIRED
-    // }
 
     //---------------------------------------------------------------------------- monthly-rate-----------------------------------------------------------------------------//
 
@@ -427,11 +376,22 @@ class IpcrService
             $totals['timeliness_total'] += data_get($month, 'timeliness.month_total', 0);
         }
 
-        // 🔹 Prevent division by zero
-        $quantityTotal = $totals['quantity_total'] ?: 1;
+
 
         // Calculate quantity_rating based on standard_outcomes
         $quantityRating = $this->getQuantityRating($totals['quantity_total'], $standardOutcomes);
+
+        $quantityTotal = $totals['quantity_total'];
+
+        $effectivenessRating = $quantityTotal > 0
+            ? round($totals['effectiveness_total'] / $quantityTotal)
+            : 0;
+
+        $timelinessRating = $quantityTotal > 0
+            ? round($totals['timeliness_total'] / $quantityTotal)
+            : 0;
+
+
 
         return [
             'totals' => $totals,
@@ -443,13 +403,9 @@ class IpcrService
             // Timeliness and Effectiveness Rating Calculation
             // Rating = Total Actual / Total Quantity
             'ratings' => [
-                'quantity_rating' => (int) $quantityRating,
-                'effectiveness_rating' => (int) round(
-                    $totals['effectiveness_total']  /   $quantityTotal
-                ),
-                'timeliness_rating' => (int) round(
-                    $totals['timeliness_total'] /   $quantityTotal
-                ),
+                'quantity_rating'      => (int) $quantityRating,
+                'effectiveness_rating' => (int) $effectivenessRating,
+                'timeliness_rating'    => (int) $timelinessRating,
             ],
 
         ];
@@ -458,50 +414,91 @@ class IpcrService
     //getting the quantity rating based on the standard outcomes
     private function getQuantityRating($quantityTotal, $standardOutcomes)
     {
-        // Sort outcomes by rating descending (5 -> 1)
+        if ($quantityTotal <= 0) {
+            return 0;
+        }
+
         $outcomes = collect($standardOutcomes)->sortByDesc('rating');
 
         foreach ($outcomes as $outcome) {
             $quantity = data_get($outcome, 'quantity');
 
-            // Skip null quantities
             if (is_null($quantity)) {
                 continue;
             }
 
-            // Handle "X and above" (e.g., "65 and above")
             if (preg_match('/^(\d+)\s+and\s+above$/i', $quantity, $matches)) {
                 $threshold = (int) $matches[1];
                 if ($quantityTotal >= $threshold) {
                     return (int) data_get($outcome, 'rating');
                 }
-            }
-            // Handle "X and below" (e.g., "25 and below")
-            elseif (preg_match('/^(\d+)\s+and\s+below$/i', $quantity, $matches)) {
+            } elseif (preg_match('/^(\d+)\s+and\s+below$/i', $quantity, $matches)) {
                 $threshold = (int) $matches[1];
                 if ($quantityTotal <= $threshold) {
                     return (int) data_get($outcome, 'rating');
                 }
-            }
-            // Handle range "X-Y" (e.g., "57-64")
-            elseif (preg_match('/^(\d+)-(\d+)$/', $quantity, $matches)) {
+            } elseif (preg_match('/^(\d+)-(\d+)$/', $quantity, $matches)) {
                 $min = (int) $matches[1];
                 $max = (int) $matches[2];
                 if ($quantityTotal >= $min && $quantityTotal <= $max) {
                     return (int) data_get($outcome, 'rating');
                 }
-            }
-            // Handle exact number (e.g., "3", "2", "1", "0")
-            elseif (is_numeric($quantity)) {
+            } elseif (is_numeric($quantity)) {
                 if ($quantityTotal >= (int) $quantity) {
                     return (int) data_get($outcome, 'rating');
                 }
             }
         }
 
-        // Default to lowest rating if no match found
-        return 1;
+        return 0;
     }
+
+    // private function getQuantityRating($quantityTotal, $standardOutcomes)
+    // {
+    //     // Sort outcomes by rating descending (5 -> 1)
+    //     $outcomes = collect($standardOutcomes)->sortByDesc('rating');
+
+    //     foreach ($outcomes as $outcome) {
+    //         $quantity = data_get($outcome, 'quantity');
+
+    //         // Skip null quantities
+    //         if (is_null($quantity)) {
+    //             continue;
+    //         }
+
+    //         // Handle "X and above" (e.g., "65 and above")
+    //         if (preg_match('/^(\d+)\s+and\s+above$/i', $quantity, $matches)) {
+    //             $threshold = (int) $matches[1];
+    //             if ($quantityTotal >= $threshold) {
+    //                 return (int) data_get($outcome, 'rating');
+    //             }
+    //         }
+    //         // Handle "X and below" (e.g., "25 and below")
+    //         elseif (preg_match('/^(\d+)\s+and\s+below$/i', $quantity, $matches)) {
+    //             $threshold = (int) $matches[1];
+    //             if ($quantityTotal <= $threshold) {
+    //                 return (int) data_get($outcome, 'rating');
+    //             }
+    //         }
+    //         // Handle range "X-Y" (e.g., "57-64")
+    //         elseif (preg_match('/^(\d+)-(\d+)$/', $quantity, $matches)) {
+    //             $min = (int) $matches[1];
+    //             $max = (int) $matches[2];
+    //             if ($quantityTotal >= $min && $quantityTotal <= $max) {
+    //                 return (int) data_get($outcome, 'rating');
+    //             }
+    //         }
+    //         // Handle exact number (e.g., "3", "2", "1", "0")
+    //         elseif (is_numeric($quantity)) {
+    //             if ($quantityTotal >= (int) $quantity) {
+    //                 return (int) data_get($outcome, 'rating');
+    //             }
+    //         }
+    //     }
+
+    //     // Default to lowest rating if no match found
+    //     return 0;
+    // }
 
     // get the average  of employee base on the ratings
     // quantity rating + effectiveness rating + timeliness rating / 3
@@ -645,5 +642,16 @@ class IpcrService
         }
 
         return $createdMonths;
+    }
+
+    // status of ipcr of employee
+    public function updateStatusIpcr($validateData,$targetPeriodId){
+
+     $ipcr = TargetPeriod::findOrFail($targetPeriodId);
+
+     $ipcr->update($validateData); // updating
+
+     return  $ipcr;
+
     }
 }

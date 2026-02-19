@@ -17,9 +17,9 @@ return new class extends Migration
             $table->foreignId('performance_standard_id')->nullable()->constrained('performance_standards')->cascadeOnDelete();
             $table->string('control_no')->nullable();
             $table->string('date')->nullable();
-            $table->string('quantity_target_rate')->nullable();
-            $table->string('effectiveness_criteria_rate')->nullable();
-            $table->string('timeliness_range_rate')->nullable();
+            // $table->string('quantity_target_rate')->nullable();
+            // $table->string('effectiveness_criteria_rate')->nullable();
+            // $table->string('timeliness_range_rate')->nullable();
 
             $table->string('quantity_actual')->nullable()->after('timeliness_range_rate');
             $table->string('effectiveness_actual')->nullable()->after('quantity_actual');

@@ -144,4 +144,22 @@ class IpcrController extends BaseController
             ], $e->getCode() ?: 400);
         }
     }
+
+
+    // updating - status ipcr of employee
+    public function statusIpcr(Request $request, $targetPeriodId, IpcrService $updatingIpcr){
+
+    $validateData = $request->validate([
+            'status' =>  'nullable|string'
+    ]);
+
+    //updating the targetperiod of employee
+    $ipcr = $updatingIpcr->updateStatusIpcr($validateData,$targetPeriodId);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'IPCR status updated successfully.',
+            'data' => $ipcr
+        ], 200);
+    }
 }

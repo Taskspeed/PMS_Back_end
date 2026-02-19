@@ -17,9 +17,6 @@ class PerformanceRating extends Model
         'performance_standard_id',
         'control_no',
         'date',
-        // 'quantity_target_rate',
-        // 'effectiveness_criteria_rate',
-        // 'timeliness_range_rate',
         'quantity_actual',
         'effectiveness_actual',
         'timeliness_actual',
@@ -27,9 +24,20 @@ class PerformanceRating extends Model
 
     ];
 
+    protected $casts = [
+        'quantity_actual' => 'integer',
+        'effectiveness_actual' => 'integer',
+        'timeliness_actual' => 'integer',
+    ];
+
 
     public function performanceStandard()
     {
         return $this->belongsTo(PerformanceStandard::class,);
+    }
+
+    public function dropdownRating()
+    {
+        return $this->hasMany(Performance_dropdown_rating::class);
     }
 }

@@ -28,6 +28,15 @@ use App\Http\Controllers\vwActiveController;
 use App\Http\Controllers\VwplantillastructureController;
 use Illuminate\Support\Facades\Route;
 
+// Route::get('/time-check', function () {
+//     return [
+//         'laravel_now' => now(),
+//         'php_time' => date('Y-m-d H:i:s'),
+//         'php_timezone' => date_default_timezone_get(),
+//     ];
+// });
+
+
 Route::post('/login', [AuthController::class, 'login']);  // change route login
 // Route::get('/user_info', [UserController::class, 'getUserInfo']);
 
@@ -38,7 +47,7 @@ Route::get('employee/target-periods/{controlNo}', [EmployeeRatingController::cla
 Route::get('employee/target-periods/details/{targetperiodId}', [EmployeeRatingController::class, 'targetPeriodDetails']);
 Route::get('employee/list/rated/{control_no}', [EmployeeRatingController::class, 'getListOfRatingEmployee']);
 
-Route::post('employee/store/rating', [EmployeeRatingController::class, 'performanceRatingStore']);
+Route::post('employee/store/rating', [EmployeeRatingController::class, 'performanceRating']);
 
 
 Route::prefix('ipcr')->group(function () {
@@ -53,21 +62,12 @@ Route::prefix('ipcr')->group(function () {
 
     Route::put('/employee/target-periods/{controlNo}/{semester}/{year}', [IpcrController::class, 'approveIpcrEmployee']);
 
+    Route::put('/update-status/{targetperoidId}', [IpcrController::class, 'statusIpcr']); // late and absent of employee
+
     // plantilla strtucture
     // Route::post('/structure', [IpcrController::class, 'getStructure']);
 
 });
-
-
-
-
-
-// Route::get('/fetch_office', [OfficeController::class, 'getOffices']);
-// Route::get('/fetch_f_category', [FCategoryController::class, 'index']);
-// Route::get('/fetch_mfo', [MfoController::class, 'index_data']);
-// Route::get('/Outputs', [FOutpotController::class, 'Outputs']);
-
-
 
 
 
@@ -90,10 +90,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     });
 
-
-
-
-
     Route::prefix('user')->group(function(){
         Route::get('/', [UserController::class, 'getUserData']);
         Route::post('/register', [AuthController::class, 'register']); // change route name
@@ -101,18 +97,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/update/credentials/{id}', [AuthController::class, 'changePassword']);
         Route::get('/account', [AuthController::class, 'userAccount']);
     });
-
-    // Route::post('/user_assign', [AuthController::class, 'register']); // change route name
-    // Route::post('/user_logout', [AuthController::class, 'logout']);
-    // Route::get('/user_data', [UserController::class, 'get_user_data']);
-    // Route::get('/my-unit-workplans', [UserController::class, 'getUserUnitWorkPlans']);
-    // Route::get('/user_account', [AuthController::class, 'user_account']);
-
-
-
-
-
-
 
     //office
     Route::post('/add_mfo', [MfoController::class, 'storeMfo']);
@@ -128,42 +112,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/outputs/{id}', [FOutpotController::class, 'deleteOutput']);
     // Route::patch('/outputs/restore/{id}', [FOutpotController::class, 'restore']);
 
-
-    // Route::get('/employees-by-office', [EmployeeController::class, 'show_employee']); // fetch employees by office
-    // Route::get('/fetch_employees', [EmployeeController::class, 'fetchEmployees']); // office employees
-    // Route::post('/add/employee', [EmployeeController::class, 'store']);
-    // Route::post('/employees/{id}/rank', [EmployeeController::class, 'updateRank']);
-    // Route::get('/search-employees', [EmployeeController::class, 'searchEmployees']);
-    // Route::get('/employee/counts', [EmployeeController::class, 'getEmployeeCounts']);
-    // Route::get('/employee/soft-deleted', [EmployeeController::class, 'getSoftDeleted']);
-    // Route::delete('/employees/{id}', [EmployeeController::class, 'deleteEmployee']);
-    // Route::patch('/employee/restore/{id}', [EmployeeController::class, 'restore']);
-    // Route::patch('employee/fetchEmployeeCounts', [EmployeeController::class, 'getOfficeStructureCounts']);
-    // Route::get('/position', [EmployeeController::class, 'index_position']);
-    // Route::get('/employee/office-structure-counts', [EmployeeController::class, 'getOfficeStructureCounts']);
-
-
-
-
-
     Route::get('/user_activity_log', [Activity_log_Controller::class, 'index']);
-
-    // Route::get('/opcr/divisions', [OpcrController::class, 'index']);
-    // Route::get('/opcr/office-head-functions/{officeId}', [OpcrController::class, 'getOfficeHeadFunctions']);
-    // Route::post('/opcr/save', [OpcrController::class, 'saveOpcr']);
-
 
     // HR Routes
     Route::prefix('hr')->group(function () {
-        // Route::get('/spms/office/structure', [HrSpmsController::class, 'getOfficePlantilla']);
 
-        // Route::get('/unit_work_plan/office', [Hr_Unit_work_planController::class, 'office']);
-        // Route::get('/unit_work_plan', [Hr_Unit_work_planController::class, 'unit_work_plan']);
-        // Route::get('/unit_work_plan/employee', [Hr_Unit_work_planController::class, 'employee']);
-        // Route::get('/unit_work_plan/divisions', [Hr_Unit_work_planController::class, 'getDivisionsWithWorkPlans']);
-        // Route::get('/unit_work_plan/employees', [Hr_Unit_work_planController::class, 'getEmployeesByDivision']);
+        Route::get('/current-employee', [dashboardController::class, 'currentEmployeeStatus']);
 
-        Route::get('/dashboard', [dashboardController::class, 'dashboard']);
 
         // indicator library
         Route::get('/indicator', [IndicatorController::class, 'getIndicator']);
@@ -214,21 +169,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/delete/{controlNo}/{semester}/{year}', [UnitWorkPlanController::class, 'deleteUnitWorkPlan']);
     });
 
-
     // Employee
     Route::prefix('employee')->group(function () {
 
         Route::get('/', [EmployeeController::class, 'getEmployee']);
-        // Route::get('/office-employee/{office_name}', [vwActiveController::class, 'getOfficeEmployee']);
         Route::get('/office-employee', [vwActiveController::class, 'getOfficeEmployee']);
-
-        Route::get('/by-office', [EmployeeController::class, 'show_employee']); // fetch employees by office
-        Route::post('/store', [EmployeeController::class, 'store']);
+        Route::get('/by-office', [EmployeeController::class, 'listOfEmployee']); // fetch employees by office
+        Route::post('/store', [EmployeeController::class, 'addEmployee']);
         Route::post('/rank/{id}', [EmployeeController::class, 'updateRank']);
-        Route::get('/search', [EmployeeController::class, 'searchEmployees']);
+        Route::get('/search', [EmployeeController::class, 'searchEmployee']);
         Route::delete('/delete/{id}', [EmployeeController::class, 'deleteEmployee']);
         Route::get('/{controlNo}', [UnitWorkPlanController::class, 'findEmployee']);
-        Route::get('/list-of-employee', [EmployeeController::class, 'listOfEmployee']);
+        // Route::get('/list-of-employee', [EmployeeController::class, 'listOfEmployee']);
 
     });
 
@@ -239,7 +191,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/update/{targetPeriodId}', [TargetPeriodController::class, 'updateTargetPeriod']);
         Route::delete('/delete/{targetPeriodId}', [TargetPeriodController::class, 'deleteTargetPeriod']);
     });
-
 
     // Qpef
     Route::prefix('qpef')->group(function () {

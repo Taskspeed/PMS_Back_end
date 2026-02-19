@@ -26,12 +26,17 @@ class performanceRatingStoreRequest extends FormRequest
             'performance_rate.*.performance_standards' => 'required|exists:performance_standards,id',
             'performance_rate.*.date' => 'required|date_format:m/d/Y',
             'performance_rate.*.control_no' => 'required|string',
-            // 'performance_rate.*.quantity_target_rate' => 'required|string',
-            // 'performance_rate.*.effectiveness_criteria_rate' => 'required|string',
-            // 'performance_rate.*.timeliness_range_rate' => 'required|string',
-            'performance_rate.*.quantity_actual' => 'nullable|string',
-            'performance_rate.*.effectiveness_actual' => 'nullable|string',
-            'performance_rate.*.timeliness_actual' => 'nullable|string',
+
+            'performance_rate.*.quantity_actual' => 'required|string',
+            'performance_rate.*.effectiveness_actual' => 'required|string',
+            'performance_rate.*.timeliness_actual' => 'required|string',
+
+            // performance_dropdown_ratings model
+            'performance_rate.*.dropdown' => 'required|array|min:1',
+            'performance_rate.*.dropdown.*.quantity' => 'required|integer',
+            'performance_rate.*.dropdown.*.effectiveness' => 'required|integer',
+            'performance_rate.*.dropdown.*.timeliness' => 'required|integer',
+
         ];
     }
 

@@ -3,39 +3,32 @@
 namespace App\Http\Controllers\Hr;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\employeeStatusRequest;
 use App\Models\vwActive;
+use App\Services\DashboardService;
 
 class dashboardController extends Controller
 {
-    //
 
-    public function dashboard()
+    // get the number of employee base of status
+    public function currentEmployeeStatus(DashboardService $dashboardService)
     {
-        $statuses = [
-            'ELECTIVE',
-            'APPOINTED',
-            'CO-TERMINOUS',
-            'TEMPORARY',
-            'REGULAR',
-            'CASUAL',
-            'CONTRACT OF SERVICE',
-            'HONORARIUM BASED'
-        ];
-        $counts = vwActive::select('status')
-            ->whereIn('status', $statuses)
-            ->get()
-            ->groupBy(function ($item) {
-                return strtoupper($item->status); // normalize casing
-            })
-            ->map(function ($group) {
-                return count($group);
-            });
 
-        // Ensure all statuses are present even if count is 0
-        $result = collect($statuses)->mapWithKeys(function ($status) use ($counts) {
-            return [$status => $counts->get($status, 0)];
-        });
+    $employee = $dashboardService->currentEmployee();
 
-        return response()->json($result);
+    return response()->json($employee);
+
     }
+
+    // store the status of employee
+    // public function employeeStatus(employeeStatusRequest $request, DashboardService $dashboardService){
+
+
+    // $validated = $request->validate();
+
+    //  $employeeStatus = $dashboardService->storeEmployeeStatus($validated);
+
+    //  return response()->json($employeeStatus);
+
+    // }
 }

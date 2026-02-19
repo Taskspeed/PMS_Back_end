@@ -68,16 +68,10 @@ class EmployeeService
 
 
 
-    //  list of employee in the office only  casual, job order and honorarium
-    public function getEmployeebyOffice($request){
-        $user = Auth::user();
+    // list of employee in the office
+    public function employee($request, $user)
+    {
 
-        if (!$user || !$user->name) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized or no office assigned.'
-            ], 403);
-        }
 
         try {
             // Get the user's office name
@@ -89,7 +83,7 @@ class EmployeeService
                 'vwActive.Name4 as name',
                 'vwActive.Designation as position',
                 'vwActive.ControlNo',
-                'vwActive.Status', // casual, job order, honorarium
+                'vwActive.Status',
                 'vwActive.Grades',
                 'vwplantillaStructure.ItemNo',
                 'vwplantillaStructure.PageNo',
@@ -100,12 +94,11 @@ class EmployeeService
                 'vwplantillalevel.Level as SGLevel'
             )
                 ->leftJoin('vwplantillaStructure', 'vwActive.ControlNo', '=', 'vwplantillaStructure.ControlNo')
-                ->leftJoin('vwplantillalevel', 'vwplantillalevel.ID', '=', 'vwplantillaStructure.ID')
-
-                ->whereIn('vwActive.Status', ['CASUAL', 'JOB ORDER', 'HONORARIUM']); // FILTER ONLY CASUAL, JOB ORDER AND HONORARIUM
-
-
+                ->leftJoin('vwplantillalevel', 'vwplantillalevel.ID', '=', 'vwplantillaStructure.ID');
             // if the employee is CASUAL use his grade to Convert  this sg and get his level
+
+
+
             // Only filter by office if show_all is false
             $showAll = $request->query('show_all', false);
             if (!$showAll) {
@@ -178,11 +171,10 @@ class EmployeeService
 
 
 
-            return response()->json([
-                'success' => true,
-                'data' => $employees,
-                'user_office' => $officeName
-            ]);
+            return [
+                'employees' => $employees,
+                'office_name' => $officeName
+            ];
 
         } catch (\Exception $e) {
             return response()->json([
@@ -190,6 +182,62 @@ class EmployeeService
                 'message' => 'Failed to fetch employees: ' . $e->getMessage()
             ], 500);
         }
+    }
 
+
+
+    //search employees by name or designation
+    public function onSearchEmployee($request)
+    {
+        $searchTerm = $request->query('search');
+        $unassignedOnly = $request->query('unassigned_only', false);
+
+        if (empty($searchTerm)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Search term is required'
+            ], 400);
+        }
+
+        try {
+            $query = vwActive::select(
+                'vwActive.Name4 as name',
+                'vwActive.Office as office',
+                'vwActive.Designation as position',
+                'vwActive.ControlNo',
+                'vwActive.Status',
+                'vwplantillaStructure.ItemNo',
+                'vwplantillaStructure.PageNo',
+                'vwplantillaStructure.PositionID',
+                'vwplantillaStructure.ID as tblStructureID',
+                // 'vwplantillalevel.ID as tblStructureID',
+                'vwplantillalevel.SG',
+                'vwplantillalevel.Level as SGLevel',
+            )
+                ->leftJoin('vwplantillaStructure', 'vwActive.ControlNo', '=', 'vwplantillaStructure.ControlNo')
+                ->leftJoin('vwplantillalevel', 'vwplantillalevel.ID', '=', 'vwplantillaStructure.ID')
+                ->where(function ($q) use ($searchTerm) {
+                    $q->where('vwActive.Name4', 'LIKE', "%{$searchTerm}%")
+                        ->orWhere('vwActive.Designation', 'LIKE', "%{$searchTerm}%");
+                });
+
+            if ($unassignedOnly) {
+                $query->whereNotExists(function ($q) {
+                    $q->select(DB::raw(1))
+                        ->from('employees')
+                        ->whereRaw('vwActive.ControlNo = employees.ControlNo');
+                });
+            }
+
+            $employees = $query->get();
+
+            return $employees;
+   
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Search failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

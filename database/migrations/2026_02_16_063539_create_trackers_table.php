@@ -13,10 +13,11 @@ return new class extends Migration
     {
         Schema::create('trackers', function (Blueprint $table) {
             $table->id();
-            $table->string('office')->nullable(); // office 
-            $table->string('date')->nullable();
-            $table->string('semester')->nullable();
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
+            $table->string('office_name')->nullable(); // office
             $table->year('year')->nullable();
+            $table->string('semester')->nullable();
+            $table->string('date')->nullable();
             $table->string('status')->nullable();
             $table->string('remarks')->nullable();
             $table->timestamps();
