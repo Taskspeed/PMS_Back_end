@@ -31,8 +31,6 @@ class IpcrController extends BaseController
     //     });
     // }
 
-
-
     public function getIpcrEmployee($controlNo, $year, $semester, IpcrService $ipcrService)
     {
         $employee  = $ipcrService->getIpcrData($controlNo, $year, $semester);
@@ -46,7 +44,6 @@ class IpcrController extends BaseController
         return new IpcrResource($employee); // ✅ SINGLE resource
     }
 
-
     // get the perfomance standard of employee
     public function getPerformanceStandard($targetPeriodId)
     {
@@ -58,8 +55,6 @@ class IpcrController extends BaseController
             ->get();
         return response()->json($employee);
     }
-
-
 
     // approving the ipcr of the employee
     public function approveIpcrEmployee($controlNo, $semester, $year, Request $request, IpcrService $ipcrService)
@@ -103,21 +98,16 @@ class IpcrController extends BaseController
         ]);
     }
 
-
-
     // get the summary-monthly-rate
     public function getSummaryMonthlyEmployee($targetPeriodId, IpcrService $ipcrService)
     {
-
         $monthSummaryData = $ipcrService->getSummaryMonthly($targetPeriodId);
-
 
         if (empty($monthSummaryData)) {
             return response()->json([
                 'message' => 'Summary monthly performance not found'
             ], 404);
         }
-
 
         // use the MonthlyPerformanceSummaryResource to format the response
         return response()->json([

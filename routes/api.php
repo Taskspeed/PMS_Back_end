@@ -86,7 +86,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/structure/count', [VwplantillastructureController::class, 'plantillaStructureEmployeeWithCount']);
 
-        Route::get('/mfo', [MfoController::class, 'getUserMfo']); // getting the mfo of user logged in
+        Route::get('/mfo', [MfoController::class, 'Mfo']); // getting the mfo of user logged in
 
     });
 
@@ -106,11 +106,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/mfos/{id}', [MfoController::class, 'delete']);
     Route::patch('/mfos/restore/{id}', [MfoController::class, 'restore']);
 
-    Route::post('/add_output', [FOutpotController::class, 'storeOutput']);
-    // Route::get('/outputs/soft-deleted', [FOutpotController::class, 'getSoftDeleted']);
+    Route::post('/add_output', [FOutpotController::class, 'addOutput']);
     Route::post('/outputs/{id}', [FOutpotController::class, 'updateOutput']);
     Route::delete('/outputs/{id}', [FOutpotController::class, 'deleteOutput']);
-    // Route::patch('/outputs/restore/{id}', [FOutpotController::class, 'restore']);
 
     Route::get('/user_activity_log', [Activity_log_Controller::class, 'index']);
 

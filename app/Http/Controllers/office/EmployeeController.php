@@ -2,76 +2,19 @@
 
 namespace App\Http\Controllers\office;
 
-use App\Models\office;
-use App\Models\Employee;
-use App\Models\Position;
-use App\Models\vwActive;
-use Illuminate\Http\Request;
-use App\Services\EmployeeService;
-use Illuminate\Support\Facades\DB;
+
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
+
 use App\Http\Requests\addEmployeeRequest;
+use App\Models\Employee;
+use App\Services\EmployeeService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
 
 class EmployeeController extends Controller
 {
-
-    //add employee on the plantilla structure
-
-
-    public function store(addEmployeeRequest $request)
-    {
-        $validated = $request->validated();
-
-        $createdEmployees = [];
-
-        // Use a transaction to ensure data integrity
-        DB::beginTransaction();
-        try {
-            foreach ($validated['employees'] as $employeeData) {
-                // Set default rank to Employee if not provided
-                if (!isset($employeeData['rank'])) {
-                    $employeeData['rank'] = 'Employee';
-                }
-
-                $employee = Employee::create($employeeData);
-
-                // Enhanced activity logging
-                activity()
-                    ->performedOn($employee)
-                    ->causedBy(Auth::user())
-                    ->withProperties([
-                        'name' => $employee->name,
-                        // 'position_id' => $employee->position_id,
-                        'rank' => $employee->rank,
-                        'designation' => $employee->designation,
-                        'office' => $employee->office,
-                        'division' => $employee->division,
-                        'section' => $employee->section,
-                        'unit' => $employee->unit,
-                        'office_id' => $employee->office_id
-                    ])
-                    ->log('Employee Created');
-
-                $createdEmployees[] = $employee;
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Employees created successfully',
-                'employees' => $createdEmployees
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create employees',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
 
     // add an employee on the plantilla structure
     public function addEmployee(addEmployeeRequest $request, EmployeeService $employeeStore)
@@ -85,10 +28,8 @@ class EmployeeController extends Controller
             'message' => 'Employees created successfully',
             'employees' => $employee
 
-           ]);
+        ]);
     }
-
-
 
     //rank update of employee
     public function updateRank(Request $request, $id) // need to check  this code for review
@@ -147,9 +88,10 @@ class EmployeeController extends Controller
         ]);
     }
 
- 
+
     //remove employee on the plantilla
-    public function deleteEmployee($employeeId){
+    public function deleteEmployee($employeeId)
+    {
 
         $employee = Employee::findOrFail($employeeId);
 
@@ -197,7 +139,6 @@ class EmployeeController extends Controller
                 'data' => $result['employees'],
                 'user_office' => $result['office_name']
             ]);
-
         } catch (\Exception $e) {
 
             return response()->json([
@@ -208,17 +149,14 @@ class EmployeeController extends Controller
     }
 
     // search employee on the list of employee
-    public function searchEmployee(Request $request ,EmployeeService $employeeService)
+    public function searchEmployee(Request $request, EmployeeService $employeeService)
     {
 
-     $employee = $employeeService->onSearchEmployee($request);
-
-
+        $employee = $employeeService->onSearchEmployee($request);
 
         return response()->json([
             'success' => true,
             'data' => $employee
         ]);
     }
-
 }

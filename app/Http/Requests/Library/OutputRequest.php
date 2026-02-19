@@ -25,7 +25,8 @@ class OutputRequest extends FormRequest
 
             'name' => 'required|string|max:255',
             'f_category_id' => 'required|exists:f_categories,id',
-            'office_id' => 'required|exists:offices,id'
+            'office_id' => 'required|exists:offices,id',
+            'mfo_id' => 'nullable|exists:mfos,id'
 
         ];
     }

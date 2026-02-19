@@ -15,7 +15,6 @@ use App\Services\PerformanceRatingService;
 class EmployeeRatingController extends Controller
 {
 
-
     // fetch the target period of employee
     public function targetPeriodEmployee($controlNo)
     {
@@ -35,31 +34,52 @@ class EmployeeRatingController extends Controller
         ], 200);
     }
 
-
     //  get the target peroid details the performance standart and standard outcome
     public function targetPeriodDetails($targetPeriodId)
     {
         $targetperiod = TargetPeriod::select('id')->where('id', $targetPeriodId)
             ->with([
                 'performanceStandards' => function ($query) {
-                    $query->select('id', 'target_period_id', 'category', 'mfo', 'output',
-                    'output_name', 'performance_indicator', 'success_indicator', 'required_output')
+                    $query->select(
+                        'id',
+                        'target_period_id',
+                        'category',
+                        'mfo',
+                        'output',
+                        'output_name',
+                        'performance_indicator',
+                        'success_indicator',
+                        'required_output'
+                    )
                         ->with([
                             'standardOutcomes' => function ($query) {
-                                $query->select('id', 'performance_standard_id', 'rating',
-                                'quantity_target as quantity', 'effectiveness_criteria as effectiveness', 'timeliness_range as timeliness');
+                                $query->select(
+                                    'id',
+                                    'performance_standard_id',
+                                    'rating',
+                                    'quantity_target as quantity',
+                                    'effectiveness_criteria as effectiveness',
+                                    'timeliness_range as timeliness'
+                                );
                             },
-                    'configurations' => function ($query) {
-                        $query->select('id', 'performance_standard_id', 'target_output as targetOutput',
-                        'quantity_indicator as quantityIndicator', 'timeliness_indicator as timelinessIndicator', 'timeliness_range as range','timeliness_date as date','timeliness_description as description');
-                    }
+                            'configurations' => function ($query) {
+                                $query->select(
+                                    'id',
+                                    'performance_standard_id',
+                                    'target_output as targetOutput',
+                                    'quantity_indicator as quantityIndicator',
+                                    'timeliness_indicator as timelinessIndicator',
+                                    'timeliness_range as range',
+                                    'timeliness_date as date',
+                                    'timeliness_description as description'
+                                );
+                            }
                         ]);
                 }
             ])->get();
 
         return response()->json($targetperiod);
     }
-
 
     // employee store his rate
     public function performanceRating(performanceRatingStoreRequest $request, PerformanceRatingService $performanceRatingService)
@@ -76,7 +96,8 @@ class EmployeeRatingController extends Controller
     }
 
     // get the list of the employee the rate of date
-    public function getListOfRatingEmployee($controlNo){
+    public function getListOfRatingEmployee($controlNo)
+    {
 
         $list = PerformanceRating::select(
             'id',
