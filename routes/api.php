@@ -82,7 +82,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/dashboard', [OfficeDashboardController::class, 'getTotalEmployee']);
 
-        Route::get('/structure', [OfficeController::class, 'plantillaStructureEmployee']);
+        Route::get('/structure', [OfficeController::class, 'officeStructure']);
 
         Route::get('/structure/count', [VwplantillastructureController::class, 'plantillaStructureEmployeeWithCount']);
 
