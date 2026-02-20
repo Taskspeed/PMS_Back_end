@@ -28,9 +28,9 @@ class TrackerRequest extends FormRequest
             // 'office_name' => 'required|string',
             'year' => 'required|integer',
             'semester' => 'required|string',
-            'date' => 'required|date',
+            'date' => 'required|date|date_format:Y-m-d',
             'status' => 'required|string',
-            'remarks' => 'required|string'
+            'remarks' => 'nullable|string'
         ];
     }
 }

@@ -135,11 +135,11 @@ class IpcrController extends BaseController
         }
     }
 
-    // updating - status ipcr of employee
+    // updating - status ipcr of employee args approve,review,cancel and others
     public function statusIpcr(Request $request, $targetPeriodId, IpcrService $updatingIpcr){
 
     $validateData = $request->validate([
-            'status' =>  'nullable|string'
+            'status' =>  'required|string'
     ]);
 
     //updating the targetperiod of employee

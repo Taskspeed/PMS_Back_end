@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Hr;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\employeeStatusRequest;
 use App\Models\vwActive;
 use App\Services\DashboardService;
 
@@ -19,15 +18,22 @@ class dashboardController extends Controller
         return response()->json($employee);
     }
 
-    // store the status of employee
-    // public function employeeStatus(employeeStatusRequest $request, DashboardService $dashboardService){
+    // get the number of employee base of status
+    // old data
+    public function previousEmployeeStatus(DashboardService $dashboardService,$year,$semester)
+    {
+        $employee = $dashboardService->filterEmployeeStatus($year,$semester);
+
+        return response()->json($employee);
+    }
+
+    // fetching the list of data available employee status
+    public function fetchEmployeeStatus(DashboardService $dashboardService)
+    {
+        $employee = $dashboardService->availableDataEmployeeStatus();
+
+        return response()->json($employee);
+    }
 
 
-    // $validated = $request->validate();
-
-    //  $employeeStatus = $dashboardService->storeEmployeeStatus($validated);
-
-    //  return response()->json($employeeStatus);
-
-    // }
 }

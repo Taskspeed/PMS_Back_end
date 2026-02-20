@@ -78,6 +78,8 @@ class EmployeeRatingController extends Controller
                 }
             ])->get();
 
+        // check if the his office
+
         return response()->json($targetperiod);
     }
 

@@ -23,6 +23,7 @@ class addEmployeeUnitWorkPlanRequest extends FormRequest
     {
         return [
 
+
             'employees' => 'required|array|min:1',
 
             // employee details
@@ -41,14 +42,15 @@ class addEmployeeUnitWorkPlanRequest extends FormRequest
             // performance standards
             'employees.*.performance_standards' => 'required|array|min:1',
             'employees.*.performance_standards.*.category' => 'required|string',
-            'employees.*.performance_standards.*.mfo' => 'required|string',
-            'employees.*.performance_standards.*.output' => 'required|string',
+            'employees.*.performance_standards.*.mfo' => 'nullable|string',
+            'employees.*.performance_standards.*.output' => 'nullable|string',
+            'employees.*.performance_standards.*.output_name' => 'nullable|string',
             'employees.*.performance_standards.*.core_competency' => 'nullable|array',
             'employees.*.performance_standards.*.technical_competency' => 'nullable|array',
             'employees.*.performance_standards.*.leadership_competency' => 'nullable|array',
             'employees.*.performance_standards.*.success_indicator' => 'required|string',
-            'employees.*.performance_standards.*.performance_indicator' => 'required|string',
-            'employees.*.performance_standards.*.required_output' => 'required|string',
+            'employees.*.performance_standards.*.performance_indicator' => 'required|array',
+            'employees.*.performance_standards.*.required_output' => 'nullable|string',
 
             // standatd outcomes / ratings
             'employees.*.performance_standards.*.ratings' => 'required|array|min:1',
@@ -57,11 +59,16 @@ class addEmployeeUnitWorkPlanRequest extends FormRequest
             'employees.*.performance_standards.*.ratings.*.effectiveness' => 'nullable|string',
             'employees.*.performance_standards.*.ratings.*.timeliness' => 'nullable|string',
 
+            // CONFIG (single object)
             'employees.*.performance_standards.*.config' => 'required|array',
-            'employees.*.performance_standards.*.config.*.quantity' => 'required|string',
-            'employees.*.performance_standards.*.config.*.timeliness' => 'required|string',
-            'employees.*.performance_standards.*.config.*.type' => 'required|string',
+            'employees.*.performance_standards.*.config.target_output' => 'required|string',
+            'employees.*.performance_standards.*.config.quantity_indicator' => 'required|string',
+            'employees.*.performance_standards.*.config.timeliness_indicator' => 'required|string',
 
+            'employees.*.performance_standards.*.config.timelinessType' => 'required|array',
+            'employees.*.performance_standards.*.config.timelinessType.range' => 'required|boolean',
+            'employees.*.performance_standards.*.config.timelinessType.date' => 'required|boolean',
+            'employees.*.performance_standards.*.config.timelinessType.description' => 'required|boolean',
         ];
     }
 }

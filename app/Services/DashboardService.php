@@ -127,4 +127,32 @@ class DashboardService
             $data
         );
     }
+
+    // get the employee data base on the args year and semester
+    public function filterEmployeeStatus($year, $semester)
+    {
+
+        $data = EmployeeStatus::where('year', $year)
+            ->where('semester', $semester)
+            ->first();
+
+        if (!$data) {
+            return response()->json([
+                'message' => 'There is no data available yet.'
+            ], 200); // use 200,
+        }
+
+        return $data;
+    }
+
+    // fetching the available data of employee status
+    public function availableDataEmployeeStatus()
+    {
+
+        $data = EmployeeStatus::select('id', 'year', 'semester')
+            ->orderByDesc('year')
+            ->orderByDesc('semester')->get();
+            
+        return $data;
+    }
 }

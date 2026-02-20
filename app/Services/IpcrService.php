@@ -36,8 +36,8 @@ class IpcrService
                     $q->where('year', $year)
                         ->where('semester', $semester)
                         ->with([
-                    'performanceStandards.performanceRating:id,performance_standard_id,date,quantity_actual as quantity,effectiveness_actual as effectiveness,timeliness_actual as timeliness',
-                    'performanceStandards.standardOutcomes:performance_standard_id,rating,quantity_target as quantity,effectiveness_criteria as effectiveness,timeliness_range as timeliness',
+                            'performanceStandards.performanceRating:id,performance_standard_id,date,quantity_actual as quantity,effectiveness_actual as effectiveness,timeliness_actual as timeliness',
+                            'performanceStandards.standardOutcomes:performance_standard_id,rating,quantity_target as quantity,effectiveness_criteria as effectiveness,timeliness_range as timeliness',
 
 
                         ]); //
@@ -85,12 +85,12 @@ class IpcrService
 
                 // merge get the effectiveness and timeliness rating into accomplishment
                 $standard->accomplishment = array_merge(
-                        $accomplishment,
-                        [
-                            'effectiveness_rating' => $summary['ratings']['effectiveness_rating'],
-                            'timeliness_rating' => $summary['ratings']['timeliness_rating'],
-                        ]
-                    );
+                    $accomplishment,
+                    [
+                        'effectiveness_rating' => $summary['ratings']['effectiveness_rating'],
+                        'timeliness_rating' => $summary['ratings']['timeliness_rating'],
+                    ]
+                );
 
                 $standard->makeHidden('performanceRating');
             });
@@ -152,7 +152,6 @@ class IpcrService
             'attendance' => $attendance ?? null
         ];
     }
-
 
 
     private function groupRatingsByMonthly($ratings)
@@ -236,12 +235,7 @@ class IpcrService
         // return $date->weekOfMonth;
     }
 
-
-
-
-
     //---------------------------------------------------------------------------- summary-monthly-rate-----------------------------------------------------------------------------//
-
 
 
     // get the summary-monthly-rate
@@ -279,7 +273,6 @@ class IpcrService
             $standard->monthly_ratings = $monthly;
             $standard->totals = $summary['totals'];
             $standard->ratings = $summary['ratings'];
-
         }
 
         // 🔹 FETCH ATTENDANCE SEPARATELY
@@ -453,52 +446,7 @@ class IpcrService
         return 0;
     }
 
-    // private function getQuantityRating($quantityTotal, $standardOutcomes)
-    // {
-    //     // Sort outcomes by rating descending (5 -> 1)
-    //     $outcomes = collect($standardOutcomes)->sortByDesc('rating');
 
-    //     foreach ($outcomes as $outcome) {
-    //         $quantity = data_get($outcome, 'quantity');
-
-    //         // Skip null quantities
-    //         if (is_null($quantity)) {
-    //             continue;
-    //         }
-
-    //         // Handle "X and above" (e.g., "65 and above")
-    //         if (preg_match('/^(\d+)\s+and\s+above$/i', $quantity, $matches)) {
-    //             $threshold = (int) $matches[1];
-    //             if ($quantityTotal >= $threshold) {
-    //                 return (int) data_get($outcome, 'rating');
-    //             }
-    //         }
-    //         // Handle "X and below" (e.g., "25 and below")
-    //         elseif (preg_match('/^(\d+)\s+and\s+below$/i', $quantity, $matches)) {
-    //             $threshold = (int) $matches[1];
-    //             if ($quantityTotal <= $threshold) {
-    //                 return (int) data_get($outcome, 'rating');
-    //             }
-    //         }
-    //         // Handle range "X-Y" (e.g., "57-64")
-    //         elseif (preg_match('/^(\d+)-(\d+)$/', $quantity, $matches)) {
-    //             $min = (int) $matches[1];
-    //             $max = (int) $matches[2];
-    //             if ($quantityTotal >= $min && $quantityTotal <= $max) {
-    //                 return (int) data_get($outcome, 'rating');
-    //             }
-    //         }
-    //         // Handle exact number (e.g., "3", "2", "1", "0")
-    //         elseif (is_numeric($quantity)) {
-    //             if ($quantityTotal >= (int) $quantity) {
-    //                 return (int) data_get($outcome, 'rating');
-    //             }
-    //         }
-    //     }
-
-    //     // Default to lowest rating if no match found
-    //     return 0;
-    // }
 
     // get the average  of employee base on the ratings
     // quantity rating + effectiveness rating + timeliness rating / 3
@@ -568,10 +516,7 @@ class IpcrService
         ];
     }
 
-
-
     //-----------------------approve the ipcr of the employee----------------------------------------------//
-
 
     public function approveIpcr($controlNo, $semester, $year, Request $request)
     {
@@ -645,13 +590,13 @@ class IpcrService
     }
 
     // status of ipcr of employee
-    public function updateStatusIpcr($validateData,$targetPeriodId){
+    public function updateStatusIpcr($validateData, $targetPeriodId)
+    {
 
-     $ipcr = TargetPeriod::findOrFail($targetPeriodId);
+        $ipcr = TargetPeriod::findOrFail($targetPeriodId);
 
-     $ipcr->update($validateData); // updating
+        $ipcr->update($validateData); // updating
 
-     return  $ipcr;
-
+        return  $ipcr;
     }
 }
