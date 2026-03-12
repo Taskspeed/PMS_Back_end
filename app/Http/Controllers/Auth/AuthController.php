@@ -154,7 +154,7 @@ class AuthController extends Controller
     // Add this method to your AuthController.php
     public function changePassword(ChangePasswordRequest $request)
     {
-     
+
 
         try {
             $user = $request->user();

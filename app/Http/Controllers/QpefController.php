@@ -75,4 +75,19 @@ class QpefController extends Controller
 
         return new QpefResource($qpef);
     }
+
+    //
+    public function employeeQpefAllQuarter($control_no,$year, QpefService $QpefService)
+    {
+        $qpef = $QpefService->fetchAllEmployeeQpef($control_no,$year);
+
+        if ($qpef->isEmpty()) {
+            return response()->json([
+                'message' => 'Employee does not have QPEF yet.'
+            ], 404);
+        }
+
+
+        return  response()->json($qpef);
+    }
 }

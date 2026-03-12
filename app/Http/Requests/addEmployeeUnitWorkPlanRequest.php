@@ -34,6 +34,7 @@ class addEmployeeUnitWorkPlanRequest extends FormRequest
             'employees.*.division' => 'nullable|string',
             'employees.*.section' => 'nullable|string',
             'employees.*.unit' => 'nullable|string',
+            'employees.*.supervisory_control_no' => 'nullable|string',
 
             // semester and year
             'employees.*.semester' => 'required|string',
@@ -49,8 +50,15 @@ class addEmployeeUnitWorkPlanRequest extends FormRequest
             'employees.*.performance_standards.*.technical_competency' => 'nullable|array',
             'employees.*.performance_standards.*.leadership_competency' => 'nullable|array',
             'employees.*.performance_standards.*.success_indicator' => 'required|string',
-            'employees.*.performance_standards.*.performance_indicator' => 'required|array',
+            // 'employees.*.performance_standards.*.performance_indicator' => 'required|array',
             'employees.*.performance_standards.*.required_output' => 'nullable|string',
+
+            // Performance Indicator (fixed)
+            'employees.*.performance_standards.*.performance_indicator' => 'required|array|min:1',
+            'employees.*.performance_standards.*.performance_indicator.*.category' => 'required|string',
+            'employees.*.performance_standards.*.performance_indicator.*.value' => 'required|string',
+
+
 
             // standatd outcomes / ratings
             'employees.*.performance_standards.*.ratings' => 'required|array|min:1',

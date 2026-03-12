@@ -232,6 +232,19 @@ class QpefService
         return $employeeQpef;
     }
 
+
+    // fetch all qpef of employee $control_no, $$year
+    public function fetchAllEmployeeQpef($control_no,$year)
+    {
+        $control_no = str_pad($control_no, 6, '0', STR_PAD_LEFT); // ✅ 22485 → 022485
+
+        $employeeQpef = Qpef::with('jobPerformances', 'competenciesAttitudes', 'physicalMentals', 'recommendationDevelopment')
+            ->where('control_no', $control_no)->where('year', $year)
+            ->get(); //
+
+        return $employeeQpef;
+    }
+
     /**
      * Get the sub_total and weighted_score of job performance, competencies attitude,
      * and physical mental of the employee QPEF

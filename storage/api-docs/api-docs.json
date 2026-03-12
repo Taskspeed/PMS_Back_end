@@ -1,0 +1,294 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "MAIFP API Docs",
+        "description": "Swagger documentation for MAIFP project",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://192.168.8.182:8000",
+            "description": "Local development server"
+        }
+    ],
+    "paths": {
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "User login",
+                "description": "Authenticate a user and return access token",
+                "operationId": "82e1c873d57994b70076a22b3e7f353f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "james"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful"
+                    }
+                }
+            }
+        },
+        "/api/unit_work_plan/store": {
+            "post": {
+                "tags": [
+                    "Unit Work Plan"
+                ],
+                "summary": "Add Unit Work Plan for employees",
+                "operationId": "fc4e2ec4202b25db85c08716ef44a398",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "employees"
+                                ],
+                                "properties": {
+                                    "employees": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "control_no",
+                                                "semester",
+                                                "year",
+                                                "office",
+                                                "performance_standards"
+                                            ],
+                                            "properties": {
+                                                "control_no": {
+                                                    "type": "string",
+                                                    "example": "003041"
+                                                },
+                                                "semester": {
+                                                    "type": "string",
+                                                    "example": "July-December"
+                                                },
+                                                "year": {
+                                                    "type": "integer",
+                                                    "example": 2026
+                                                },
+                                                "office": {
+                                                    "type": "string",
+                                                    "example": "ICT Office"
+                                                },
+                                                "performance_standards": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "required": [
+                                                            "category",
+                                                            "success_indicator",
+                                                            "performance_indicator",
+                                                            "ratings",
+                                                            "config"
+                                                        ],
+                                                        "properties": {
+                                                            "category": {
+                                                                "type": "string",
+                                                                "example": "B. CORE FUNCTION"
+                                                            },
+                                                            "mfo": {
+                                                                "type": "string",
+                                                                "example": "ICT Network and Data Management"
+                                                            },
+                                                            "output": {
+                                                                "type": "string",
+                                                                "example": "System Development"
+                                                            },
+                                                            "output_name": {
+                                                                "type": "string",
+                                                                "example": "Information System"
+                                                            },
+                                                            "performance_indicator": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "required": [
+                                                                        "category",
+                                                                        "value"
+                                                                    ],
+                                                                    "properties": {
+                                                                        "category": {
+                                                                            "type": "string",
+                                                                            "example": "Production"
+                                                                        },
+                                                                        "value": {
+                                                                            "type": "string",
+                                                                            "example": "supervised"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "success_indicator": {
+                                                                "type": "string",
+                                                                "example": "2 related ICT network and data management output supervised without lapses , as per schedule"
+                                                            },
+                                                            "required_output": {
+                                                                "type": "string",
+                                                                "example": "Completed software system"
+                                                            },
+                                                            "ratings": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "rating": {
+                                                                            "type": "integer",
+                                                                            "example": 5
+                                                                        },
+                                                                        "quantity": {
+                                                                            "type": "string",
+                                                                            "example": "3"
+                                                                        },
+                                                                        "effectiveness": {
+                                                                            "type": "string",
+                                                                            "example": "All systems deployed without issues"
+                                                                        },
+                                                                        "timeliness": {
+                                                                            "type": "string",
+                                                                            "example": "Within 6 months"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "config": {
+                                                                "required": [
+                                                                    "target_output",
+                                                                    "quantity_indicator",
+                                                                    "timeliness_indicator",
+                                                                    "timelinessType"
+                                                                ],
+                                                                "properties": {
+                                                                    "target_output": {
+                                                                        "type": "string",
+                                                                        "example": "3 systems"
+                                                                    },
+                                                                    "quantity_indicator": {
+                                                                        "type": "string",
+                                                                        "example": "Number of systems developed"
+                                                                    },
+                                                                    "timeliness_indicator": {
+                                                                        "type": "string",
+                                                                        "example": "Project completion time"
+                                                                    },
+                                                                    "timelinessType": {
+                                                                        "required": [
+                                                                            "range",
+                                                                            "date",
+                                                                            "description"
+                                                                        ],
+                                                                        "properties": {
+                                                                            "range": {
+                                                                                "type": "boolean",
+                                                                                "example": true
+                                                                            },
+                                                                            "date": {
+                                                                                "type": "boolean",
+                                                                                "example": false
+                                                                            },
+                                                                            "description": {
+                                                                                "type": "boolean",
+                                                                                "example": true
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Unit Work Plan created successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized. Please login to access this resource."
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Unauthenticated"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to create Unit Work Plan"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Authentication endpoints"
+        },
+        {
+            "name": "Unit Work Plan",
+            "description": ""
+        }
+    ]
+}

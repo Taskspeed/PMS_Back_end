@@ -35,26 +35,26 @@ class qpefRequest extends FormRequest
             'job_performance' => 'required|array|min:1',
             'job_performance.*.indicators' => 'required|string',
             'job_performance.*.rating' => 'required|integer',
-            'job_performance.*.remarks' => 'required|string',
+            'job_performance.*.remarks' => 'nullable|string',
 
             'competencies_attitude' => 'required|array|min:1',
             'competencies_attitude.*.indicators' => 'required|string',
             'competencies_attitude.*.rating' => 'required|integer',
-            'competencies_attitude.*.remarks' => 'required|string',
+            'competencies_attitude.*.remarks' => 'nullable|string',
 
             'physical_mental' => 'required|array|min:1',
             'physical_mental.*.indicators' => 'required|string',
             'physical_mental.*.rating' => 'required|integer',
-            'physical_mental.*.remarks' => 'required|string',
+            'physical_mental.*.remarks' => 'nullable|string',
 
 
             // These should be nested under recommendation_development
             'recommendation_development' => 'required|array',
-            'recommendation_development.for_retention' => 'required|boolean',
-            'recommendation_development.for_commendation' => 'required|boolean',
-            'recommendation_development.for_improvement' => 'required|boolean',
-            'recommendation_development.for_non_renewal' => 'required|boolean',
-            'recommendation_development.recommendation' => 'required|string',
+            'recommendation_development.for_retention' => 'nullable|boolean',
+            'recommendation_development.for_commendation' => 'nullable|boolean',
+            'recommendation_development.for_improvement' => 'nullable|boolean',
+            'recommendation_development.for_non_renewal' => 'nullable|boolean',
+            'recommendation_development.recommendation' => 'nullable|string',
 
             // In your validation rules
             'job_performance.*.id' => 'sometimes|integer|exists:job_performances,id',

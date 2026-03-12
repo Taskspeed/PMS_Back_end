@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\DB;
 class EmployeeController extends Controller
 {
 
+
+
     // add an employee on the plantilla structure
     public function addEmployee(addEmployeeRequest $request, EmployeeService $employeeStore)
     {
@@ -86,6 +88,29 @@ class EmployeeController extends Controller
             'success' => true,
             'message' => 'Employee rank updated successfully'
         ]);
+    }
+
+
+    //fetch of list of jobtitle
+    public function fetchJobTitle()
+    {
+        $job = \App\Models\JobTitle::all();
+
+        return $job;
+    }
+
+    //Jobtitle update of employee
+    public function updateJobTitle(Request $request,$employeeId, EmployeeService $employeeService) // need to check  this code for review
+
+    {
+        $validated = $request->validate([
+            'job_title' => 'required|string'
+        ]);
+
+        $job = $employeeService->jobTitle($employeeId,$validated);
+
+        return $job;
+
     }
 
     //remove employee on the plantilla

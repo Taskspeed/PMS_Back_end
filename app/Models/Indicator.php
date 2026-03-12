@@ -13,7 +13,12 @@ class Indicator extends Model
 
 
     protected $fillable = [
-
+        'category_id',
         'indicator_name'
     ];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }

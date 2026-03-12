@@ -24,8 +24,9 @@ class UnitWorkPlanController extends BaseController
 
     protected $user;
     protected $officeId;
+    protected $unitWorkPlanService;
 
-    public function __construct()
+    public function __construct(UnitWorkPlanService $unitWorkPlanService)
     {
         $this->middleware(function ($request, $next) {
             $this->user = Auth::user();
@@ -33,316 +34,37 @@ class UnitWorkPlanController extends BaseController
 
             return $next($request);
         });
+
+        $this->unitWorkPlanService = $unitWorkPlanService;
     }
 
 
-    // unit work plan store function
-    // public function storeUnitWorkPlan(Request $request) //  old working store function
-    // {
-    //     $validated = $request->validate([
 
-    //         'employees' => 'required|array|min:1',
-
-    //         // employee details
-    //         'employees.*.control_no' => 'required|string',
-    //         'employees.*.office' => 'required|string',
-    //         'employees.*.office2' => 'nullable|string',
-    //         'employees.*.group' => 'nullable|string',
-    //         'employees.*.division' => 'nullable|string',
-    //         'employees.*.section' => 'nullable|string',
-    //         'employees.*.unit' => 'nullable|string',
-
-    //         // semester and year
-    //         'employees.*.semester' => 'required|string',
-    //         'employees.*.year' => 'required|integer',
-
-    //         // performance standards
-    //         'employees.*.performance_standards' => 'required|array|min:1',
-    //         'employees.*.performance_standards.*.category' => 'required|string',
-    //         'employees.*.performance_standards.*.mfo' => 'nullable|string',
-    //         'employees.*.performance_standards.*.output' => 'nullable|string',
-    //         'employees.*.performance_standards.*.output_name' => 'nullable|string',
-    //         'employees.*.performance_standards.*.core_competency' => 'nullable|array',
-    //         'employees.*.performance_standards.*.technical_competency' => 'nullable|array',
-    //         'employees.*.performance_standards.*.leadership_competency' => 'nullable|array',
-    //         'employees.*.performance_standards.*.success_indicator' => 'required|string',
-    //         'employees.*.performance_standards.*.performance_indicator' => 'required|array',
-    //         'employees.*.performance_standards.*.required_output' => 'required|string',
-
-    //         // standatd outcomes / ratings
-    //         'employees.*.performance_standards.*.ratings' => 'required|array|min:1',
-    //         'employees.*.performance_standards.*.ratings.*.rating' => 'nullable|integer',
-    //         'employees.*.performance_standards.*.ratings.*.quantity' => 'nullable|string',
-    //         'employees.*.performance_standards.*.ratings.*.effectiveness' => 'nullable|string',
-    //         'employees.*.performance_standards.*.ratings.*.timeliness' => 'nullable|string',
-
-    //         // CONFIG (single object)
-    //         'employees.*.performance_standards.*.config' => 'required|array',
-    //         'employees.*.performance_standards.*.config.target_output' => 'required|string',
-    //         'employees.*.performance_standards.*.config.quantity_indicator' => 'required|string',
-    //         'employees.*.performance_standards.*.config.timeliness_indicator' => 'required|string',
-
-    //         'employees.*.performance_standards.*.config.timelinessType' => 'required|array',
-    //         'employees.*.performance_standards.*.config.timelinessType.range' => 'required|boolean',
-    //         'employees.*.performance_standards.*.config.timelinessType.date' => 'required|boolean',
-    //         'employees.*.performance_standards.*.config.timelinessType.description' => 'required|boolean',
-
-
-
-    //     ]);
-
-    //     DB::beginTransaction(); // Start transaction
-
-    //     try {
-    //         foreach ($validated['employees'] as $employeeData) {
-    //             // Check if already exists
-    //             $existing = TargetPeriod::where('control_no', $employeeData['control_no'])
-    //                 ->where('semester', $employeeData['semester'])
-    //                 ->where('year', $employeeData['year'])
-    //                 ->first();
-
-    //             if ($existing) {
-    //                 throw new \Exception("Employee ({$employeeData['control_no']}) already has a Unit Work Plan for {$employeeData['semester']} {$employeeData['year']}.");
-    //             }
-
-    //             // Create Target Period
-    //             $targetPeriod = TargetPeriod::create([
-    //                 'control_no' => $employeeData['control_no'],
-    //                 'semester' => $employeeData['semester'],
-    //                 'year' => $employeeData['year'],
-    //                 'office' => $employeeData['office'],
-    //                 'office2' => $employeeData['office2'] ?? null,
-    //                 'group' => $employeeData['group'] ?? null,
-    //                 'division' => $employeeData['division'] ?? null,
-    //                 'section' => $employeeData['section'] ?? null,
-    //                 'unit' => $employeeData['unit'] ?? null,
-    //                 'status' => 'pending',
-    //             ]);
-
-    //             // Create Performance Standards
-    //             foreach ($employeeData['performance_standards'] as $standard) {
-    //                 $performanceStandard = PerformanceStandard::create([
-    //                     'target_period_id' => $targetPeriod->id,
-    //                     'category' => $standard['category'],
-    //                     'mfo' => $standard['mfo'],
-    //                     'output' => $standard['output'],
-    //                     'output_name' => $standard['output_name'],
-    //                     'core' => $standard['core_competency'] ?? NULL,
-    //                     'technical' => $standard['technical_competency'] ?? NULL,
-    //                     'leadership' => $standard['leadership_competency'] ??  NULL,
-    //                     'performance_indicator' => $standard['performance_indicator'],
-    //                     'success_indicator' => $standard['success_indicator'],
-    //                     'required_output' => $standard['required_output'],
-    //                 ]);
-
-    //                 foreach ($standard['ratings'] as $rating) {
-    //                     StandardOutcome::create([
-    //                         'performance_standard_id' => $performanceStandard->id,
-    //                         'rating' => $rating['rating'],
-    //                         'quantity_target' => $rating['quantity'],
-    //                         'effectiveness_criteria' => $rating['effectiveness'],
-    //                         'timeliness_range' => $rating['timeliness'],
-    //                     ]);
-    //                 }
-
-
-
-    //                 $config = $standard['config']; // single object
-
-    //                 PerformanceConfigurations::create([
-    //                     'performance_standard_id' => $performanceStandard->id,
-    //                     'target_output' => $config['target_output'],
-    //                     'quantity_indicator' => $config['quantity_indicator'],
-    //                     'timeliness_indicator' => $config['timeliness_indicator'],
-    //                     'timeliness_range' => $config['timelinessType']['range'],
-    //                     'timeliness_date' => $config['timelinessType']['date'],
-    //                     'timeliness_description' => $config['timelinessType']['description'],
-    //                 ]);
-    //             }
-    //         }
-
-    //         DB::commit(); // Commit transaction
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Unit Work Plans for all employees created successfully.'
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         DB::rollBack(); // Rollback if any error occurs
-
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Failed to create Unit Work Plan.',
-    //             'error' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
 
     // storing unit work plan
-    public function addUnitWorkPlan(addEmployeeUnitWorkPlanRequest $request, UnitWorkPlanService $unitWorkPlanService)
+    public function addUnitWorkPlan(addEmployeeUnitWorkPlanRequest $request)
     {
         $validated = $request->validated();
 
-        $unitworkplan = $unitWorkPlanService->store($validated);
+        try {
+            $unitworkplan = $this->unitWorkPlanService->store($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Unit Work Plans for all employees created successfully.',
-            'target_period' => $unitworkplan['target_period'],
-            'performance_standard' => $unitworkplan['performance_standard'],
-            'standard_outcome' => $unitworkplan['standard_outcome'],
-            'configuration' => $unitworkplan['configuration'],
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Unit Work Plans for all employees created successfully.',
+                'target_period' => $unitworkplan['target_period'],
+                'performance_standard' => $unitworkplan['performance_standard'],
+                'standard_outcome' => $unitworkplan['standard_outcome'],
+                'configuration' => $unitworkplan['configuration'],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create Unit Work Plan.',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
     }
-
-
-    // updating the unit work plan of employee
-    // public function updateUnitWorkPlan(Request $request, $controlNo, $semester, $year)
-    // {
-    //     $validated = $request->validate([
-    //         'performance_standards' => 'required|array|min:1',
-    //         'performance_standards.*.category' => 'required|string',
-    //         'performance_standards.*.mfo' => 'required|string',
-    //         'performance_standards.*.output' => 'nullable|string',
-    //         'performance_standards.*.output_name' => 'required|string', // ✅ Should match store
-    //         'performance_standards.*.core_competency' => 'nullable|array',
-    //         'performance_standards.*.technical_competency' => 'nullable|array',
-    //         'performance_standards.*.leadership_competency' => 'nullable|array',
-    //         'performance_standards.*.success_indicator' => 'required|string',
-    //         'performance_standards.*.performance_indicator' => 'required|array',
-    //         'performance_standards.*.required_output' => 'required|string',
-
-    //         'performance_standards.*.ratings' => 'required|array|min:1',
-    //         'performance_standards.*.ratings.*.rating' => 'nullable|integer',
-    //         'performance_standards.*.ratings.*.quantity' => 'nullable|string',
-    //         'performance_standards.*.ratings.*.effectiveness' => 'nullable|string',
-    //         'performance_standards.*.ratings.*.timeliness' => 'nullable|string',
-
-    //         'performance_standards.*.config' => 'required|array',
-    //         'performance_standards.*.config.target_output' => 'required|string',
-    //         'performance_standards.*.config.quantity_indicator' => 'required|string',
-    //         'performance_standards.*.config.timeliness_indicator' => 'required|string',
-
-    //         'performance_standards.*.config.timelinessType' => 'required|array',
-    //         'performance_standards.*.config.timelinessType.range' => 'required|boolean',
-    //         'performance_standards.*.config.timelinessType.date' => 'required|boolean',
-    //         'performance_standards.*.config.timelinessType.description' => 'required|boolean',
-    //     ]);
-
-    //     DB::beginTransaction();
-
-    //     try {
-    //         // ✅ STEP 1: Employee + office restriction
-    //         $employee = Employee::where('ControlNo', $controlNo)
-    //             ->where('office_id', $this->officeId)
-    //             ->first();
-
-    //         if (!$employee) {
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'message' => 'Employee not found or access denied.'
-    //             ], 404);
-    //         }
-
-    //         // ✅ STEP 2: Target Period
-    //         $targetPeriod = $employee->targetPeriods()
-    //             ->where('year', $year)
-    //             ->where('semester', $semester)
-    //             ->first();
-
-    //         if (!$targetPeriod) {
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'message' => 'Unit Work Plan not found.'
-    //             ], 404);
-    //         }
-
-    //         // OPTIONAL: prevent update if approved
-    //         // if ($targetPeriod->status === 'approve') {
-    //         //     return response()->json([
-    //         //         'success' => false,
-    //         //         'message' => 'Approved Unit Work Plan cannot be edited.'
-    //         //     ], 403);
-    //         // }
-
-    //         // ✅ Reset status
-    //         $targetPeriod->update([
-    //             'status' => 'pending',
-    //         ]);
-
-    //         // ✅ DELETE CHILD RECORDS IN CORRECT ORDER (reverse dependency)
-    //         // 1. Delete PerformanceConfigurations first
-    //         PerformanceConfigurations::whereIn(
-    //             'performance_standard_id',
-    //             PerformanceStandard::where('target_period_id', $targetPeriod->id)->pluck('id')
-    //         )->delete();
-
-    //         // 2. Delete StandardOutcome
-    //         StandardOutcome::whereIn(
-    //             'performance_standard_id',
-    //             PerformanceStandard::where('target_period_id', $targetPeriod->id)->pluck('id')
-    //         )->delete();
-
-    //         // 3. Delete PerformanceStandard last
-    //         PerformanceStandard::where('target_period_id', $targetPeriod->id)->delete();
-
-    //         // ✅ RE-CREATE PERFORMANCE STANDARDS
-    //         foreach ($validated['performance_standards'] as $standard) {
-    //             $performanceStandard = PerformanceStandard::create([
-    //                 'target_period_id' => $targetPeriod->id,
-    //                 'category' => $standard['category'],
-    //                 'mfo' => $standard['mfo'],
-    //                 'output' => $standard['output'],
-    //                 'output_name' => $standard['output_name'], // ✅ ADDED - was missing
-    //                 'core' => $standard['core_competency'] ??  NULL,
-    //                 'technical' => $standard['technical_competency'] ??  NULL,
-    //                 'leadership' => $standard['leadership_competency'] ??  NULL,
-    //                 'performance_indicator' => $standard['performance_indicator'],
-    //                 'success_indicator' => $standard['success_indicator'],
-    //                 'required_output' => $standard['required_output'],
-    //             ]);
-
-    //             // ✅ Create ratings (StandardOutcome)
-    //             foreach ($standard['ratings'] as $rating) {
-    //                 StandardOutcome::create([
-    //                     'performance_standard_id' => $performanceStandard->id,
-    //                     'rating' => $rating['rating'],
-    //                     'quantity_target' => $rating['quantity'],
-    //                     'effectiveness_criteria' => $rating['effectiveness'],
-    //                     'timeliness_range' => $rating['timeliness'],
-    //                 ]);
-    //             }
-
-    //             // ✅ Create config
-    //             $config = $standard['config'];
-
-    //             PerformanceConfigurations::create([
-    //                 'performance_standard_id' => $performanceStandard->id,
-    //                 'target_output' => $config['target_output'],
-    //                 'quantity_indicator' => $config['quantity_indicator'],
-    //                 'timeliness_indicator' => $config['timeliness_indicator'],
-    //                 'timeliness_range' => $config['timelinessType']['range'],
-    //                 'timeliness_date' => $config['timelinessType']['date'],
-    //                 'timeliness_description' => $config['timelinessType']['description'],
-    //             ]);
-    //         }
-
-    //         DB::commit();
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Unit Work Plan updated successfully.'
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Failed to update Unit Work Plan.',
-    //             'error' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
 
     // updating unit work plan
 
@@ -351,8 +73,7 @@ class UnitWorkPlanController extends BaseController
 
         $validated = $request->validated();
 
-        $unitworkplan = $unitworkplanService->update($validated, $controlNo, $semester, $year);
-
+        $unitworkplan = $this->unitWorkPlanService->update($validated, $controlNo, $semester, $year);
 
         return response()->json([
             'success' => true,
@@ -361,8 +82,6 @@ class UnitWorkPlanController extends BaseController
         ]);
 
     }
-
-
 
 
     // find employee
@@ -928,8 +647,325 @@ class UnitWorkPlanController extends BaseController
             'year' => 'required',
         ]);
 
-        $organization = $unitWorkPlanService->organization($request);
+        $organization = $this->unitWorkPlanService->organization($request);
 
         return new UnitWorkPlanOrganizationResource($organization);
     }
+
+
+
+    //    /// need to finish the response
+    // public function managerialSuccessIndicator(Request $request, UnitWorkPlanService $unitWorkPlanService)
+    // {
+
+    //   $validated  =   $request->validate([
+    //         'year' => 'required'
+    //         'semester' => 'required',
+    //     ]);
+
+    //     $result = $unitWorkPlanService->findManagerial($validated);
+
+    //     return ($organization);
+    // }
+
+    // find  managerial on the office base on the  year and semester to get the data
+    // and supervisory
+    // public function findManagerial($year, $semester,$mfo)
+    // {
+
+
+    //     $user = Auth::user();
+
+    //     // Get the managerial (office head) of this office
+    //     $managerial = Employee::where('rank', 'Managerial')
+    //         ->where('office_id', $user->office_id)
+    //         ->first();
+
+    //     if (!$managerial) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'No managerial employee found.'
+    //         ], 404);
+    //     }
+
+
+
+
+    //     // Get the managerial's target period with performance standards
+    //     $targetPeriod = TargetPeriod::with('performanceStandards')
+    //         ->where('control_no', $managerial->ControlNo)
+    //         ->where('year', $year)
+    //         ->where('semester', $semester)
+    //         ->first();
+
+    //     if (!$targetPeriod) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'No target period found for this managerial.'
+    //         ], 404);
+    //     }
+
+    //     // Get all employees under the same office (excluding managerial)
+    //     $employeeControlNos = Employee::where('office_id', $user->office_id)
+    //         ->where('rank', '!=', 'Managerial')
+    //         ->pluck('ControlNo');
+
+
+    //     // $employeeControlNos = Employee::where('office_id', $user->office_id)
+    //     //     ->where('rank', '!=', 'Supervisory')
+    //     //     ->pluck('ControlNo');
+
+    //     // Get all employee target periods for same year and semester
+    //     $employeeTargetPeriods = TargetPeriod::with('performanceStandards')
+    //         ->whereIn('control_no', $employeeControlNos)
+    //         ->where('year', $year)
+    //         ->where('semester', $semester)
+    //         ->get();
+
+
+    //     $standards = $mfo
+    //         ? $targetPeriod->performanceStandards->where('mfo', $mfo)
+    //         : $targetPeriod->performanceStandards;
+
+
+    //     // Build result: for each managerial MFO/success_indicator, compute available
+    //     // $result = $targetPeriod->performanceStandards->map(function ($standard) use ($employeeTargetPeriods) {
+    //     $result = $standards->map(function ($standard) use ($employeeTargetPeriods) {
+    //         // Extract the target number from managerial's success_indicator
+    //         $totalTarget = $this->extractNumber($standard->success_indicator);
+
+    //         // Sum up all employees' claimed output for the same MFO + success_indicator
+
+    //         $claimed = 0;
+
+    //         foreach ($employeeTargetPeriods as $empPeriod) {
+    //             foreach ($empPeriod->performanceStandards as $empStandard) {
+    //                 // Match by MFO only
+    //                 if ($empStandard->mfo === $standard->mfo) {
+    //                     $claimed += $this->extractNumber($empStandard->success_indicator);
+    //                 }
+    //             }
+    //         }
+
+    //         $available = $totalTarget - $claimed;
+
+    //         return [
+    //             'category'           => $standard->category,
+    //             'mfo'              => $standard->mfo,
+    //             'output' => $standard->output,
+    //             'output_name' => $standard->output_name,
+    //             'performance_indicator' => $standard->performance_indicator,
+    //             'performance_indicator' => $standard->performance_indicator,
+    //             'success_indicator' => $standard->success_indicator,
+    //             'total_target'      => $totalTarget,
+    //             'claimed'           => $claimed,
+    //             'available'         => max(0, $available), // never go negative
+    //         ];
+    //     });
+
+    //     return response()->json([
+    //         // 'success' => true,
+    //         'controlNo' => $managerial->ControlNo,
+    //         'name' => $managerial->name,
+    //         'rank' => $managerial->rank,
+    //         'office' => $managerial->office,
+    //         'year'    => $year,
+    //         'semester' => $semester,
+    //         // 'managerial' => $managerial->ControlNo,
+    //         'mfos' => $result
+    //     ], 200);
+    // }
+
+
+    // old code
+
+    // public function findManagerial($year, $semester, $mfo)
+    // {
+    //     $user = Auth::user();
+
+    //     // Get the managerial (office head) of this office
+    //     $managerial = Employee::where('rank', 'Office Head')
+    //         ->where('office_id', $user->office_id)
+    //         ->first();
+
+    //     if (!$managerial) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'No managerial employee found.'
+    //         ], 404);
+    //     }
+
+    //     // Get ALL supervisory employees of this office
+    //     $supervisories = Employee::whereIn('rank',['Sub-Office Head','Group Head','Division Head','Section Head','Unit Head'])
+    //         ->where('office_id', $user->office_id)
+    //         ->get();
+
+    //     // Get the managerial's target period with performance standards
+    //     $targetPeriod = TargetPeriod::with('performanceStandards')
+    //         ->where('control_no', $managerial->ControlNo)
+    //         ->where('year', $year)
+    //         ->where('semester', $semester)
+    //         ->first();
+
+    //     if (!$targetPeriod) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'No target period found for this managerial.'
+    //         ], 404);
+    //     }
+
+    //     // Get all supervisory control numbers
+    //     $supervisoryControlNos = $supervisories->pluck('ControlNo');
+
+    //     // Get ALL supervisory target periods
+    //     $supervisoryTargetPeriods = TargetPeriod::with('performanceStandards')
+    //         ->whereIn('control_no', $supervisoryControlNos)
+    //         ->where('year', $year)
+    //         ->where('semester', $semester)
+    //         ->get();
+
+    //     // Get all rank-and-file employees (excluding managerial and all supervisory)
+    //     $employeeControlNos = Employee::where('office_id', $user->office_id)
+    //         ->whereNotIn('rank', ['Managerial', 'Supervisory'])
+    //         ->pluck('ControlNo');
+
+    //     // Get all rank-and-file employee target periods for same year and semester
+    //     $employeeTargetPeriods = TargetPeriod::with('performanceStandards')
+    //         ->whereIn('control_no', $employeeControlNos)
+    //         ->where('year', $year)
+    //         ->where('semester', $semester)
+    //         ->get();
+
+    //     $standards = $mfo
+    //         ? $targetPeriod->performanceStandards->where('mfo', $mfo)
+    //         : $targetPeriod->performanceStandards;
+
+    //     // Build result for managerial MFOs
+    //     // Claimed = all supervisory claimed + all rank-and-file claimed
+    //     $result = $standards->map(function ($standard) use ($employeeTargetPeriods, $supervisoryTargetPeriods) {
+    //         $totalTarget = $this->extractNumber($standard->success_indicator);
+
+    //         $claimed = 0;
+
+    //         // Sum claimed from ALL supervisory employees
+    //         foreach ($supervisoryTargetPeriods as $supPeriod) {
+    //             foreach ($supPeriod->performanceStandards as $supStandard) {
+    //                 if ($supStandard->mfo === $standard->mfo) {
+    //                     $claimed += $this->extractNumber($supStandard->success_indicator);
+    //                 }
+    //             }
+    //         }
+
+    //         // Sum claimed from rank-and-file employees
+    //         foreach ($employeeTargetPeriods as $empPeriod) {
+    //             foreach ($empPeriod->performanceStandards as $empStandard) {
+    //                 if ($empStandard->mfo === $standard->mfo) {
+    //                     $claimed += $this->extractNumber($empStandard->success_indicator);
+    //                 }
+    //             }
+    //         }
+
+    //         $available = $totalTarget - $claimed;
+
+    //         return [
+    //             'category'              => $standard->category,
+    //             'mfo'                   => $standard->mfo,
+    //             'output'                => $standard->output,
+    //             'output_name'           => $standard->output_name,
+    //             'performance_indicator' => $standard->performance_indicator,
+    //             'success_indicator'     => $standard->success_indicator,
+    //             'total_target'          => $totalTarget,
+    //             'claimed'               => $claimed,
+    //             'available'             => max(0, $available),
+    //         ];
+    //     });
+
+    //     // Build supervisory MFO data for EACH supervisory employee
+    //     $supervisoryData = $supervisories->map(function ($supervisory) use (
+    //         $supervisoryTargetPeriods,
+    //         $employeeTargetPeriods,
+    //         $mfo
+    //     ) {
+    //         $supTargetPeriod = $supervisoryTargetPeriods
+    //             ->where('control_no', $supervisory->ControlNo)
+    //             ->first();
+
+    //         if (!$supTargetPeriod) {
+    //             return [
+    //                 'controlNo' => $supervisory->ControlNo,
+    //                 'name'      => $supervisory->name,
+    //                 'rank'      => $supervisory->rank,
+    //                 'mfos'      => null,
+    //             ];
+    //         }
+
+    //         $supStandards = $mfo
+    //             ? $supTargetPeriod->performanceStandards->where('mfo', $mfo)
+    //             : $supTargetPeriod->performanceStandards;
+
+    //         // Claimed from rank-and-file only (against this supervisory's targets)
+    //         $mfos = $supStandards->map(function ($standard) use ($employeeTargetPeriods) {
+    //             $totalTarget = $this->extractNumber($standard->success_indicator);
+
+    //             $claimed = 0;
+
+    //             foreach ($employeeTargetPeriods as $empPeriod) {
+    //                 foreach ($empPeriod->performanceStandards as $empStandard) {
+    //                     if ($empStandard->mfo === $standard->mfo) {
+    //                         $claimed += $this->extractNumber($empStandard->success_indicator);
+    //                     }
+    //                 }
+    //             }
+
+    //             $available = $totalTarget - $claimed;
+
+    //             return [
+    //                 'category'              => $standard->category,
+    //                 'mfo'                   => $standard->mfo,
+    //                 'output'                => $standard->output,
+    //                 'output_name'           => $standard->output_name,
+    //                 'performance_indicator' => $standard->performance_indicator,
+    //                 'success_indicator'     => $standard->success_indicator,
+    //                 'total_target'          => $totalTarget,
+    //                 'claimed'               => $claimed,
+    //                 'available'             => max(0, $available),
+    //             ];
+    //         });
+
+    //         return [
+    //             'controlNo' => $supervisory->ControlNo,
+    //             'name'      => $supervisory->name,
+    //             'rank'      => $supervisory->rank,
+    //             'mfos'      => $mfos->values(),
+    //         ];
+    //     });
+
+    //     return response()->json([
+    //         'controlNo'    => $managerial->ControlNo,
+    //         'name'         => $managerial->name,
+    //         'rank'         => $managerial->rank,
+    //         'office'       => $managerial->office,
+    //         'year'         => $year,
+    //         'semester'     => $semester,
+    //         'mfos'         => $result,
+    //         'supervisories' => $supervisoryData->values(),
+    //     ], 200);
+    // }
+    // // Extract the leading number from a success_indicator string
+    // private function extractNumber(string $string): int
+    // {
+    //     preg_match('/^\d+/', trim($string), $matches);
+    //     return isset($matches[0]) ? (int) $matches[0] : 0;
+    // }
+
+    // find the office head and supervisory on office
+    public function findManagerial($year, $semester, $mfo)
+    {
+
+    $result = $this->unitWorkPlanService->supervisoryDeductionOfSuccessIndicator($year,$semester,$mfo);
+
+    return $result;
+
+    }
+
 }

@@ -15,7 +15,7 @@ class IndicatorController extends Controller
     public function getIndicator()
     {
 
-        $indicator = Indicator::all();
+        $indicator = Indicator::with('category')->get();
 
         return response()->json($indicator);
     }
@@ -23,11 +23,9 @@ class IndicatorController extends Controller
     // store
     public function storeIndicator(IndicatorStoreRequest $request)
     {
-       
+        $validated = $request->validated();
 
-        $indicator = Indicator::create([
-            'indicator_name' => $request->indicator_name
-        ]);
+        $indicator = Indicator::create($validated);
 
         return response()->json($indicator);
     }
@@ -35,11 +33,13 @@ class IndicatorController extends Controller
     // update
     public function updateIndicator($indicatorId, IndicatorUpdateRequest $request)
     {
+
+        $validated = $request->validated();
         $indicator = Indicator::findOrFail($indicatorId);
 
 
         // Update using validated data
-        $indicator->update(['indicator_name' => $request->indicator_name]);
+        $indicator->update($validated);
 
 
         return response()->json([

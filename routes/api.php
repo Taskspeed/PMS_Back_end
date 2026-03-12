@@ -3,16 +3,14 @@
 
 use App\Http\Controllers\Activity_log_Controller;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Hr\dashboardController;
-use App\Http\Controllers\Hr\Hr_Unit_work_planController;
 use App\Http\Controllers\Hr\IndicatorController;
 use App\Http\Controllers\Hr\RankController;
-use App\Http\Controllers\Hr\SpmsController as HrSpmsController;
 use App\Http\Controllers\Hr\UnitWorkPlanController as HrUnitWorkPlanController;
 use App\Http\Controllers\office\DashboardController as OfficeDashboardController;
 use App\Http\Controllers\office\EmployeeController;
 use App\Http\Controllers\office\EmployeeRatingController;
-use App\Http\Controllers\office\FCategoryController;
 use App\Http\Controllers\office\FOutpotController;
 use App\Http\Controllers\office\IpcrController;
 use App\Http\Controllers\office\MfoController;
@@ -28,20 +26,10 @@ use App\Http\Controllers\vwActiveController;
 use App\Http\Controllers\VwplantillastructureController;
 use Illuminate\Support\Facades\Route;
 
-// Route::get('/time-check', function () {
-//     return [
-//         'laravel_now' => now(),
-//         'php_time' => date('Y-m-d H:i:s'),
-//         'php_timezone' => date_default_timezone_get(),
-//     ];
-// });
+
 
 
 Route::post('/login', [AuthController::class, 'login']);  // change route login
-// Route::get('/user_info', [UserController::class, 'getUserInfo']);
-
-// Route::get('/spms/office/structure', [HrUnitWorkPlanController::class, 'getOfficePlantilla']);
-
 
 
 Route::prefix('ipcr')->group(function () {
@@ -63,14 +51,14 @@ Route::prefix('ipcr')->group(function () {
 
 });
 
-// get the target period on the employee on erms
-Route::get('employee/target-periods/{controlNo}', [EmployeeRatingController::class, 'targetPeriodEmployee']);
+    // get the target period on the employee on erms
+    Route::get('employee/target-periods/{controlNo}', [EmployeeRatingController::class, 'targetPeriodEmployee']);
 
-//target detials  args targetperiodId
-Route::get('employee/target-periods/details/{targetperiodId}', [EmployeeRatingController::class, 'targetPeriodDetails']);
+    //target detials  args targetperiodId
+    Route::get('employee/target-periods/details/{targetperiodId}', [EmployeeRatingController::class, 'targetPeriodDetails']);
 
-// list of date that the employee rated already args controlNo
-Route::get('employee/list/rated/{control_no}', [EmployeeRatingController::class, 'getListOfRatingEmployee']);
+    // list of date that the employee rated already args controlNo
+    Route::get('employee/list/rated/{control_no}', [EmployeeRatingController::class, 'getListOfRatingEmployee']);
 
 
 
@@ -177,6 +165,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // delete rank
         Route::delete('/rank/delete/{rankId}', [RankController::class, 'deleteRank']);
 
+        Route::get('/category', [CategoryController::class, 'fetchCategory']);
+
 
     });
 
@@ -212,6 +202,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // unit work plan of the employee
     Route::prefix('unit_work_plan')->group(function () {
 
+        // find and get the data of managerial on the office
+        Route::get('/managerial/{year}/{semester}/{mfo}', [UnitWorkPlanController::class, 'findManagerial']);
+
         // fetch the organization of office
         Route::post('/', [UnitWorkPlanController::class, 'getUniWorkPlanOfficeOrganization']);
 
@@ -223,6 +216,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // deleting unit work plan
         Route::delete('/delete/{controlNo}/{semester}/{year}', [UnitWorkPlanController::class, 'deleteUnitWorkPlan']);
+
+
     });
 
     // Employee
@@ -242,6 +237,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // updating the rank of employee args  rank-in-file, supervisory, and others
         Route::post('/rank/{id}', [EmployeeController::class, 'updateRank']);
+
+        // updating job title
+        Route::post('/title/{employeeId}', [EmployeeController::class, 'updateJobTitle']);
 
         //  search employee
         Route::get('/search', [EmployeeController::class, 'searchEmployee']);
@@ -274,14 +272,20 @@ Route::middleware('auth:sanctum')->group(function () {
     // Qpef
     Route::prefix('qpef')->group(function () {
 
+        // fetch all qpef of employee
+        Route::get('/all-quarter/{control_no}/{year}', [QpefController::class, 'employeeQpefAllQuarter']);
+
         // get qpef Q1-Q2-Q3-Q4
         Route::get('/{control_no}/{quarterly}/{year}', [QpefController::class, 'employeeQpef']);
+
 
         // storing qpef
         Route::post('/store', [QpefController::class, 'qpefStore']);
 
         // updating qpef
         Route::put('/update/{qpefId}', [QpefController::class, 'qpefUpdate']);
+
+
     });
 
 

@@ -33,7 +33,9 @@ class Employee extends Model
         'itemNo',
         'pageNo',
         'position',
-        'status'
+        'status',
+
+        'job_title'
 
     ];
 

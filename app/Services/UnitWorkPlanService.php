@@ -49,6 +49,7 @@ class UnitWorkPlanService
                     'division'   => $employeeData['division'] ?? null,
                     'section'    => $employeeData['section'] ?? null,
                     'unit'       => $employeeData['unit'] ?? null,
+                    'supervisory_control_no'  => $employeeData['supervisory_control_no'] ?? null,
                     'office_id'  => $user->office_id,
                     'status'     => 'Draft',
                 ]);
@@ -64,6 +65,7 @@ class UnitWorkPlanService
                         'core'                  => $standard['core_competency'] ?? null,
                         'technical'             => $standard['technical_competency'] ?? null,
                         'leadership'            => $standard['leadership_competency'] ?? null,
+                        // 'performance_indicator' => $standard['performance_indicator'],
                         'performance_indicator' => $standard['performance_indicator'],
                         'success_indicator'     => $standard['success_indicator'],
                         'required_output'       => $standard['required_output'],
@@ -103,12 +105,8 @@ class UnitWorkPlanService
             ];
         } catch (\Exception $e) {
             DB::rollBack(); // Rollback if any error occurs
+            throw $e;
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create Unit Work Plan.',
-                'error'   => $e->getMessage(),
-            ], 500);
         }
     }
 
@@ -380,5 +378,176 @@ class UnitWorkPlanService
                 'error'   => $e->getMessage(),
             ], 500);
         }
+    }
+
+    // get the office-head and fetch the supervisory
+    public function supervisoryDeductionOfSuccessIndicator($year, $semester, $mfo)
+    {
+        $user = Auth::user();
+
+        // Get the managerial (office head) of this office
+        $managerial = Employee::where('job_title', 'Office Head')
+            ->where('office_id', $user->office_id)
+            ->first();
+
+        if (!$managerial) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No managerial employee found.'
+            ], 404);
+        }
+
+        // Get the managerial's target period
+        $targetPeriod = TargetPeriod::with('performanceStandards')
+            ->where('control_no', $managerial->ControlNo)
+            ->where('year', $year)
+            ->where('semester', $semester)
+            ->first();
+
+        if (!$targetPeriod) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No target period found for this managerial.'
+            ], 404);
+        }
+
+        // Get ALL target periods in this office for this year/semester (excluding office head)
+        // Using supervisory_control_no from target_periods table
+        $allOtherTargetPeriods = TargetPeriod::with('performanceStandards')
+            ->where('office_id', $user->office_id)
+            ->where('year', $year)
+            ->where('semester', $semester)
+            ->where('control_no', '!=', $managerial->ControlNo)
+            ->get();
+
+        // Build a map: control_no => supervisory_control_no (from target_periods)
+        $supervisoryMap = $allOtherTargetPeriods->pluck('supervisory_control_no', 'control_no');
+
+        // Get all employees in this office for name/rank/job_title lookup
+        $allEmployees = Employee::where('office_id', $user->office_id)->get()->keyBy('ControlNo');
+
+        // Helper: recursively sum claimed from all descendants of a given control_no
+        $getTotalClaimed = function (string $controlNo, string $mfoKey) use (
+            &$getTotalClaimed,
+            $allOtherTargetPeriods,
+            $supervisoryMap
+        ) {
+            $claimed = 0;
+
+            // Find all direct reports (target periods whose supervisory_control_no === this controlNo)
+            $directReports = $allOtherTargetPeriods->filter(function ($tp) use ($controlNo, $supervisoryMap) {
+                return $supervisoryMap->get($tp->control_no) === $controlNo;
+            });
+
+            foreach ($directReports as $reportPeriod) {
+                // Find this report's success_indicator for the given MFO
+                $matchedStandard = $reportPeriod->performanceStandards
+                    ->first(fn($s) => $s->mfo === $mfoKey);
+
+                if ($matchedStandard) {
+                    $claimed += $this->extractNumber($matchedStandard->success_indicator);
+                }
+            }
+
+            return $claimed;
+        };
+
+        // Build managerial MFOs — claimed = direct supervisory reports' success_indicators
+        $standards = $mfo
+            ? $targetPeriod->performanceStandards->where('mfo', $mfo)
+            : $targetPeriod->performanceStandards;
+
+        $result = $standards->map(function ($standard) use ($getTotalClaimed, $managerial) {
+            $totalTarget = $this->extractNumber($standard->success_indicator);
+            $claimed     = $getTotalClaimed($managerial->ControlNo, $standard->mfo);
+            $available   = $totalTarget - $claimed;
+
+            return [
+                'category'              => $standard->category,
+                'mfo'                   => $standard->mfo,
+                'output'                => $standard->output,
+                'output_name'           => $standard->output_name,
+                'performance_indicator' => $standard->performance_indicator,
+                'success_indicator'     => $standard->success_indicator,
+                'total_target'          => $totalTarget,
+                'claimed'               => $claimed,
+                'available'             => max(0, $available),
+            ];
+        });
+
+        // Build subordinates list — everyone with a target period in this office (excluding office head)
+        $subordinatesData = $allOtherTargetPeriods->map(function ($tp) use (
+            $allEmployees,
+            $supervisoryMap,
+            $getTotalClaimed,
+            $mfo
+        ) {
+            $employee = $allEmployees->get($tp->control_no);
+
+            $standards = $mfo
+                ? $tp->performanceStandards->where('mfo', $mfo)
+                : $tp->performanceStandards;
+
+            if ($standards->isEmpty()) {
+                return [
+                    'controlNo'             => $tp->control_no,
+                    'name'                  => $employee?->name,
+                    'rank'                  => $employee?->rank,
+                    'job_title'             => $employee?->job_title,
+                    'supervisory_control_no' => $tp->supervisory_control_no,
+                    'mfos'                  => null,
+                ];
+            }
+
+            $mfos = $standards->map(function ($standard) use ($tp, $getTotalClaimed) {
+                $totalTarget = $this->extractNumber($standard->success_indicator);
+
+                // Claimed = direct reports under THIS person
+                $claimed   = $getTotalClaimed($tp->control_no, $standard->mfo);
+                $available = $totalTarget - $claimed;
+
+                return [
+                    'category'              => $standard->category,
+                    'mfo'                   => $standard->mfo,
+                    'output'                => $standard->output,
+                    'output_name'           => $standard->output_name,
+                    'performance_indicator' => $standard->performance_indicator,
+                    'success_indicator'     => $standard->success_indicator,
+                    'total_target'          => $totalTarget,
+                    'claimed'               => $claimed,
+                    'available'             => max(0, $available),
+                ];
+            });
+
+            return [
+                'controlNo'              => $tp->control_no,
+                'name'                   => $employee?->name,
+                'rank'                   => $employee?->rank,
+                'job_title'              => $employee?->job_title,
+                'supervisory_control_no' => $tp->supervisory_control_no,
+                'mfos'                   => $mfos->values(),
+            ];
+        });
+
+        return response()->json([
+            'controlNo'     => $managerial->ControlNo,
+            'name'          => $managerial->name,
+            'rank'          => $managerial->rank,
+            'job_title'     => $managerial->job_title,
+            'office'        => $managerial->office,
+            'year'          => $year,
+            'semester'      => $semester,
+            'mfos'          => $result->values(),
+            'supervisories' => $subordinatesData->filter(function ($subordinate) use ($allEmployees) {
+                $emp = $allEmployees->get($subordinate['controlNo']);
+                return $emp && $emp->job_title !== 'Employee';
+            })->values(),
+        ], 200);
+    }
+
+    private function extractNumber(string $string): int
+    {
+        preg_match('/^\d+/', trim($string), $matches);
+        return isset($matches[0]) ? (int) $matches[0] : 0;
     }
 }

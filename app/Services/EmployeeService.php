@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Employee;
+use App\Models\JobTitle;
 use App\Models\vwActive;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -232,7 +233,7 @@ class EmployeeService
             $employees = $query->get();
 
             return $employees;
-   
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -240,4 +241,63 @@ class EmployeeService
             ], 500);
         }
     }
+
+
+
+    //job title update of employee
+    public function jobTitle($employeeId,$validated) // need to check  this code for review
+
+    {
+
+        $employee = Employee::findOrFail($employeeId);
+
+        // Check if this is a Head promotion
+        if ($validated['job_title'] === 'Office-Head') {
+            $query = Employee::where('office_id', $employee->office_id)
+                ->where('job_title', 'Office-Head')
+                ->where('id', '!=', $employee->id);
+
+            // Check based on organizational level
+            if ($employee->unit) {
+                $query->where('unit', $employee->unit);
+            } elseif ($employee->section) {
+                $query->where('section', $employee->section)
+                    ->whereNull('unit');
+            } elseif ($employee->division) {
+                $query->where('division', $employee->division)
+                    ->whereNull('section')
+                    ->whereNull('unit');
+            } else {
+                $query->whereNull('division')
+                    ->whereNull('section')
+                    ->whereNull('unit');
+            }
+
+            $existingHead = $query->first();
+
+            if ($existingHead) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'There is already a Head in this organizational unit'
+                ], 422);
+            }
+        }
+
+        $employee->job_title = $validated['job_title'];
+        $employee->save();
+
+        activity()
+            ->performedOn($employee)
+            ->causedBy(Auth::user())
+            ->withProperties(['job_title' => $validated['job_title']])
+            ->log('Employee job_title updated');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Employee job_title updated successfully'
+        ]);
+    }
+
+
+   
 }
