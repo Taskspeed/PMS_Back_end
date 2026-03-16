@@ -21,12 +21,13 @@ class UnitWorkPlanOrganizationResource extends JsonResource
         $officeEmployee             = $data->officeEmployee;
         $officeTargetPeriod         = $data->officeTargetPeriod;
         $organizationTargetPeriods  = $data->organizationTargetPeriods;
+        // $unitworkplan_status = $data->unitworkplan_status;
 
         return [
             'office' => [
                 'name' => $data->office_name,  // ✅ from resource, not $request
 
-                'unitworkplan_status' => $data->unitworkplan_status, // ✅ HERE
+                'unitworkplan' => $data->unitworkplan, // ✅ HERE
 
                 'employee' => [
                     'ControlNo' => $officeEmployee->ControlNo,
@@ -76,6 +77,10 @@ class UnitWorkPlanOrganizationResource extends JsonResource
                         ];
                     })->values(),
             ],
+
+            // 'unitworkplan_status' => [
+            //     $unitworkplan_status
+            // ]
         ];
     }
     }

@@ -12,10 +12,16 @@ class UnitWorkPlanRecord extends Model
 
 
     protected $fillable = [
-        'office_name',
-        'semester',
-        'year',
-        'status',
-        'reviewed_by',
+        'unitworkplan_id',
+          'date',
+            'status',
+            'remarks',
+            'reviewed_by'
     ];
+
+
+    public function unitworkplan()
+    {
+        return $this->belongsTo(UnitWorkPlan::class, 'unitworkplan_id');
+    }
 }

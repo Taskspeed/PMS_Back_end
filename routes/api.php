@@ -135,8 +135,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/employee/status/available', [dashboardController::class, 'fetchEmployeeStatus']);
         });
 
-        
-        Route::prefix('monitor')->group(function () {
+
+        Route::prefix('unit-work-plan')->group(function () {
 
             // updating the unit-work-plan of status
             Route::post('/update-status', [HrUnitWorkPlanController::class, 'updateUnitWorkPlan']);

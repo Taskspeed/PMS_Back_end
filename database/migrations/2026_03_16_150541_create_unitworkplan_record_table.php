@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('trackers', function (Blueprint $table) {
+        Schema::create('unitworkplan_records', function (Blueprint $table) {
             $table->id();
-            $table->string('office_name')->nullable(); // office of user
+            $table->foreignId('unitworkplan_id')->nullable()->constrained('unitworkplans')->onDelete('cascade');
             $table->string('date')->nullable();
             $table->string('status')->nullable();
             $table->string('remarks')->nullable();
-            $table->foreignId('unitworkplan_record_id')->nullable()->constrained('unitworkplan_records')->onDelete('cascade');
             $table->unsignedBigInteger('reviewed_by')->nullable(); // user_id
             $table->timestamps();
         });
@@ -28,6 +27,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('trackers');
+        Schema::table('unitworkplan_records', function (Blueprint $table) {
+            $table->dropForeign(['unitworkplan_id']);
+        });
+
+        Schema::dropIfExists('unitworkplan_records');
     }
 };

@@ -12,7 +12,7 @@ class UserController extends Controller
     public function getUserData()
     {
         $user = Auth::user();
-        // $office = $user->office;
+        $office = $user->office;
 
         // Get all categories having either MFOs or outputs for this office
 

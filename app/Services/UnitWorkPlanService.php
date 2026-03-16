@@ -2,13 +2,13 @@
 
 namespace App\Services;
 
-use App\Events\UnitWorkPlanRecord;
+use App\Events\UnitWorkPlanEvent;
 use App\Models\Employee;
 use App\Models\PerformanceConfigurations;
 use App\Models\PerformanceStandard;
 use App\Models\StandardOutcome;
 use App\Models\TargetPeriod;
-use App\Models\Tracker;
+use App\Models\UnitWorkPlan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -57,15 +57,15 @@ class UnitWorkPlanService
 
                 $employee = Employee::where('ControlNo', $employeeData['control_no'])->first();
 
-                \Illuminate\Support\Facades\Log::info('Employee check:', [
-                    'control_no' => $employeeData['control_no'],
-                    'found'      => $employee ? 'yes' : 'no',
-                    'job_title'  => $employee->job_title ?? 'N/A',
-                ]);
+                // \Illuminate\Support\Facades\Log::info('Employee check:', [
+                //     'control_no' => $employeeData['control_no'],
+                //     'found'      => $employee ? 'yes' : 'no',
+                //     'job_title'  => $employee->job_title ?? 'N/A',
+                // ]);
 
                 if ($employee && $employee->job_title == 'Office Head') {
-                    \Illuminate\Support\Facades\Log::info('Dispatching UnitWorkPlanRecord event...');
-                    UnitWorkPlanRecord::dispatch($targetPeriod);
+                    // \Illuminate\Support\Facades\Log::info('Dispatching UnitWorkPlanRecord event...');
+                    UnitWorkPlanEvent::dispatch($targetPeriod);
                 }
                 // Create Performance Standards
                 foreach ($employeeData['performance_standards'] as $standard) {
@@ -261,14 +261,35 @@ class UnitWorkPlanService
         // checking  the status of the unit work plan on the office
         // Trackers
 
-        $unitworkplan = \App\Models\UnitWorkPlanRecord::where('office_name', $request->office_name) // ⚠️ fix typo (offiice_name)
-            ->where('year', $request->year)
-            ->where('semester', $request->semester)
+        // $unitworkplan = \App\Models\UnitWorkPlanRecord::where('office_name', $request->office_name) // ⚠️ fix typo (offiice_name)
+        //     ->where('year', $request->year)
+        //     ->where('semester', $request->semester)
 
-            ->first();
+        //     ->first();
 
         // If no record → Pending
-        $unitWorkPlanStatus = $unitworkplan ? $unitworkplan->status : 'Draft';
+        // $unitWorkPlanStatus = $unitworkplan ? $unitworkplan->status : 'Draft';
+
+
+        // $unitworkplan = UnitWorkPlan::with('unitworkplanRecord')->where('office_name', $request->office_name) // ⚠️ fix typo (offiice_name)
+        //     ->where('year', $request->year)
+        //     ->where('semester', $request->semester)
+        //     ->first();
+        $unitworkplan_status = UnitWorkPlan::with([
+            'unitworkplanLastestRecord' => function ($query) {
+                $query->select(
+                    'unitworkplan_records.id',
+                    'unitworkplan_records.unitworkplan_id',
+                    'unitworkplan_records.status',
+                    'unitworkplan_records.remarks'
+                );
+            }
+        ])->select('id', 'office_name','semester','year')
+
+        ->where('office_name', $request->office_name)
+            ->where('year', $request->year)
+            ->where('semester', $request->semester)
+            ->first();
 
         return (object) [
             'office_name'               => $request->office_name,
@@ -276,7 +297,7 @@ class UnitWorkPlanService
             'officeEmployee'            => $officeEmployee,
             'officeTargetPeriod'        => $officeTargetPeriod,
             'organizationTargetPeriods' => $organizationTargetPeriods,
-            'unitworkplan_status'       => $unitWorkPlanStatus, // ✅ ADD THIS
+            'unitworkplan'       => $unitworkplan_status, // ✅ ADD THIS
         ];
     }
 

@@ -14,15 +14,18 @@ class UnitWorkPlanController extends Controller
     //  status if unitworkplan of office
     public function updateUnitworkplan(TrackerRequest $request,TrackerService $trackerService) {
 
-        $validatedData = $request->validated();
+        $validated = $request->validated();
 
-        $unitworkplan = $trackerService->unitworkplanStatus($validatedData);
+        $unitworkplan = $trackerService->unitworkplanStatus($validated);
 
         return response()->json([
             'message' => 'Unit workplan status created successfully.',
             'data' => $unitworkplan
         ], 201);
     }
+
+
+
 
 
 }

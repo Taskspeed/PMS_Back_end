@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\office;
-use App\Models\TargetPeriod;
-use App\Models\Tracker;
+use App\Models\UnitWorkPlan;
+use App\Models\UnitWorkPlanRecord;
+use Illuminate\Support\Facades\Auth;
+
+use function Symfony\Component\Clock\now;
 
 class TrackerService
 {
@@ -60,10 +62,20 @@ class TrackerService
     //         ]);
     // }
 
-    // public function unitworkplanStatus($validated){
+    // updating the unitworkplan
+    public function unitworkplanStatus($validated)
+    {
+        $user = Auth::user(); // ✅ Now works correctly
 
+        // $status = UnitWorkPlanRecord::findOrFail($unitworkplanRecordId);
+        $status = UnitWorkPlanRecord::create([
+            'unitworkplan_id' => $validated['unitworkplan_id'],
+            'reviewed_by' => $user->id,           // ✅ comma not semicolon
+            'date' => now()->format('m-d-Y'),
+            'status'  => $validated['status'],
+            'remarks' => $validated['remarks'] ?? null,
+        ]);
 
-
-
-    // }
+        return $status;
+    }
 }
