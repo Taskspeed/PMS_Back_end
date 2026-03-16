@@ -204,6 +204,36 @@ class UnitWorkPlanController extends BaseController
         ]);
     }
 
+    //  get the organization of the office - division - section - unit
+    public function getUniWorkPlanOfficeOrganization(Request $request)
+    {
+
+        $request->validate([
+            'office_name' => 'required|string',
+            'organization' => 'required|string',
+            'semester' => 'required',
+            'year' => 'required',
+        ]);
+
+        try {
+            $organization = $this->unitWorkPlanService->organization($request);
+            return new UnitWorkPlanOrganizationResource($organization);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ]);
+        }
+
+    }
+
+    // find the office head and supervisory on office
+    public function findManagerial($year, $semester, $mfo)
+    {
+
+        $result = $this->unitWorkPlanService->supervisoryDeductionOfSuccessIndicator($year, $semester, $mfo);
+
+        return $result;
+    }
 
 
     //     public function plantilla(Request $request)
@@ -636,336 +666,5 @@ class UnitWorkPlanController extends BaseController
     // }
 
 
-    /// need to finish the response
-    public function getUniWorkPlanOfficeOrganization(Request $request, UnitWorkPlanService $unitWorkPlanService)
-    {
-
-        $request->validate([
-            'office_name' => 'required|string',
-            'organization' => 'required|string',
-            'semester' => 'required',
-            'year' => 'required',
-        ]);
-
-        $organization = $this->unitWorkPlanService->organization($request);
-
-        return new UnitWorkPlanOrganizationResource($organization);
-    }
-
-
-
-    //    /// need to finish the response
-    // public function managerialSuccessIndicator(Request $request, UnitWorkPlanService $unitWorkPlanService)
-    // {
-
-    //   $validated  =   $request->validate([
-    //         'year' => 'required'
-    //         'semester' => 'required',
-    //     ]);
-
-    //     $result = $unitWorkPlanService->findManagerial($validated);
-
-    //     return ($organization);
-    // }
-
-    // find  managerial on the office base on the  year and semester to get the data
-    // and supervisory
-    // public function findManagerial($year, $semester,$mfo)
-    // {
-
-
-    //     $user = Auth::user();
-
-    //     // Get the managerial (office head) of this office
-    //     $managerial = Employee::where('rank', 'Managerial')
-    //         ->where('office_id', $user->office_id)
-    //         ->first();
-
-    //     if (!$managerial) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'No managerial employee found.'
-    //         ], 404);
-    //     }
-
-
-
-
-    //     // Get the managerial's target period with performance standards
-    //     $targetPeriod = TargetPeriod::with('performanceStandards')
-    //         ->where('control_no', $managerial->ControlNo)
-    //         ->where('year', $year)
-    //         ->where('semester', $semester)
-    //         ->first();
-
-    //     if (!$targetPeriod) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'No target period found for this managerial.'
-    //         ], 404);
-    //     }
-
-    //     // Get all employees under the same office (excluding managerial)
-    //     $employeeControlNos = Employee::where('office_id', $user->office_id)
-    //         ->where('rank', '!=', 'Managerial')
-    //         ->pluck('ControlNo');
-
-
-    //     // $employeeControlNos = Employee::where('office_id', $user->office_id)
-    //     //     ->where('rank', '!=', 'Supervisory')
-    //     //     ->pluck('ControlNo');
-
-    //     // Get all employee target periods for same year and semester
-    //     $employeeTargetPeriods = TargetPeriod::with('performanceStandards')
-    //         ->whereIn('control_no', $employeeControlNos)
-    //         ->where('year', $year)
-    //         ->where('semester', $semester)
-    //         ->get();
-
-
-    //     $standards = $mfo
-    //         ? $targetPeriod->performanceStandards->where('mfo', $mfo)
-    //         : $targetPeriod->performanceStandards;
-
-
-    //     // Build result: for each managerial MFO/success_indicator, compute available
-    //     // $result = $targetPeriod->performanceStandards->map(function ($standard) use ($employeeTargetPeriods) {
-    //     $result = $standards->map(function ($standard) use ($employeeTargetPeriods) {
-    //         // Extract the target number from managerial's success_indicator
-    //         $totalTarget = $this->extractNumber($standard->success_indicator);
-
-    //         // Sum up all employees' claimed output for the same MFO + success_indicator
-
-    //         $claimed = 0;
-
-    //         foreach ($employeeTargetPeriods as $empPeriod) {
-    //             foreach ($empPeriod->performanceStandards as $empStandard) {
-    //                 // Match by MFO only
-    //                 if ($empStandard->mfo === $standard->mfo) {
-    //                     $claimed += $this->extractNumber($empStandard->success_indicator);
-    //                 }
-    //             }
-    //         }
-
-    //         $available = $totalTarget - $claimed;
-
-    //         return [
-    //             'category'           => $standard->category,
-    //             'mfo'              => $standard->mfo,
-    //             'output' => $standard->output,
-    //             'output_name' => $standard->output_name,
-    //             'performance_indicator' => $standard->performance_indicator,
-    //             'performance_indicator' => $standard->performance_indicator,
-    //             'success_indicator' => $standard->success_indicator,
-    //             'total_target'      => $totalTarget,
-    //             'claimed'           => $claimed,
-    //             'available'         => max(0, $available), // never go negative
-    //         ];
-    //     });
-
-    //     return response()->json([
-    //         // 'success' => true,
-    //         'controlNo' => $managerial->ControlNo,
-    //         'name' => $managerial->name,
-    //         'rank' => $managerial->rank,
-    //         'office' => $managerial->office,
-    //         'year'    => $year,
-    //         'semester' => $semester,
-    //         // 'managerial' => $managerial->ControlNo,
-    //         'mfos' => $result
-    //     ], 200);
-    // }
-
-
-    // old code
-
-    // public function findManagerial($year, $semester, $mfo)
-    // {
-    //     $user = Auth::user();
-
-    //     // Get the managerial (office head) of this office
-    //     $managerial = Employee::where('rank', 'Office Head')
-    //         ->where('office_id', $user->office_id)
-    //         ->first();
-
-    //     if (!$managerial) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'No managerial employee found.'
-    //         ], 404);
-    //     }
-
-    //     // Get ALL supervisory employees of this office
-    //     $supervisories = Employee::whereIn('rank',['Sub-Office Head','Group Head','Division Head','Section Head','Unit Head'])
-    //         ->where('office_id', $user->office_id)
-    //         ->get();
-
-    //     // Get the managerial's target period with performance standards
-    //     $targetPeriod = TargetPeriod::with('performanceStandards')
-    //         ->where('control_no', $managerial->ControlNo)
-    //         ->where('year', $year)
-    //         ->where('semester', $semester)
-    //         ->first();
-
-    //     if (!$targetPeriod) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'No target period found for this managerial.'
-    //         ], 404);
-    //     }
-
-    //     // Get all supervisory control numbers
-    //     $supervisoryControlNos = $supervisories->pluck('ControlNo');
-
-    //     // Get ALL supervisory target periods
-    //     $supervisoryTargetPeriods = TargetPeriod::with('performanceStandards')
-    //         ->whereIn('control_no', $supervisoryControlNos)
-    //         ->where('year', $year)
-    //         ->where('semester', $semester)
-    //         ->get();
-
-    //     // Get all rank-and-file employees (excluding managerial and all supervisory)
-    //     $employeeControlNos = Employee::where('office_id', $user->office_id)
-    //         ->whereNotIn('rank', ['Managerial', 'Supervisory'])
-    //         ->pluck('ControlNo');
-
-    //     // Get all rank-and-file employee target periods for same year and semester
-    //     $employeeTargetPeriods = TargetPeriod::with('performanceStandards')
-    //         ->whereIn('control_no', $employeeControlNos)
-    //         ->where('year', $year)
-    //         ->where('semester', $semester)
-    //         ->get();
-
-    //     $standards = $mfo
-    //         ? $targetPeriod->performanceStandards->where('mfo', $mfo)
-    //         : $targetPeriod->performanceStandards;
-
-    //     // Build result for managerial MFOs
-    //     // Claimed = all supervisory claimed + all rank-and-file claimed
-    //     $result = $standards->map(function ($standard) use ($employeeTargetPeriods, $supervisoryTargetPeriods) {
-    //         $totalTarget = $this->extractNumber($standard->success_indicator);
-
-    //         $claimed = 0;
-
-    //         // Sum claimed from ALL supervisory employees
-    //         foreach ($supervisoryTargetPeriods as $supPeriod) {
-    //             foreach ($supPeriod->performanceStandards as $supStandard) {
-    //                 if ($supStandard->mfo === $standard->mfo) {
-    //                     $claimed += $this->extractNumber($supStandard->success_indicator);
-    //                 }
-    //             }
-    //         }
-
-    //         // Sum claimed from rank-and-file employees
-    //         foreach ($employeeTargetPeriods as $empPeriod) {
-    //             foreach ($empPeriod->performanceStandards as $empStandard) {
-    //                 if ($empStandard->mfo === $standard->mfo) {
-    //                     $claimed += $this->extractNumber($empStandard->success_indicator);
-    //                 }
-    //             }
-    //         }
-
-    //         $available = $totalTarget - $claimed;
-
-    //         return [
-    //             'category'              => $standard->category,
-    //             'mfo'                   => $standard->mfo,
-    //             'output'                => $standard->output,
-    //             'output_name'           => $standard->output_name,
-    //             'performance_indicator' => $standard->performance_indicator,
-    //             'success_indicator'     => $standard->success_indicator,
-    //             'total_target'          => $totalTarget,
-    //             'claimed'               => $claimed,
-    //             'available'             => max(0, $available),
-    //         ];
-    //     });
-
-    //     // Build supervisory MFO data for EACH supervisory employee
-    //     $supervisoryData = $supervisories->map(function ($supervisory) use (
-    //         $supervisoryTargetPeriods,
-    //         $employeeTargetPeriods,
-    //         $mfo
-    //     ) {
-    //         $supTargetPeriod = $supervisoryTargetPeriods
-    //             ->where('control_no', $supervisory->ControlNo)
-    //             ->first();
-
-    //         if (!$supTargetPeriod) {
-    //             return [
-    //                 'controlNo' => $supervisory->ControlNo,
-    //                 'name'      => $supervisory->name,
-    //                 'rank'      => $supervisory->rank,
-    //                 'mfos'      => null,
-    //             ];
-    //         }
-
-    //         $supStandards = $mfo
-    //             ? $supTargetPeriod->performanceStandards->where('mfo', $mfo)
-    //             : $supTargetPeriod->performanceStandards;
-
-    //         // Claimed from rank-and-file only (against this supervisory's targets)
-    //         $mfos = $supStandards->map(function ($standard) use ($employeeTargetPeriods) {
-    //             $totalTarget = $this->extractNumber($standard->success_indicator);
-
-    //             $claimed = 0;
-
-    //             foreach ($employeeTargetPeriods as $empPeriod) {
-    //                 foreach ($empPeriod->performanceStandards as $empStandard) {
-    //                     if ($empStandard->mfo === $standard->mfo) {
-    //                         $claimed += $this->extractNumber($empStandard->success_indicator);
-    //                     }
-    //                 }
-    //             }
-
-    //             $available = $totalTarget - $claimed;
-
-    //             return [
-    //                 'category'              => $standard->category,
-    //                 'mfo'                   => $standard->mfo,
-    //                 'output'                => $standard->output,
-    //                 'output_name'           => $standard->output_name,
-    //                 'performance_indicator' => $standard->performance_indicator,
-    //                 'success_indicator'     => $standard->success_indicator,
-    //                 'total_target'          => $totalTarget,
-    //                 'claimed'               => $claimed,
-    //                 'available'             => max(0, $available),
-    //             ];
-    //         });
-
-    //         return [
-    //             'controlNo' => $supervisory->ControlNo,
-    //             'name'      => $supervisory->name,
-    //             'rank'      => $supervisory->rank,
-    //             'mfos'      => $mfos->values(),
-    //         ];
-    //     });
-
-    //     return response()->json([
-    //         'controlNo'    => $managerial->ControlNo,
-    //         'name'         => $managerial->name,
-    //         'rank'         => $managerial->rank,
-    //         'office'       => $managerial->office,
-    //         'year'         => $year,
-    //         'semester'     => $semester,
-    //         'mfos'         => $result,
-    //         'supervisories' => $supervisoryData->values(),
-    //     ], 200);
-    // }
-    // // Extract the leading number from a success_indicator string
-    // private function extractNumber(string $string): int
-    // {
-    //     preg_match('/^\d+/', trim($string), $matches);
-    //     return isset($matches[0]) ? (int) $matches[0] : 0;
-    // }
-
-    // find the office head and supervisory on office
-    public function findManagerial($year, $semester, $mfo)
-    {
-
-    $result = $this->unitWorkPlanService->supervisoryDeductionOfSuccessIndicator($year,$semester,$mfo);
-
-    return $result;
-
-    }
 
 }
