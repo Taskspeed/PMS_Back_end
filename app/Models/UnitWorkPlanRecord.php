@@ -4,18 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Tracker extends Model
+class UnitWorkPlanRecord extends Model
 {
     //
 
-    protected $table = 'trackers';
+    protected $table = 'unitworkplan_records';
+
 
     protected $fillable = [
-        'reviewed_by',
         'office_name',
-        'date',
+        'semester',
+        'year',
         'status',
-        'remarks',
-        'unitworkplan_record_id'
+        'reviewed_by',
     ];
 }

@@ -19,44 +19,51 @@ class TrackerService
 
     // updating the unitworkplan of office
 
-    const STATUS_MONITORED = 'monitored';
-    const STATUS_PENDING = 'Pending';
+    // const STATUS_MONITORED = 'monitored';
+    // const STATUS_PENDING = 'Pending';
 
 
     // updating the unitworkplan of office
-    public function unitworkplanStatus(array $validatedData)
-    {
-        // Get office from database
-        $office = office::findOrFail($validatedData['office_id']);
+    // public function unitworkplanStatus(array $validatedData)
+    // {
+    //     // Get office from database
+    //     $office = office::findOrFail($validatedData['office_id']);
 
-        // Secure override
-        $validatedData['office_name'] = $office->name;
+    //     // Secure override
+    //     $validatedData['office_name'] = $office->name;
 
-        // Store tracker
-        $tracker = Tracker::create($validatedData);
+    //     // Store tracker
+    //     $tracker = Tracker::create($validatedData);
 
-        // Apply additional business logic
-        $this->updateTargetPeriodStatusIfMonitored($tracker);
+    //     // Apply additional business logic
+    //     $this->updateTargetPeriodStatusIfMonitored($tracker);
 
-        return $tracker;
-    }
+    //     return $tracker;
+    // }
 
 
     /**
      * Update target period employee status if tracker is monitored
      */
-    private function updateTargetPeriodStatusIfMonitored(Tracker $tracker): void
-    {
-        // Only run if monitored
-        if (strtolower($tracker->status) !== self::STATUS_MONITORED) {
-            return;
-        }
+    // private function updateTargetPeriodStatusIfMonitored(Tracker $tracker): void
+    // {
+    //     // Only run if monitored
+    //     if (strtolower($tracker->status) !== self::STATUS_MONITORED) {
+    //         return;
+    //     }
 
-        TargetPeriod::where('year', $tracker->year)
-            ->where('semester', $tracker->semester)
-            ->where('office_id', $tracker->office_id)
-            ->update([
-                'status' => 'Pending'
-            ]);
-    }
+    //     TargetPeriod::where('year', $tracker->year)
+    //         ->where('semester', $tracker->semester)
+    //         ->where('office_id', $tracker->office_id)
+    //         ->update([
+    //             'status' => 'Pending'
+    //         ]);
+    // }
+
+    // public function unitworkplanStatus($validated){
+
+
+
+
+    // }
 }

@@ -54,9 +54,9 @@ class addEmployeeUnitWorkPlanRequest extends FormRequest
             'employees.*.performance_standards.*.required_output' => 'nullable|string',
 
             // Performance Indicator (fixed)
-            'employees.*.performance_standards.*.performance_indicator' => 'required|array|min:1',
-            'employees.*.performance_standards.*.performance_indicator.*.category' => 'required|string',
-            'employees.*.performance_standards.*.performance_indicator.*.value' => 'required|string',
+            'employees.*.performance_standards.*.performance_indicator' => 'nullable',
+            'employees.*.performance_standards.*.performance_indicator.*.category' => 'nullable|string',
+            'employees.*.performance_standards.*.performance_indicator.*.value' => 'nullable|string',
 
 
 

@@ -27,7 +27,7 @@ class UnitWorkPlanOrganizationResource extends JsonResource
                 'name' => $data->office_name,  // ✅ from resource, not $request
 
                 'unitworkplan_status' => $data->unitworkplan_status, // ✅ HERE
-                
+
                 'employee' => [
                     'ControlNo' => $officeEmployee->ControlNo,
                     'name'      => $officeEmployee->name,

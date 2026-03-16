@@ -135,6 +135,13 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/employee/status/available', [dashboardController::class, 'fetchEmployeeStatus']);
         });
 
+        
+        Route::prefix('monitor')->group(function () {
+
+            // updating the unit-work-plan of status
+            Route::post('/update-status', [HrUnitWorkPlanController::class, 'updateUnitWorkPlan']);
+        });
+
 
 
         // indicator library
@@ -302,10 +309,5 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 
-    Route::prefix('monitor')->group(function(){
 
-        // store monitor
-        Route::post('/store', [HrUnitWorkPlanController::class, 'monitorUnitworkplan']);
-
-    });
 });

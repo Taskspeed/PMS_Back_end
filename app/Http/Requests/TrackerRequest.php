@@ -24,10 +24,10 @@ class TrackerRequest extends FormRequest
         return [
             //
 
-            'office_id' => 'required|exists:offices,id',
-            // 'office_name' => 'required|string',
-            'year' => 'required|integer',
-            'semester' => 'required|string',
+            'unitworkplan_record_id' => 'required|exists:unitworkplan_records,id',
+            'office_name' => 'required|string',
+            // 'year' => 'required|integer',
+            // 'semester' => 'required|string',
             'date' => 'required|date|date_format:Y-m-d',
             'status' => 'required|string',
             'remarks' => 'nullable|string'

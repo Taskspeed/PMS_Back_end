@@ -11,15 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('trackers', function (Blueprint $table) {
+        Schema::create('unitworkplan_records', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
-            $table->string('office_name')->nullable(); // office
-            $table->year('year')->nullable();
+            $table->string('office_name')->nullable();
             $table->string('semester')->nullable();
-            $table->string('date')->nullable();
+            $table->integer('year')->nullable();
             $table->string('status')->nullable();
-            $table->string('remarks')->nullable();
+            $table->unsignedBigInteger('reviewed_by')->nullable(); // user_id
             $table->timestamps();
         });
     }
@@ -29,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('trackers');
+        Schema::dropIfExists('unitworkplan_record');
     }
 };

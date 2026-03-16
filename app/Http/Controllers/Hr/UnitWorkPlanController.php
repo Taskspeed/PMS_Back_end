@@ -12,7 +12,8 @@ class UnitWorkPlanController extends Controller
 
     // monitoring the unitworkplan by hr
     //  status if unitworkplan of office
-    public function monitorUnitworkplan(TrackerRequest $request,TrackerService $trackerService) {
+    public function updateUnitworkplan(TrackerRequest $request,TrackerService $trackerService) {
+
         $validatedData = $request->validated();
 
         $unitworkplan = $trackerService->unitworkplanStatus($validatedData);
