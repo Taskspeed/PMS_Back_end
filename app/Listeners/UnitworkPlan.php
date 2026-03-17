@@ -29,6 +29,7 @@ class UnitWorkPlan
 
         // ✅ Just save directly
         $unitworkplan =  UnitWorkPlanCreate::create([
+            'office_name' => $employee->office_id,
             'office_name' => $employee->office,
             'year'        => $unitworkplan->year,
             'semester'    => $unitworkplan->semester,

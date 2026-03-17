@@ -17,6 +17,7 @@ use App\Http\Controllers\office\MfoController;
 use App\Http\Controllers\office\UnitWorkPlanController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\OpcrController;
+use App\Http\Controllers\Planning\OpcrController as PlanningOpcrController;
 use App\Http\Controllers\Planning\Planning_Unit_work_planController;
 use App\Http\Controllers\QpefController;
 use App\Http\Controllers\SpmsController;
@@ -59,7 +60,7 @@ Route::prefix('ipcr')->group(function () {
 
     // list of date that the employee rated already args controlNo
     Route::get('employee/list/rated/{control_no}', [EmployeeRatingController::class, 'getListOfRatingEmployee']);
-
+Route::get('employee/start/{officeId}/{semester}/{year}', [EmployeeRatingController::class, 'canEmployeesRate']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -173,7 +174,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // delete rank
         Route::delete('/rank/delete/{rankId}', [RankController::class, 'deleteRank']);
-
         Route::get('/category', [CategoryController::class, 'fetchCategory']);
 
 
@@ -186,6 +186,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/unit_work_plan/employee', [Planning_Unit_work_planController::class, 'employee']);
         Route::get('/unit_work_plan/divisions', [Planning_Unit_work_planController::class, 'getDivisionsWithWorkPlans']);
         Route::get('/unit_work_plan/employees', [Planning_Unit_work_planController::class, 'getEmployeesByDivision']);
+
+
+        Route::prefix('opcr')->group(function () {
+            Route::post('/update-status', [PlanningOpcrController::class, 'opcrStatus']);
+
+        });
     });
 
     // SPMS

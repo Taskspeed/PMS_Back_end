@@ -3,36 +3,154 @@
 namespace App\Http\Controllers\office;
 
 use App\Http\Controllers\Controller;
-
 use App\Http\Requests\performanceRatingStoreRequest;
-
+use App\Models\OfficeOpcr;
 use App\Models\PerformanceRating;
-
 use App\Models\TargetPeriod;
+use App\Models\UnitWorkPlan;
 use App\Services\PerformanceRatingService;
+use App\Services\TargetPeriodService;
+use Illuminate\Support\Facades\Log;
 
 
 class EmployeeRatingController extends Controller
 {
 
-    // fetch the target period of employee
+
+        protected $targetperiodService;
+
+        public function __construct(TargetPeriodService $targetperiodService)
+        {
+            return $this->targetperiodService = $targetperiodService;
+        }
+
+
+    // // fetch the target period of employee
+    // public function targetPeriodEmployee($controlNo)
+    // {
+
+    //     $employeeTargetPeriod = TargetPeriod::select('id', 'control_no', 'semester', 'year', 'status','office_id')->where('control_no', $controlNo)->get();
+
+    //     if ($employeeTargetPeriod->isEmpty()) {
+    //         return response()->json([
+    //             'message' => 'No target period found for this employee.',
+    //             'data' => []
+    //         ], 200);
+    //     }
+
+    //     $unitWorkplan = UnitWorkPlan::where('office_id',  $employeeTargetPeriod->office_id)
+    //         ->where('semester', $employeeTargetPeriod->semester)
+    //         ->where('year', $employeeTargetPeriod->year)
+    //         ->whereHas('unitworkplanLastestRecord', function ($q) {
+    //             $q->where('status', 'reviewed');
+    //         })
+    //         ->exists();
+
+    //     $opcr = OfficeOpcr::where('office_id', $employeeTargetPeriod->office_id)
+    //         ->where('semester',  $employeeTargetPeriod->semester)
+    //         ->where('year', $employeeTargetPeriod->year)
+    //         ->whereHas('officeOpcrRecordLastestRecord', function ($q) {
+    //             $q->where('status', 'reviewed');
+    //         })
+    //         ->exists();
+
+    //     if (!$unitWorkplan && !$opcr) {
+    //         return [
+    //             'can_rate' => false,
+    //             'message' => 'Unit Work Plan and OPCR are not reviewed yet.'
+    //         ];
+    //     }
+
+    //     if (!$unitWorkplan) {
+    //         return [
+    //             'can_rate' => false,
+    //             'message' => 'Unit Work Plan is not reviewed yet.'
+    //         ];
+    //     }
+
+    //     if (!$opcr) {
+    //         return [
+    //             'can_rate' => false,
+    //             'message' => 'OPCR is not reviewed yet.'
+    //         ];
+    //     }
+
+    //     // ✅ BOTH REVIEWED → UPDATE TARGET PERIOD STATUS
+    //     TargetPeriod::where('office_id', $employeeTargetPeriod->office_id)
+    //         ->where('semester',  $employeeTargetPeriod->semester)
+    //         ->where('year', $employeeTargetPeriod->year)
+    //         ->update([
+    //             'status' => 'target period started'
+    //         ]);
+
+    //     return [
+    //         'can_rate' => true,
+    //         'message' => 'Employees can now start rating.'
+    //     ];
+
+
+    //     return response()->json([
+    //         'message' => 'Target period retrieved successfully.',
+    //         'targetPeriod' => $employeeTargetPeriod
+    //     ], 200);
+    // }
+
+
+    // target period of employee
     public function targetPeriodEmployee($controlNo)
     {
 
-        $employeeTargetPeriod = TargetPeriod::select('id', 'control_no', 'semester', 'year', 'status')->where('control_no', $controlNo)->get();
+      $result = $this->targetperiodService->targetPeriod($controlNo);
 
-        if ($employeeTargetPeriod->isEmpty()) {
-            return response()->json([
-                'message' => 'No target period found for this employee.',
-                'data' => []
-            ], 200);
-        }
+      return $result;
 
-        return response()->json([
-            'message' => 'Target period retrieved successfully.',
-            'targetPeriod' => $employeeTargetPeriod
-        ], 200);
     }
+
+    //  private function canEmployeesRate($officeId, $semester, $year)
+    // {
+    //     $unitWorkplan = UnitWorkPlan::where('office_id', $officeId)
+    //         ->where('semester', $semester)
+    //         ->where('year', $year)
+    //         ->whereHas('unitworkplanLastestRecord', function ($q) {
+    //             $q->where('status', 'reviewed');
+    //         })
+    //         ->first();
+
+    //     $opcr = OfficeOpcr::where('office_id', $officeId)
+    //         ->where('semester', $semester)
+    //         ->where('year', $year)
+    //         ->whereHas('officeOpcrRecordLastestRecord', function ($q) {
+    //             $q->where('status', 'reviewed');
+    //         })
+    //         ->first();
+
+
+    //     if (!$unitWorkplan && !$opcr) {
+    //         return [
+    //             'can_rate' => false,
+    //             'message' => 'Unit Work Plan and OPCR are not reviewed yet.'
+    //         ];
+    //     }
+
+    //     if (!$unitWorkplan) {
+    //         return [
+    //             'can_rate' => false,
+    //             'message' => 'Unit Work Plan is not reviewed yet.'
+    //         ];
+    //     }
+
+    //     if (!$opcr) {
+    //         return [
+    //             'can_rate' => false,
+    //             'message' => 'OPCR is not reviewed yet.'
+    //         ];
+    //     }
+
+    //     return [
+    //         'can_rate' => true,
+    //         'message' => 'Employees can now start rating.'
+    //     ];
+    // }
 
     //  get the target peroid details the performance standart and standard outcome
     public function targetPeriodDetails($targetPeriodId)
@@ -82,6 +200,31 @@ class EmployeeRatingController extends Controller
 
         return response()->json($targetperiod);
     }
+
+    // // check if the emplotee can rate
+    // public function canEmployeesRate($officeId, $semester, $year)
+    // {
+    //     $unitWorkplan = UnitWorkPlan::where('office_id', $officeId)
+    //         ->where('semester', $semester)
+    //         ->where('year', $year)
+    //         ->whereHas('unitworkplanLastestRecord', function ($q) {
+    //             $q->where('status', 'reviewed');
+    //         })
+    //         ->first();
+
+    //     $opcr = OfficeOpcr::where('office_id', $officeId)
+    //         ->where('semester', $semester)
+    //         ->where('year', $year)
+    //         ->whereHas('officeOpcrRecordLastestRecord', function ($q) {
+    //             $q->where('status', 'reviewed');
+    //         })
+    //         ->first();
+
+    //     return $unitWorkplan && $opcr;
+    // }
+
+
+
 
     // employee store his rate
     public function performanceRating(performanceRatingStoreRequest $request, PerformanceRatingService $performanceRatingService)

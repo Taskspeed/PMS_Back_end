@@ -12,6 +12,7 @@ class UnitWorkPlan extends Model
     protected  $table = 'unitworkplans';
 
     protected $fillable = [
+            'office_id',
             'office_name',
             'semester',
             'year'

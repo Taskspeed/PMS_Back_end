@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Planning;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\OpcrStoreStatusRequest;
 use App\Services\OpcrService;
 use Illuminate\Http\Request;
 
@@ -18,11 +19,13 @@ class OpcrController extends Controller
     }
 
 
-    public function opcrStatus(){
+     public function opcrStatus(OpcrStoreStatusRequest $request){
 
-    $result = $this->opcrService->opcrStoreStatus();
+        $validated = $request->validated();
 
-    return $result;
+        $result = $this->opcrService->opcrStoreStatus($validated);
+
+     return $result;
 
     }
 

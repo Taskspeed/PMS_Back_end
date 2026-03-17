@@ -6,8 +6,11 @@ use App\Events\OpcrEvent;
 use App\Models\opcr;
 use App\Models\Employee;
 use App\Models\OfficeOpcr;
+use App\Models\OfficeOpcrRecord;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+
+use function Symfony\Component\Clock\now;
 
 class OpcrService
 {
@@ -190,8 +193,23 @@ class OpcrService
 
 
     // storing status of opcr
-    public function opcrStoreStatus(){
+    public function opcrStoreStatus($validated){
 
+    $user =  Auth::user();
+
+
+    $opcr = OfficeOpcrRecord::create([
+
+        'office_opcr_id' => $validated['office_opcr_id'],
+            'date' => now()->format('m-d-Y'),
+            'status' => $validated['status'],
+            'remarks' => $validated['remarks'],
+            'reviewed_by' => $user->id,
+
+
+    ]);
+
+    return response()->json($opcr);
 
     }
 }
