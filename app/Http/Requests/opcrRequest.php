@@ -22,10 +22,19 @@ class opcrRequest extends FormRequest
     public function rules(): array
     {
         return [
-            '*.performance_standard_id' => 'required|exists:performance_standards,id',
-            '*.budget' => 'required',
-            '*.accountable' => 'required',
-            '*.accomplishment' => 'required',
+            // '*.performance_standard_id' => 'required|exists:performance_standards,id',
+            // '*.budget' => 'required',
+            // '*.accountable' => 'required',
+            // '*.accomplishment' => 'required',
+            'semester' => 'required',
+            'year' => 'required',
+
+            'data' => 'required|array',
+
+            'data.*.performance_standard_id' => 'required|exists:performance_standards,id',
+            'data.*.budget' => 'required',
+            'data.*.accountable' => 'required',
+            'data.*.accomplishment' => 'required',
         ];
     }
 }

@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('office_opcrs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('office_id')->nullable()->constrained('offices')->onDelete('cascade');
+            $table->string('office_name')->nullable();
+            $table->string('semester')->nullable();
+            $table->integer('year')->nullable();
             $table->timestamps();
         });
     }

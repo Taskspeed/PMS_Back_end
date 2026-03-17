@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('date')->nullable();
             $table->string('status')->nullable();
             $table->string('remarks')->nullable();
+            $table->unsignedBigInteger('reviewed_by')->nullable(); // user_id
             $table->timestamps();
         });
     }

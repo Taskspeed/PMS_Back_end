@@ -15,6 +15,8 @@ class OpcrResource extends JsonResource
             'id' => $this->id,
             'control_no' => $this->ControlNo,
             'name' => $this->name,
+            'office_id' => $this->office_id,
+            'office' => $this->office,
 
             'target_periods' => $this->whenLoaded('targetPeriods', function () {
                 return $this->targetPeriods->map(function ($target) {

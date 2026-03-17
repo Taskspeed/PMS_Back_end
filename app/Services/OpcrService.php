@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\OpcrEvent;
 use App\Models\opcr;
 use App\Models\Employee;
 
@@ -19,7 +20,7 @@ class OpcrService
     // }
     public function opcrOfficeHead($controlNo, $semester, $year){
 
-        $officeHeadOpcr = Employee::select('id', 'ControlNo', 'name')
+        $officeHeadOpcr = Employee::select('id', 'ControlNo', 'name','office_id','office')
             ->where('ControlNo', $controlNo)
 
             ->whereHas('targetPeriods', function ($q) use ($year, $semester) {
@@ -75,6 +76,7 @@ class OpcrService
     }
 
 
+    // store opcr
     public function storeAllotedBudget($validatedData)
     {
         $user = Auth::user();
@@ -86,7 +88,18 @@ class OpcrService
 
             $records = [];
 
-            foreach ($validatedData as $data) {
+            // foreach ($validatedData as $data) {
+
+            //     $records[] = opcr::create([
+            //         'office_id' => $officeId,
+            //         'performance_standard_id' => $data['performance_standard_id'],
+            //         'budget' => $data['budget'],
+            //         'accountable' => $data['accountable'],
+            //         'accomplishment' => $data['accomplishment'],
+            //         // 'remarks' => $data['remarks'],
+            //     ]);
+            // }
+            foreach ($validatedData['data'] as $data) {
 
                 $records[] = opcr::create([
                     'office_id' => $officeId,
@@ -94,11 +107,19 @@ class OpcrService
                     'budget' => $data['budget'],
                     'accountable' => $data['accountable'],
                     'accomplishment' => $data['accomplishment'],
-                    // 'remarks' => $data['remarks'],
                 ]);
             }
 
             DB::commit();
+
+            //Execute
+            // dispatch event
+            OpcrEvent::dispatch(
+                $records,
+                $validatedData['year'],
+                $validatedData['semester']
+            );
+
 
             return $records;
         } catch (\Exception $e) {
