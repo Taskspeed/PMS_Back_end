@@ -67,7 +67,7 @@ class UnitWorkPlanService
                     // \Illuminate\Support\Facades\Log::info('Dispatching UnitWorkPlanRecord event...');
                     UnitWorkPlanEvent::dispatch($targetPeriod);
                 }
-                
+
                 // Create Performance Standards
                 foreach ($employeeData['performance_standards'] as $standard) {
                     $performanceStandard = PerformanceStandard::create([
@@ -282,7 +282,8 @@ class UnitWorkPlanService
                     'unitworkplan_records.id',
                     'unitworkplan_records.unitworkplan_id',
                     'unitworkplan_records.status',
-                    'unitworkplan_records.remarks'
+                    'unitworkplan_records.remarks',
+                    'unitworkplan_records.reviewed_by',
                 );
             }
         ])->select('id', 'office_name','semester','year')

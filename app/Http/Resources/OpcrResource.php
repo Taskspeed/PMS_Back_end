@@ -11,49 +11,50 @@ class OpcrResource extends JsonResource
 
     public function toArray(Request $request): array
     {
+        $employee = $this->resource['employee'] ?? $this->resource;
+        $opcr_status = $this->resource['opcr_status'] ?? null;
+
         return [
-            'id' => $this->id,
-            'control_no' => $this->ControlNo,
-            'name' => $this->name,
-            'office_id' => $this->office_id,
-            'office' => $this->office,
+            'id'         => $employee->id,
+            'control_no' => $employee->ControlNo,
+            'name'       => $employee->name,
+            'office_id'  => $employee->office_id,
+            'office'     => $employee->office,
 
-            'target_periods' => $this->whenLoaded('targetPeriods', function () {
-                return $this->targetPeriods->map(function ($target) {
-
+            'target_periods' => $employee->relationLoaded('targetPeriods')
+                ? $employee->targetPeriods->map(function ($target) {
                     return [
-                        'id' => $target->id,
+                        'id'       => $target->id,
                         'semester' => $target->semester,
-                        'year' => $target->year,
-                        'status' => $target->status,
+                        'year'     => $target->year,
+                        'status'   => $target->status,
 
                         'performance_standards' => $target->performanceStandards
                             ? $target->performanceStandards->map(function ($ps) {
-
                                 return [
-                                    'id' => $ps->id,
-                                    'target_period_id' => $ps->target_period_id,
-                                    'category' => $ps->category,
-                                    'mfo' => $ps->mfo,
-                                    'output' => $ps->output,
+                                    'id'                => $ps->id,
+                                    'target_period_id'  => $ps->target_period_id,
+                                    'category'          => $ps->category,
+                                    'mfo'               => $ps->mfo,
+                                    'output'            => $ps->output,
                                     'success_indicator' => $ps->success_indicator,
-                                    'core' => $ps->core,
-                                    'technical' => $ps->technical,
-                                    'leadership' => $ps->leadership,
-
-                                    // assuming hasOne
+                                    'core'              => $ps->core,
+                                    'technical'         => $ps->technical,
+                                    'leadership'        => $ps->leadership,
                                     'opcr' => $ps->opcr ? [
-                                        'id' => $ps->opcr->id,
-                                        'budget' => $ps->opcr->budget,
-                                        'accountable' => $ps->opcr->accountable,
+                                        'id'            => $ps->opcr->id,
+                                        'budget'        => $ps->opcr->budget,
+                                        'accountable'   => $ps->opcr->accountable,
                                         'accomplishment' => $ps->opcr->accomplishment,
                                     ] : null,
                                 ];
                             })
                             : [],
                     ];
-                });
-            }),
+                })
+                : [],
+
+            'opcr_status' => $opcr_status,
         ];
     }
 }

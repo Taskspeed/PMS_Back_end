@@ -20,4 +20,9 @@ class OfficeOpcrRecord extends Model
         'reviewed_by'
 
     ];
+
+    public function officeOpcr()
+    {
+        return $this->belongsTo(OfficeOpcr::class);
+    }
 }

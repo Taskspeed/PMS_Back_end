@@ -23,4 +23,14 @@ class OfficeOpcr extends Model
     {
         return $this->belongsTo(office::class);
     }
+
+    public function officeOpcrRecord()
+    {
+        return $this->hasMany(officeOpcrRecord::class);
+    }
+
+    public function officeOpcrRecordLastestRecord()
+    {
+        return $this->hasOne(OfficeOpcrRecord::class, 'office_opcr_id')->latestOfMany();
+    }
 }

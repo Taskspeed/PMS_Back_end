@@ -25,7 +25,7 @@ class OpcrController extends BaseController
             return $next($request);
         });
     }
-  
+
     // get the opcr of the office head
     public function opcr($controlNo, $semester, $year, opcrService $opcr)
     {
@@ -38,7 +38,10 @@ class OpcrController extends BaseController
             ], 404);
         }
 
-        return new OpcrResource($employeeOpcr);
+        return new OpcrResource([
+            'employee'    => $employeeOpcr['employee'],
+            'opcr_status' => $employeeOpcr['opcr_status'],
+        ]);
     }
 
     // saving the opcr of the office head

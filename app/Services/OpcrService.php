@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Events\OpcrEvent;
 use App\Models\opcr;
 use App\Models\Employee;
-
+use App\Models\OfficeOpcr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -18,6 +18,8 @@ class OpcrService
     // {
     //     //
     // }
+
+    // get the opcr Office Head
     public function opcrOfficeHead($controlNo, $semester, $year){
 
         $officeHeadOpcr = Employee::select('id', 'ControlNo', 'name','office_id','office')
@@ -72,7 +74,26 @@ class OpcrService
             ])
             ->first();
 
-            return $officeHeadOpcr;
+        $opcr_status = OfficeOpcr::with(['officeOpcrRecordLastestRecord' => function ($query){
+            $query->select(
+                'office_opcrs_records.id',
+                'office_opcrs_records.office_opcr_id',
+                'office_opcrs_records.date',
+                'office_opcrs_records.status',
+                'office_opcrs_records.remarks',
+                'office_opcrs_records.reviewed_by',
+            );
+        }])
+        ->select('id','office_id','office_name','semester','year')
+        ->where('office_id', $officeHeadOpcr->office_id)
+        ->where('semester',$semester)->where('year',$year)->first();
+
+
+        return [
+            'employee'    => $officeHeadOpcr,
+            'opcr_status' => $opcr_status,
+        ];
+
     }
 
 
@@ -165,5 +186,12 @@ class OpcrService
             DB::rollBack();
             throw $e;
         }
+    }
+
+
+    // storing status of opcr
+    public function opcrStoreStatus(){
+
+
     }
 }
