@@ -98,6 +98,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/structure', [OfficeController::class, 'officeStructure']);
         Route::get('/structure/count', [VwplantillastructureController::class, 'plantillaStructureEmployeeWithCount']);
         Route::get('/mfo', [MfoController::class, 'Mfo']); // getting the mfo of user logged in
+        Route::get('/head-mfo/{semester}/{year}', [MfoController::class, 'fetchMfo']); // getting the mfo of user logged in
+
 
     });
 

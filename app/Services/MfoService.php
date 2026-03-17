@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Employee;
 use App\Models\mfo;
+use App\Models\TargetPeriod;
 use Illuminate\Support\Facades\Auth;
 
 class MfoService
@@ -92,5 +94,33 @@ class MfoService
             ->log('MFO updated');
 
         return $mfo;
+    }
+
+    // get the all mfo of the office head
+    public function getMfo($semester, $year)
+    {
+        $user = Auth::user();
+
+        $employee = Employee::select('ControlNo', 'name', 'office', 'job_title', 'office_id',)
+        ->where('office_id', $user->office_id)
+        ->where('job_title', 'Office Head')->first();
+
+
+        if (!$employee) {
+            return response()->json([
+                'message' => 'Office Head not found'
+            ], 404);
+        }
+
+        $target_period = TargetPeriod::with('performanceStandards:id,category,mfo,target_period_id')->select('id','control_no','semester','year')
+            ->where('control_no', $employee->ControlNo)
+            ->where('semester', $semester)
+            ->where('year', $year)
+            ->first();
+
+        return response()->json([
+            'employee' => $employee,
+            'target_period' => $target_period
+        ]);
     }
 }

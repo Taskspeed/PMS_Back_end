@@ -70,4 +70,15 @@ class MfoController extends Controller
     }
 
 
+    // fetch all mfo of office head
+    public function fetchMfo(Request $request, MfoService $mfoService, $semester, $year)
+    {
+        $mfo = $mfoService->getMfo($semester, $year);
+
+
+
+        return $mfo;
+    }
+
+
 }
