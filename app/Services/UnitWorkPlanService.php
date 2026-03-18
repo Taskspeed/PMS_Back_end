@@ -50,7 +50,7 @@ class UnitWorkPlanService
                     'division'   => $employeeData['division'] ?? null,
                     'section'    => $employeeData['section'] ?? null,
                     'unit'       => $employeeData['unit'] ?? null,
-                    'supervisory_control_no'  => $employeeData['supervisory_control_no'] ?? null,
+                    // 'supervisory_control_no'  => $employeeData['supervisory_control_no'] ?? null,
                     'office_id'  => $user->office_id,
                     'status'     => 'Draft',
                 ]);
@@ -464,6 +464,30 @@ class UnitWorkPlanService
         $allEmployees = Employee::where('office_id', $user->office_id)->get()->keyBy('ControlNo');
 
         // Helper: recursively sum claimed from all descendants of a given control_no
+        // $getTotalClaimed = function (string $controlNo, string $mfoKey) use (
+        //     &$getTotalClaimed,
+        //     $allOtherTargetPeriods,
+        //     $supervisoryMap
+        // ) {
+        //     $claimed = 0;
+
+        //     // Find all direct reports (target periods whose supervisory_control_no === this controlNo)
+        //     $directReports = $allOtherTargetPeriods->filter(function ($tp) use ($controlNo, $supervisoryMap) {
+        //         return $supervisoryMap->get($tp->control_no) === $controlNo;
+        //     });
+
+        //     foreach ($directReports as $reportPeriod) {
+        //         // Find this report's success_indicator for the given MFO
+        //         $matchedStandard = $reportPeriod->performanceStandards
+        //             ->first(fn($s) => $s->mfo === $mfoKey);
+
+        //         if ($matchedStandard) {
+        //             $claimed += $this->extractNumber($matchedStandard->success_indicator);
+        //         }
+        //     }
+
+        //     return $claimed;
+        // };
         $getTotalClaimed = function (string $controlNo, string $mfoKey) use (
             &$getTotalClaimed,
             $allOtherTargetPeriods,
@@ -471,18 +495,17 @@ class UnitWorkPlanService
         ) {
             $claimed = 0;
 
-            // Find all direct reports (target periods whose supervisory_control_no === this controlNo)
             $directReports = $allOtherTargetPeriods->filter(function ($tp) use ($controlNo, $supervisoryMap) {
                 return $supervisoryMap->get($tp->control_no) === $controlNo;
             });
 
             foreach ($directReports as $reportPeriod) {
-                // Find this report's success_indicator for the given MFO
-                $matchedStandard = $reportPeriod->performanceStandards
-                    ->first(fn($s) => $s->mfo === $mfoKey);
+                // ✅ Use ->filter() instead of ->first() to get ALL matching MFO rows
+                $matchedStandards = $reportPeriod->performanceStandards
+                    ->filter(fn($s) => $s->mfo === $mfoKey);
 
-                if ($matchedStandard) {
-                    $claimed += $this->extractNumber($matchedStandard->success_indicator);
+                foreach ($matchedStandards as $standard) {
+                    $claimed += $this->extractNumber($standard->success_indicator);
                 }
             }
 

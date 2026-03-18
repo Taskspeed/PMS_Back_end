@@ -17,6 +17,7 @@ use App\Http\Controllers\office\MfoController;
 use App\Http\Controllers\office\UnitWorkPlanController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\OpcrController;
+use App\Http\Controllers\Planning\DashboardController as PlanningDashboardController;
 use App\Http\Controllers\Planning\OpcrController as PlanningOpcrController;
 use App\Http\Controllers\Planning\Planning_Unit_work_planController;
 use App\Http\Controllers\QpefController;
@@ -102,6 +103,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/head-mfo/{semester}/{year}', [MfoController::class, 'fetchMfo']); // getting the mfo of user logged in
 
 
+
+
+        Route::prefix('dashboard')->group(function () {
+            Route::get('/', [OfficeDashboardController::class, 'getTotalEmployee']);
+            Route::get('/ipcr-status-counts', [OfficeDashboardController::class, 'getIpcrStatusCounts']);
+            Route::get('/employee/{semester}/{year}', [OfficeDashboardController::class, 'listOfEmployeeNoIpcr']);
+
+
+        });
     });
 
     Route::prefix('user')->group(function () {
@@ -181,12 +191,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Planning
     Route::prefix('planning')->group(function () {
-        Route::get('/unit_work_plan/office', [Planning_Unit_work_planController::class, 'office']);
-        Route::get('/unit_work_plan', [Planning_Unit_work_planController::class, 'unit_work_plan']);
-        Route::get('/unit_work_plan/employee', [Planning_Unit_work_planController::class, 'employee']);
-        Route::get('/unit_work_plan/divisions', [Planning_Unit_work_planController::class, 'getDivisionsWithWorkPlans']);
-        Route::get('/unit_work_plan/employees', [Planning_Unit_work_planController::class, 'getEmployeesByDivision']);
+        // Route::get('/unit_work_plan/office', [Planning_Unit_work_planController::class, 'office']);
+        // Route::get('/unit_work_plan', [Planning_Unit_work_planController::class, 'unit_work_plan']);
+        // Route::get('/unit_work_plan/employee', [Planning_Unit_work_planController::class, 'employee']);
+        // Route::get('/unit_work_plan/divisions', [Planning_Unit_work_planController::class, 'getDivisionsWithWorkPlans']);
+        // Route::get('/unit_work_plan/employees', [Planning_Unit_work_planController::class, 'getEmployeesByDivision']);
 
+        Route::prefix('dashboard')->group(function () {
+            Route::get('/status/{semester}/{year}', [PlanningDashboardController::class, 'numberOfStatus']);
+        });
 
         Route::prefix('opcr')->group(function () {
             Route::post('/update-status', [PlanningOpcrController::class, 'opcrStatus']);

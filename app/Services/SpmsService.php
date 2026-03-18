@@ -3,9 +3,10 @@
 namespace App\Services;
 
 use App\Models\Employee;
+use App\Models\OfficeOpcr;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class SpmsService
 {
@@ -216,13 +217,61 @@ class SpmsService
         return $employees;
     }
 
-    // fetch employee request by the HR
+    // // fetch employee request by the HR
+    // public function employeesRequest($request)
+    // {
+
+    //     // Get semester & year from request
+    //     $semester = $request->input('semester');   // example: January-June / July-December
+    //     $year = $request->input('year');           // example: 2025
+    //     $officeIdRequested = $request->input('office_id');
+
+    //     if (!$semester || !$year) {
+    //         return response()->json([
+    //             'message' => 'Please provide semester and year'
+    //         ], 422);
+    //     }
+
+    //     $employees = Employee::where('office_id', $officeIdRequested)
+    //         ->get()
+    //         ->map(function ($emp) use ($semester, $year) {
+
+    //             // Look for target period based on user request
+    //             $existing = $emp->targetPeriods()
+    //                 ->where('semester', $semester)
+    //                 ->where('year', $year)
+    //                 ->first();
+
+    //             $emp->has_target_period = $existing ? true : false;
+    //             $emp->existing_target_period = $existing;
+
+    //             // Remove auto-loaded relation if exists
+    //             unset($emp->target_periods);
+
+    //             return $emp;
+    //         });
+
+
+
+    //     // this is for office head only
+
+    //         $opcr = OfficeOpcr::where('office_id', $officeIdRequested)
+    //             ->where('semester', $semester)
+    //             ->where('year', $year)
+    //             ->whereHas('officeOpcrRecordLastestRecord', function ($q) {
+    //                 $q->where('status', 'reviewed');
+    //             })
+    //             ->first();
+
+
+
+    //     return $employees;
+    // }
+
     public function employeesRequest($request)
     {
-
-        // Get semester & year from request
-        $semester = $request->input('semester');   // example: January-June / July-December
-        $year = $request->input('year');           // example: 2025
+        $semester = $request->input('semester');
+        $year = $request->input('year');
         $officeIdRequested = $request->input('office_id');
 
         if (!$semester || !$year) {
@@ -231,11 +280,19 @@ class SpmsService
             ], 422);
         }
 
+        // Fetch OPCR with latest record status for this office ONCE (outside the loop)
+        $opcr = OfficeOpcr::where('office_id', $officeIdRequested)
+            ->where('semester', $semester)
+            ->where('year', $year)
+            ->with('officeOpcrRecordLastestRecord')
+            ->first();
+
+        $opcrStatus = $opcr?->officeOpcrRecordLastestRecord?->status ?? null;
+
         $employees = Employee::where('office_id', $officeIdRequested)
             ->get()
-            ->map(function ($emp) use ($semester, $year) {
+            ->map(function ($emp) use ($semester, $year, $opcrStatus) {
 
-                // Look for target period based on user request
                 $existing = $emp->targetPeriods()
                     ->where('semester', $semester)
                     ->where('year', $year)
@@ -244,7 +301,13 @@ class SpmsService
                 $emp->has_target_period = $existing ? true : false;
                 $emp->existing_target_period = $existing;
 
-                // Remove auto-loaded relation if exists
+                // ✅ Attach opcr_status only for Office Head
+
+                if ($emp->job_title === 'Office Head' && $existing) {
+                    $emp->existing_target_period->opcr_status = $opcrStatus ? :'Draft';
+                    $emp->existing_target_period->makeHidden('status'); // ✅ hide status for Office Head only
+                }
+
                 unset($emp->target_periods);
 
                 return $emp;

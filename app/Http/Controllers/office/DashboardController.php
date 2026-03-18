@@ -47,5 +47,24 @@ class DashboardController extends Controller
 
 
 
+    // list of emplotee dont have ipcr
+    public function listOfEmployeeNoIpcr($semester, $year)
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
 
+        // Get all employees in the same office
+        $employees = \App\Models\Employee::select('ControlNo','name','position','office_id','status','job_title')->where('office_id', $user->office_id)->get();
+
+        // Get control numbers of employees WHO ALREADY HAVE a target period
+        $withTargetPeriod = \App\Models\TargetPeriod::where('office_id', $user->office_id)
+            ->where('semester', $semester)
+            ->where('year', $year)
+            ->pluck('control_no')
+            ->toArray();
+
+        // Filter out employees who already have a target period
+        $employeesWithoutIpcr = $employees->whereNotIn('ControlNo', $withTargetPeriod)->values();
+
+        return response()->json($employeesWithoutIpcr);
+    }
 }

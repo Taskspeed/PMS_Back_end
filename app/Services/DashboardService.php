@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Employee;
 use App\Models\EmployeeStatus;
+use App\Models\OfficeOpcr;
+use App\Models\TargetPeriod;
 use App\Models\vwActive;
 use Carbon\Carbon;
 
@@ -152,7 +154,78 @@ class DashboardService
         $data = EmployeeStatus::select('id', 'year', 'semester')
             ->orderByDesc('year')
             ->orderByDesc('semester')->get();
-            
+
         return $data;
     }
+
+
+
+
+    //-----------------------------HR------------------------------------------//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //-----------------------------HR------------------------------------------//
+
+
+    //-----------------------------Planning------------------------------------------//
+
+    // number of status of opcr
+    public function status($semester, $year){
+
+    $status = OfficeOpcr::with(['officeOpcrRecordLastestRecord'])->where('semester',$semester)->where('year',$year)->count();
+
+        if (!$status) {
+            return response()->json([
+                'message' => 'There is no data available yet.'
+            ], 200); // use 200,
+        }
+
+
+    return response()->json($status);
+
+
+    }
+
+
+    // list of  opcr pending
+    public function opcrPending($semester, $year)
+    {
+
+        $status = OfficeOpcr::with(['officeOpcrRecordLastestRecord'])->where('semester', $semester)->where('year', $year)->get();
+
+        if (!$status) {
+            return response()->json([
+                'message' => 'There is no data available yet.'
+            ], 200); // use 200,
+        }
+
+
+        return response()->json($status);
+    }
+
+
+
+
+
+
 }

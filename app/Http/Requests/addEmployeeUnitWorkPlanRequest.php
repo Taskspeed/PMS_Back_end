@@ -34,7 +34,7 @@ class addEmployeeUnitWorkPlanRequest extends FormRequest
             'employees.*.division' => 'nullable|string',
             'employees.*.section' => 'nullable|string',
             'employees.*.unit' => 'nullable|string',
-            'employees.*.supervisory_control_no' => 'nullable|string',
+            // 'employees.*.supervisory_control_no' => 'nullable|string',
 
             // semester and year
             'employees.*.semester' => 'required|string',
