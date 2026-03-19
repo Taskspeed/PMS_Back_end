@@ -50,6 +50,7 @@ class addEmployeeUnitWorkPlanRequest extends FormRequest
             'employees.*.performance_standards.*.technical_competency' => 'nullable|array',
             'employees.*.performance_standards.*.leadership_competency' => 'nullable|array',
             'employees.*.performance_standards.*.success_indicator' => 'required|string',
+            'employees.*.performance_standards.*.supervisory_control_no' => 'required|string',
             // 'employees.*.performance_standards.*.performance_indicator' => 'required|array',
             'employees.*.performance_standards.*.required_output' => 'nullable|string',
 

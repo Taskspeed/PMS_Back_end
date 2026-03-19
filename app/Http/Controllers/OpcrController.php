@@ -6,6 +6,7 @@ use App\Http\Requests\opcrRequest;
 use App\Http\Resources\OpcrResource;
 use App\Models\opcr;
 use App\Models\Employee;
+use App\Services\IpcrService;
 use App\Services\OpcrService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Routing\Controller as BaseController;
@@ -27,10 +28,10 @@ class OpcrController extends BaseController
     }
 
     // get the opcr of the office head
-    public function opcr($controlNo, $semester, $year, opcrService $opcr)
+    public function opcr($controlNo, $semester, $year, IpcrService $ipcr)
     {
 
-        $employeeOpcr = $opcr->opcrOfficeHead($controlNo, $semester, $year);
+        $employeeOpcr = $ipcr->opcrOfficeHead($controlNo, $semester, $year);
 
         if (!$employeeOpcr) {
             return response()->json([
@@ -41,6 +42,7 @@ class OpcrController extends BaseController
         return new OpcrResource([
             'employee'    => $employeeOpcr['employee'],
             'opcr_status' => $employeeOpcr['opcr_status'],
+            'average_rating' => $employeeOpcr['average_rating'],
         ]);
     }
 

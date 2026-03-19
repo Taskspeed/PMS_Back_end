@@ -71,10 +71,10 @@ class TargetPeriodService
 
             if ($unitWorkplan && $opcr) {
                 $updated = TargetPeriod::where('id', $target->id)->update([
-                    'status' => 'target period started'
+                    'status' => 'Pending'
                 ]);
 
-                $target->status = 'target period started';
+                $target->status = 'Pending';
             } else {
             }
         }

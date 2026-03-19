@@ -61,7 +61,8 @@ Route::prefix('ipcr')->group(function () {
 
     // list of date that the employee rated already args controlNo
     Route::get('employee/list/rated/{control_no}', [EmployeeRatingController::class, 'getListOfRatingEmployee']);
-Route::get('employee/start/{officeId}/{semester}/{year}', [EmployeeRatingController::class, 'canEmployeesRate']);
+
+    Route::get('employee/start/{officeId}/{semester}/{year}', [EmployeeRatingController::class, 'canEmployeesRate']);
 
 
 Route::middleware('auth:sanctum')->group(function () {

@@ -2,15 +2,16 @@
 
 namespace App\Services;
 
-use Carbon\Carbon;
-use App\Models\Month;
+use App\Http\Requests\AttendanceRequest;
 use App\Models\Employee;
-use Illuminate\Http\Request;
+use App\Models\Month;
+use App\Models\OfficeOpcr;
 use App\Models\PerformanceRating;
 use App\Models\PerformanceStandard;
-use Illuminate\Support\Facades\Log;
-use App\Http\Requests\AttendanceRequest;
 use App\Models\TargetPeriod;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class IpcrService
 {
@@ -23,8 +24,308 @@ class IpcrService
     // {
     //     //
     // }
+    public function opcrOfficeHead($controlNo, $semester, $year)
+    {
+        $officeHeadOpcr = Employee::select('id', 'ControlNo', 'name', 'office_id', 'office')
+            ->where('ControlNo', $controlNo)
+            ->whereHas('targetPeriods', function ($q) use ($year, $semester) {
+                $q->where('year', $year)->where('semester', $semester);
+            })
+            ->with([
+                'targetPeriods' => function ($queryTargetPeriod) use ($year, $semester) {
+                    $queryTargetPeriod
+                        ->select('id', 'control_no', 'semester', 'year', 'status')
+                        ->where('year', $year)
+                        ->where('semester', $semester)
+                        ->with([
+                            'performanceStandards' => function ($queryPerformanceStandard) {
+                                $queryPerformanceStandard->select(
+                                    'id',
+                                    'target_period_id',
+                                    'category',
+                                    'mfo',
+                                    'output',
+                                    'success_indicator',
+                                    'core',
+                                    'technical',
+                                    'leadership',
+                                )->with([
+                                    'opcr' => function ($queryopcr) {
+                                        $queryopcr->select(
+                                            'id',
+                                            'performance_standard_id',
+                                            'competency',
+                                            'budget',
+                                            'accountable',
+                                            'profiency',
+                                            'remarks',
+                                        );
+                                    }
+                                ]);
+                            }
+                        ]);
+                }
+            ])
+            ->first();
+
+        $opcr_status = OfficeOpcr::with(['officeOpcrRecordLastestRecord' => function ($query) {
+            $query->select(
+                'office_opcrs_records.id',
+                'office_opcrs_records.office_opcr_id',
+                'office_opcrs_records.date',
+                'office_opcrs_records.status',
+                'office_opcrs_records.remarks',
+                'office_opcrs_records.reviewed_by',
+            );
+        }])
+            ->select('id', 'office_id', 'office_name', 'semester', 'year')
+            ->where('office_id', $officeHeadOpcr->office_id)
+            ->where('semester', $semester)
+            ->where('year', $year)
+            ->first();
 
 
+        $successIndicatorsByMfo = collect();
+        $officeHeadOpcr->targetPeriods->each(function ($period) use (&$successIndicatorsByMfo) {
+            $period->performanceStandards->each(function ($standard) use (&$successIndicatorsByMfo) {
+                $successIndicatorsByMfo->put($standard->mfo, $standard->success_indicator);
+            });
+        });
+
+        // Get aggregated IPCR keyed by MFO name for easy lookup
+        $ipcrByMfo = $this->aggregateIpcrByMfoForOpcr(
+            $officeHeadOpcr->office_id,
+            $year,
+            $semester,
+            $officeHeadOpcr->ControlNo,  // <-- exclude the office head himself
+            $successIndicatorsByMfo   // ✅ pass it here
+        );
+        // ✅ Extract both parts from the returned array
+        $opcr_accomplishment = $ipcrByMfo['opcr_accomplishment'];
+        $averageRating       = $ipcrByMfo['average_rating'];
+        // Key the result by MFO name for easy lookup
+        // $ipcrByMfoKeyed = collect($ipcrByMfo)->keyBy('mfo');
+        $ipcrByMfoKeyed = collect($opcr_accomplishment)->keyBy('mfo');
+
+        // Inject ipcr accomplishment into each of the office head's performance standards
+        $officeHeadOpcr->targetPeriods->each(function ($period) use ($ipcrByMfoKeyed) {
+            $period->performanceStandards->each(function ($standard) use ($ipcrByMfoKeyed) {
+                $mfo = $standard->mfo;
+
+                if ($ipcrByMfoKeyed->has($mfo)) {
+                    $ipcr = $ipcrByMfoKeyed->get($mfo);
+
+                    // Inject the aggregated accomplishment into the opcr
+                    $standard->ipcr_accomplishment = [
+                        'quantity_total'   => $ipcr['quantity_total'],
+                        'accomplishment'  => $ipcr['accomplishment'],
+                        'ratings'          => $ipcr['ratings'],
+                        'employee_count'   => $ipcr['employee_count'],
+
+                    ];
+                } else {
+                    // No employee data found for this MFO yet
+                    $standard->ipcr_accomplishment = null;
+                }
+            });
+        });
+
+        return [
+            'employee'    => $officeHeadOpcr,
+
+            'opcr_status'    => $opcr_status,
+            'average_rating' => $averageRating,   // ✅ add this
+        ];
+    }
+
+    /**
+     * Aggregate IPCR by MFO — exclude the office head's own control number
+     */
+    public function aggregateIpcrByMfoForOpcr($officeId, $year, $semester, $excludeControlNo = null,  $successIndicatorsByMfo = null)
+    {
+        $query = Employee::where('office_id', $officeId);
+
+        // Exclude the office head himself from the aggregation
+        if ($excludeControlNo) {
+            $query->where('ControlNo', '!=', $excludeControlNo);
+        }
+
+        $employees = $query->with([
+            'targetPeriods' => function ($q) use ($year, $semester) {
+                $q->where('year', $year)
+                    ->where('semester', $semester)
+                    ->with([
+                        'performanceStandards.performanceRating:id,performance_standard_id,date,quantity_actual as quantity,effectiveness_actual as effectiveness,timeliness_actual as timeliness',
+                        'performanceStandards.standardOutcomes:performance_standard_id,rating,quantity_target as quantity,effectiveness_criteria as effectiveness,timeliness_range as timeliness',
+                    ]);
+            }
+        ])->get();
+
+        // Compute IPCR for each employee
+        $employees->each(function ($employee) {
+            $employee->targetPeriods->each(function ($period) {
+                $period->performanceStandards->each(function ($standard) {
+
+                    // Skip if no ratings data (e.g. draft/no submissions)
+                    if ($standard->performanceRating->isEmpty()) {
+                        $standard->ratings       = null;
+                        $standard->accomplishment = null;
+                        return;
+                    }
+
+                    $monthly = $this->groupRatingsByMonthlySummary($standard->performanceRating);
+                    $summary = $this->getComputationTotalAndRating($monthly['monthly'], $standard->standardOutcomes);
+                    $average = $this->getAverageRating($summary['ratings']);
+
+                    $standard->monthly_ratings = $monthly;
+                    $standard->totals          = $summary['totals'];
+                    $standard->ratings         = array_merge(
+                        $summary['ratings'],
+                        ['average_rating' => $average]
+                    );
+
+                    $accomplishment           = $this->accomplishment($standard, $summary);
+                    $standard->accomplishment = array_merge(
+                        $accomplishment,
+                        [
+                            'effectiveness_rating' => $summary['ratings']['effectiveness_rating'],
+                            'timeliness_rating'    => $summary['ratings']['timeliness_rating'],
+                        ]
+                    );
+
+                    $standard->makeHidden('performanceRating');
+                });
+            });
+        });
+
+        // Group by MFO and aggregate
+        $mfoGroups = [];
+
+        foreach ($employees as $employee) {
+            foreach ($employee->targetPeriods as $period) {
+                foreach ($period->performanceStandards as $standard) {
+
+                    // Skip standards with no computed ratings
+                    if (is_null($standard->ratings) || is_null($standard->accomplishment)) {
+                        continue;
+                    }
+
+                    $mfo = $standard->mfo;
+
+                    if (!isset($mfoGroups[$mfo])) {
+                        $mfoGroups[$mfo] = [
+                            'mfo'                      => $mfo,
+                            'category'                 => $standard->category,
+                            'quantity_total'            => 0,
+                            'quantity_rating_sum'       => 0,
+                            'effectiveness_rating_sum'  => 0,
+                            'timeliness_rating_sum'     => 0,
+                            'employee_count'            => 0,
+                        ];
+                    }
+
+                    $mfoGroups[$mfo]['quantity_total']            += $standard->accomplishment['quantityTotal']          ?? 0;
+                    $mfoGroups[$mfo]['quantity_rating_sum']       += $standard->ratings['quantity_rating']               ?? 0;
+                    $mfoGroups[$mfo]['effectiveness_rating_sum']  += $standard->ratings['effectiveness_rating']          ?? 0;
+                    $mfoGroups[$mfo]['timeliness_rating_sum']     += $standard->ratings['timeliness_rating']             ?? 0;
+                    $mfoGroups[$mfo]['employee_count']++;
+                }
+            }
+        }
+
+        // Compute averages
+        $result = [];
+
+        $categoryRatings = [
+            'strategic' => ['sum' => 0, 'count' => 0],
+            'core'      => ['sum' => 0, 'count' => 0],
+            'support'   => ['sum' => 0, 'count' => 0],
+        ];
+        foreach ($mfoGroups as $mfo => $data) {
+            $count = $data['employee_count'];
+
+            $avgQ = $count > 0 ? round($data['quantity_rating_sum']      / $count, 2) : 0;
+            $avgE = $count > 0 ? round($data['effectiveness_rating_sum'] / $count, 2) : 0;
+            $avgT = $count > 0 ? round($data['timeliness_rating_sum']    / $count, 2) : 0;
+            $avgA = round(($avgQ + $avgE + $avgT) / 3, 2);
+
+
+            $rawIndicator = $successIndicatorsByMfo?->get($mfo) ?? '';
+            // Remove leading number (e.g. "70 ")
+            $cleanIndicator = preg_replace('/^\d+\s*/', '', $rawIndicator);
+
+            // ✅ Step 2: Get the category for this MFO and accumulate
+            $category = strtoupper($data['category'] ?? '');
+
+            if (str_contains($category, 'STRATEGIC')) {
+                $categoryRatings['strategic']['sum']   += $avgA;
+                $categoryRatings['strategic']['count'] += 1;
+            } elseif (str_contains($category, 'CORE')) {
+                $categoryRatings['core']['sum']   += $avgA;
+                $categoryRatings['core']['count'] += 1;
+            } elseif (str_contains($category, 'SUPPORT')) {
+                $categoryRatings['support']['sum']   += $avgA;
+                $categoryRatings['support']['count'] += 1;
+            }
+
+
+            $result[] = [
+                'mfo'            => $mfo,
+                'quantity_total' => $data['quantity_total'],
+                'accomplishment' => $data['quantity_total'] . ' ' . $cleanIndicator,
+
+                'ratings'        => [
+                    'quantity_rating'      => $avgQ,
+                    'effectiveness_rating' => $avgE,
+                    'timeliness_rating'    => $avgT,
+                    'average_rating'       => $avgA,
+                ],
+
+                // 'average_rating'        => [
+                //     'stragetic_functions'      =>
+                //     'core_functions' =>
+                //     'support_functions'    =>
+                //     'final_rating'       =>  //  final_rating = stragetic_functions + core_functions+ support_functions
+                // ],
+                'employee_count' => $count,
+            ];
+
+
+
+        }
+        // ✅ Step 3: Compute weighted category averages
+        $strategicAvg = $categoryRatings['strategic']['count'] > 0
+            ? round($categoryRatings['strategic']['sum'] / $categoryRatings['strategic']['count'], 2)
+            : 0;
+
+        $coreAvg = $categoryRatings['core']['count'] > 0
+            ? round($categoryRatings['core']['sum'] / $categoryRatings['core']['count'], 2)
+            : 0;
+
+        $supportAvg = $categoryRatings['support']['count'] > 0
+            ? round($categoryRatings['support']['sum'] / $categoryRatings['support']['count'], 2)
+            : 0;
+
+
+        // ✅ Step 4: Apply weights and compute final rating
+        $strategicWeighted = round($strategicAvg * 0.2, 2);
+        $coreWeighted      = round($coreAvg      * 0.6, 2);
+        $supportWeighted   = round($supportAvg   * 0.2, 2);
+        $finalRating       = round($strategicWeighted + $coreWeighted + $supportWeighted, 2);
+
+        $averageRating = [
+            'strategic_functions' => $strategicWeighted,
+            'core_functions'      => $coreWeighted,
+            'support_functions'   => $supportWeighted,
+            'final_rating'        => $finalRating,
+        ];
+
+
+        return [
+            'opcr_accomplishment'    => $result,
+            'average_rating' => $averageRating,
+        ];
+    }
     //---------------------------------------------------------------------------- Ipcr Data-----------------------------------------------------------------------------//
 
     //Ipcr Data of Employee

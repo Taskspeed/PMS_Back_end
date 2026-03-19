@@ -24,6 +24,7 @@ class PerformanceStandard extends Model
         'performance_indicator',
         'success_indicator',
         'required_output',
+        'supervisory_control_no'
 
     ];
 

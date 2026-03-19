@@ -13,6 +13,7 @@ class OpcrResource extends JsonResource
     {
         $employee = $this->resource['employee'] ?? $this->resource;
         $opcr_status = $this->resource['opcr_status'] ?? null;
+        $average_rating = $this->resource['average_rating'] ?? null;
 
         return [
             'id'         => $employee->id,
@@ -45,8 +46,10 @@ class OpcrResource extends JsonResource
                                         'id'            => $ps->opcr->id,
                                         'budget'        => $ps->opcr->budget,
                                         'accountable'   => $ps->opcr->accountable,
-                                        'accomplishment' => $ps->opcr->accomplishment,
+                                        // 'accomplishment' => $ps->opcr->accomplishment,
                                     ] : null,
+                                      'opcr_accomplishment' => $ps->ipcr_accomplishment ?? null,
+
                                 ];
                             })
                             : [],
@@ -54,7 +57,7 @@ class OpcrResource extends JsonResource
                 })
                 : [],
 
-            'opcr_status' => $opcr_status,
+            'average_rating' => $average_rating,
         ];
     }
 }

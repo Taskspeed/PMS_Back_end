@@ -23,81 +23,81 @@ class OpcrService
     // }
 
     // get the opcr Office Head
-    public function opcrOfficeHead($controlNo, $semester, $year){
+    // public function opcrOfficeHead($controlNo, $semester, $year){
 
-        $officeHeadOpcr = Employee::select('id', 'ControlNo', 'name','office_id','office')
-            ->where('ControlNo', $controlNo)
+    //     $officeHeadOpcr = Employee::select('id', 'ControlNo', 'name','office_id','office')
+    //         ->where('ControlNo', $controlNo)
 
-            ->whereHas('targetPeriods', function ($q) use ($year, $semester) {
-                $q->where('year', $year)
-                    ->where('semester', $semester);
-            })
+    //         ->whereHas('targetPeriods', function ($q) use ($year, $semester) {
+    //             $q->where('year', $year)
+    //                 ->where('semester', $semester);
+    //         })
 
-            ->with([
-                'targetPeriods' => function ($queryTargetPeriod) use ($year, $semester) {
-                    $queryTargetPeriod
-                        ->select('id', 'control_no', 'semester', 'year', 'status')
-                        ->where('year', $year)
-                        ->where('semester', $semester)
-                        ->with([
-                            'performanceStandards' => function ($queryPerformanceStandard) {
-                                $queryPerformanceStandard->select(
-                                    'id',
-                                    'target_period_id',
-                                    'category',
-                                    'mfo',
-                                    'output',
-                                    'success_indicator',
-                                    'core',
-                                    'technical',
-                                    'leadership',
-                                )
-                                    ->with([
-                                        'opcr' => function ($queryopcr) {
-                                            $queryopcr->select(
-                                                'id',
-                                                'performance_standard_id', // REQUIRED FK
-                                                'competency',
-                                                'budget',
-                                                'accountable',
-                                                'accomplishment',
-                                                'rating_q',
-                                                'rating_e',
-                                                'rating_t',
-                                                'rating_a',
-                                                'profiency',
-                                                'remarks',
+    //         ->with([
+    //             'targetPeriods' => function ($queryTargetPeriod) use ($year, $semester) {
+    //                 $queryTargetPeriod
+    //                     ->select('id', 'control_no', 'semester', 'year', 'status')
+    //                     ->where('year', $year)
+    //                     ->where('semester', $semester)
+    //                     ->with([
+    //                         'performanceStandards' => function ($queryPerformanceStandard) {
+    //                             $queryPerformanceStandard->select(
+    //                                 'id',
+    //                                 'target_period_id',
+    //                                 'category',
+    //                                 'mfo',
+    //                                 'output',
+    //                                 'success_indicator',
+    //                                 'core',
+    //                                 'technical',
+    //                                 'leadership',
+    //                             )
+    //                                 ->with([
+    //                                     'opcr' => function ($queryopcr) {
+    //                                         $queryopcr->select(
+    //                                             'id',
+    //                                             'performance_standard_id', // REQUIRED FK
+    //                                             'competency',
+    //                                             'budget',
+    //                                             'accountable',
+    //                                             // 'accomplishment',
+    //                                             // 'rating_q',
+    //                                             // 'rating_e',
+    //                                             // 'rating_t',
+    //                                             // 'rating_a',
+    //                                             'profiency',
+    //                                             'remarks',
 
-                                            );
-                                        }
-                                    ]);
-                            }
-                        ]);
-                }
-            ])
-            ->first();
+    //                                         );
+    //                                     }
+    //                                 ]);
+    //                         }
+    //                     ]);
+    //             }
+    //         ])
+    //         ->first();
 
-        $opcr_status = OfficeOpcr::with(['officeOpcrRecordLastestRecord' => function ($query){
-            $query->select(
-                'office_opcrs_records.id',
-                'office_opcrs_records.office_opcr_id',
-                'office_opcrs_records.date',
-                'office_opcrs_records.status',
-                'office_opcrs_records.remarks',
-                'office_opcrs_records.reviewed_by',
-            );
-        }])
-        ->select('id','office_id','office_name','semester','year')
-        ->where('office_id', $officeHeadOpcr->office_id)
-        ->where('semester',$semester)->where('year',$year)->first();
+    //     $opcr_status = OfficeOpcr::with(['officeOpcrRecordLastestRecord' => function ($query){
+    //         $query->select(
+    //             'office_opcrs_records.id',
+    //             'office_opcrs_records.office_opcr_id',
+    //             'office_opcrs_records.date',
+    //             'office_opcrs_records.status',
+    //             'office_opcrs_records.remarks',
+    //             'office_opcrs_records.reviewed_by',
+    //         );
+    //     }])
+    //     ->select('id','office_id','office_name','semester','year')
+    //     ->where('office_id', $officeHeadOpcr->office_id)
+    //     ->where('semester',$semester)->where('year',$year)->first();
 
 
-        return [
-            'employee'    => $officeHeadOpcr,
-            'opcr_status' => $opcr_status,
-        ];
+    //     return [
+    //         'employee'    => $officeHeadOpcr,
+    //         'opcr_status' => $opcr_status,
+    //     ];
 
-    }
+    // }
 
 
     // store opcr
@@ -130,7 +130,7 @@ class OpcrService
                     'performance_standard_id' => $data['performance_standard_id'],
                     'budget' => $data['budget'],
                     'accountable' => $data['accountable'],
-                    'accomplishment' => $data['accomplishment'],
+                    // 'accomplishment' => $data['accomplishment'],
                 ]);
             }
 
