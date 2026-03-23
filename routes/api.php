@@ -4,13 +4,13 @@
 use App\Http\Controllers\Activity_log_Controller;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Erms\EmployeeRatingController;
 use App\Http\Controllers\Hr\dashboardController;
 use App\Http\Controllers\Hr\IndicatorController;
 use App\Http\Controllers\Hr\RankController;
 use App\Http\Controllers\Hr\UnitWorkPlanController as HrUnitWorkPlanController;
 use App\Http\Controllers\office\DashboardController as OfficeDashboardController;
 use App\Http\Controllers\office\EmployeeController;
-use App\Http\Controllers\office\EmployeeRatingController;
 use App\Http\Controllers\office\FOutpotController;
 use App\Http\Controllers\office\IpcrController;
 use App\Http\Controllers\office\MfoController;
@@ -19,7 +19,6 @@ use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\OpcrController;
 use App\Http\Controllers\Planning\DashboardController as PlanningDashboardController;
 use App\Http\Controllers\Planning\OpcrController as PlanningOpcrController;
-use App\Http\Controllers\Planning\Planning_Unit_work_planController;
 use App\Http\Controllers\QpefController;
 use App\Http\Controllers\SpmsController;
 use App\Http\Controllers\TargetPeriodController;
@@ -62,7 +61,24 @@ Route::prefix('ipcr')->group(function () {
     // list of date that the employee rated already args controlNo
     Route::get('employee/list/rated/{control_no}', [EmployeeRatingController::class, 'getListOfRatingEmployee']);
 
-    Route::get('employee/start/{officeId}/{semester}/{year}', [EmployeeRatingController::class, 'canEmployeesRate']);
+
+
+
+    Route::prefix('erms')->group(function(){
+
+    // get the target period on the employee on erms
+    Route::get('employee/target-periods/{controlNo}', [EmployeeRatingController::class, 'targetPeriodEmployee']);
+
+    //target detials  args targetperiodId
+    Route::get('employee/target-periods/details/{targetperiodId}', [EmployeeRatingController::class, 'targetPeriodDetails']);
+
+    // list of date that the employee rated already args controlNo
+    Route::get('employee/list/rated/{control_no}', [EmployeeRatingController::class, 'getListOfRatingEmployee']);
+
+
+    Route::get('employee/performance-record/{targetPeriodId}', [EmployeeRatingController::class, 'performanceRatingRecord']);
+    });
+
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -103,12 +119,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/mfo', [MfoController::class, 'Mfo']); // getting the mfo of user logged in
         Route::get('/head-mfo/{semester}/{year}', [MfoController::class, 'fetchMfo']); // getting the mfo of user logged in
 
-
-
-
         Route::prefix('dashboard')->group(function () {
-            Route::get('/', [OfficeDashboardController::class, 'getTotalEmployee']);
-            Route::get('/ipcr-status-counts', [OfficeDashboardController::class, 'getIpcrStatusCounts']);
+            Route::get('/{semester}/{year}', [OfficeDashboardController::class, 'dashboardStatus']);
+            // Route::get('/ipcr-status-counts', [OfficeDashboardController::class, 'getIpcrStatusCounts']);
             Route::get('/employee/{semester}/{year}', [OfficeDashboardController::class, 'listOfEmployeeNoIpcr']);
 
 
@@ -157,6 +170,14 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
 
+        Route::prefix('target-period')->group(function () {
+
+            // updating the unit-work-plan of status
+            Route::post('/update-status', [HrUnitWorkPlanController::class, 'lockTargetPeriod']);
+        });
+
+
+
 
         // indicator library
 
@@ -200,6 +221,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::prefix('dashboard')->group(function () {
             Route::get('/status/{semester}/{year}', [PlanningDashboardController::class, 'numberOfStatus']);
+            Route::get('/list-pending-opcr/{semester}/{year}', [PlanningDashboardController::class, 'listOfOpcrPending']);
         });
 
         Route::prefix('opcr')->group(function () {
@@ -320,7 +342,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('opcr')->group(function () {
 
-        // get the opcr
+        // get the opcr of office head
         Route::get('/{controlNo}/{semester}/{year}', [OpcrController::class, 'opcr']);
 
         // storing opcr

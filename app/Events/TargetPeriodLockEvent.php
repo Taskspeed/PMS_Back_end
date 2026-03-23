@@ -19,12 +19,12 @@ class TargetPeriodLockEvent
      */
 
     public $target_period_lock;
+    public $user;
 
-    public function __construct($target_period_lock)
+    public function __construct($target_period_lock, $user)
     {
-        //
-
-        return  $this->target_period_lock = $target_period_lock;
+        $this->target_period_lock = $target_period_lock;
+        $this->user = $user;
     }
 
     /**

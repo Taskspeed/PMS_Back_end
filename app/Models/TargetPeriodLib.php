@@ -16,4 +16,10 @@ class TargetPeriodLib extends Model
         'semester',
         'year',
     ];
+
+    // public function targetPeriodStatus()
+    // {
+    //     return $this->hasOne(\App\Models\TargetPeriodLock::class, 'semester', 'semester')->whereColumn('target_period_locks.year', 'target_period_lib.year');
+    // }
+
 }

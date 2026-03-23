@@ -1,16 +1,14 @@
 <?php
 
-namespace App\Http\Controllers\office;
+namespace App\Http\Controllers\Erms;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\performanceRatingStoreRequest;
-use App\Models\OfficeOpcr;
 use App\Models\PerformanceRating;
 use App\Models\TargetPeriod;
-use App\Models\UnitWorkPlan;
 use App\Services\PerformanceRatingService;
 use App\Services\TargetPeriodService;
-use Illuminate\Support\Facades\Log;
+
 
 
 class EmployeeRatingController extends Controller
@@ -152,7 +150,7 @@ class EmployeeRatingController extends Controller
     //     ];
     // }
 
-    //  get the target peroid details the performance standart and standard outcome
+    //  get the target peroid details the performance standard and standard outcome
     public function targetPeriodDetails($targetPeriodId)
     {
         $targetperiod = TargetPeriod::select('id')->where('id', $targetPeriodId)
@@ -224,8 +222,6 @@ class EmployeeRatingController extends Controller
     // }
 
 
-
-
     // employee store his rate
     public function performanceRating(performanceRatingStoreRequest $request, PerformanceRatingService $performanceRatingService)
     {
@@ -262,4 +258,46 @@ class EmployeeRatingController extends Controller
 
         return response()->json($list, 200);
     }
+
+    //performance rating record
+    public function performanceRatingRecord($targetPeriodId){
+
+    $employee_rating_record = TargetPeriod::select('id')->where('id', $targetPeriodId)
+            ->with([
+                'performanceStandards' => function ($query) {
+                    $query->select(
+                        'id',
+                        'target_period_id',
+                        'category',
+                        'mfo',
+                        // 'output',
+                        // 'output_name',
+                        // 'performance_indicator',
+                        // 'success_indicator',
+                        // 'required_output'
+                    )
+                        ->with([
+                            'performanceRating' => function ($query) {
+                                $query->select(
+                                    'id',
+                                    'performance_standard_id',
+
+                                    'date',
+                                    'quantity_actual',
+                                    'effectiveness_actual',
+                                   'timeliness_actual'
+                                );
+                            },
+
+                        ]);
+                }
+            ])->get();
+
+
+    return response()->json($employee_rating_record);
+
+
+    }
+
+
 }

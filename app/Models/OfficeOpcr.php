@@ -33,4 +33,10 @@ class OfficeOpcr extends Model
     {
         return $this->hasOne(OfficeOpcrRecord::class, 'office_opcr_id')->latestOfMany();
     }
+
+    public function officeHead()
+    {
+        return $this->hasOne(Employee::class, 'office_id', 'office_id')
+            ->where('job_title', 'Office Head');
+    }
 }

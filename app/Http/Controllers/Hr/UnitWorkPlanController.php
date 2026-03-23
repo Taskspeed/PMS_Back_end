@@ -9,7 +9,7 @@ use App\Models\TargetPeriod;
 use App\Models\TargetPeriodLock;
 use App\Services\TrackerService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Http\Request;
 
 use function Symfony\Component\Clock\now;
 
@@ -29,7 +29,6 @@ class UnitWorkPlanController extends Controller
             'data' => $unitworkplan
         ], 201);
     }
-
 
 
     // lock the target period

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Listeners\Opcr;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -83,4 +84,17 @@ class Employee extends Model
     //         'id'                 // Local key on target_periods
     //     );
     // }
+    public function officeOpcr()
+    {
+        return $this->belongsTo(Opcr::class);
+    }
+
+
+    // // for opcr
+    // public function officeHeadTargetPeriod()
+    // {
+    //     return $this->hasOne(TargetPeriod::class, 'control_no', 'ControlNo');
+    //     // or hasMany if an employee has multiple
+    // }
+
 }

@@ -9,6 +9,7 @@ use App\Models\TargetPeriod;
 use App\Models\vwActive;
 use Carbon\Carbon;
 
+
 class DashboardService
 {
 
@@ -190,28 +191,10 @@ class DashboardService
     //-----------------------------Planning------------------------------------------//
 
     // number of status of opcr
-    public function status($semester, $year){
-
-    $status = OfficeOpcr::with(['officeOpcrRecordLastestRecord'])->where('semester',$semester)->where('year',$year)->count();
-
-        if (!$status) {
-            return response()->json([
-                'message' => 'There is no data available yet.'
-            ], 200); // use 200,
-        }
-
-
-    return response()->json($status);
-
-
-    }
-
-
-    // list of  opcr pending
-    public function opcrPending($semester, $year)
+    public function status($semester, $year)
     {
 
-        $status = OfficeOpcr::with(['officeOpcrRecordLastestRecord'])->where('semester', $semester)->where('year', $year)->get();
+        $status = OfficeOpcr::with(['officeOpcrRecordLastestRecord'])->where('semester', $semester)->where('year', $year)->count();
 
         if (!$status) {
             return response()->json([
@@ -224,8 +207,53 @@ class DashboardService
     }
 
 
+    // list of  opcr pending
+    public function opcrPending($semester, $year)
+    {
+        // opcr of office
+        $data = OfficeOpcr::select(
+            'office_opcrs.id',
+            'office_opcrs.office_id',
+            'office_opcrs.office_name', // add your fields here
+            'office_opcrs.semester',
+            'office_opcrs.year'
+        )->with([
+            'officeOpcrRecordLastestRecord' => function ($query) {
+                $query->select(
+                    'office_opcrs_records.id',
+                    'office_opcrs_records.office_opcr_id',
+                    'office_opcrs_records.date',
+                    'office_opcrs_records.status'
+                );
+            }, // eager load office head per office
+            'officeHead' => function ($query) {
+                $query->select(
+                    'employees.id',
+                    'employees.office_id',
+                    'employees.name',
+                    'employees.job_title',
+                    'employees.ControlNo'
+                );
+            },
+            // // nested eager load — officeHead's targetPeriod
+            // 'officeHead.officeHeadTargetPeriod' => function ($query) use ($semester, $year) {
+            //     $query->select(
+            //         'target_periods.id',
+            //         'target_periods.control_no', // FK back to employees
+            //         'target_periods.semester',
+            //         'target_periods.year'
+            //     )->where('semester', $semester)->where('year', $year);
+            // }
 
+        ])
+            ->where('semester', $semester)
+            ->where('year', $year)
+            ->whereHas('officeOpcrRecordLastestRecord', function ($query) {
+                $query->where('status', 'Pending');
+            })->get();
 
+        return $data;
+    }
 
 
 }
