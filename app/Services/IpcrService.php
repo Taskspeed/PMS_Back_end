@@ -155,8 +155,29 @@ class IpcrService
                 $q->where('year', $year)
                     ->where('semester', $semester)
                     ->with([
-                        'performanceStandards.performanceRating:id,performance_standard_id,date,quantity_actual as quantity,effectiveness_actual as effectiveness,timeliness_actual as timeliness',
-                        'performanceStandards.standardOutcomes:performance_standard_id,rating,quantity_target as quantity,effectiveness_criteria as effectiveness,timeliness_range as timeliness',
+                    // 'performanceStandards.performanceRating:id,performance_standard_id,date,quantity_actual as quantity,effectiveness_actual as effectiveness,timeliness_actual as timeliness',
+                    'performanceStandards.performanceRating' => function ($query) {
+                        $query->select(
+                            'id',
+                            'performance_standard_id',
+                            'date',
+                            'status',
+                            'quantity_actual as quantity',
+                            'effectiveness_actual as effectiveness',
+                            'timeliness_actual as timeliness'
+                        )
+                            ->where('status', 'Approved');
+                    },
+                    'performanceStandards.standardOutcomes' => function ($query) {
+                        $query->select(
+                            'performance_standard_id',
+                            'rating',
+                            'quantity_target as quantity',
+                            'effectiveness_criteria as effectiveness',
+                            'timeliness_range as timeliness'
+                        );
+                    },
+                        // 'performanceStandards.standardOutcomes:performance_standard_id,rating,quantity_target as quantity,effectiveness_criteria as effectiveness,timeliness_range as timeliness',
                     ]);
             }
         ])->get();
@@ -337,8 +358,26 @@ class IpcrService
                     $q->where('year', $year)
                         ->where('semester', $semester)
                         ->with([
-                            'performanceStandards.performanceRating:id,performance_standard_id,date,quantity_actual as quantity,effectiveness_actual as effectiveness,timeliness_actual as timeliness',
-                            'performanceStandards.standardOutcomes:performance_standard_id,rating,quantity_target as quantity,effectiveness_criteria as effectiveness,timeliness_range as timeliness',
+                            'performanceStandards.performanceRating' => function ($query){
+                                $query->select('id',
+                                'performance_standard_id',
+                                'date',
+                                'status',
+                                'quantity_actual as quantity',
+                                'effectiveness_actual as effectiveness',
+                                'timeliness_actual as timeliness')
+                                    ->where('status', 'Approved');
+
+                            },
+                              'performanceStandards.standardOutcomes' => function ($query) {
+                                $query->select('performance_standard_id',
+                                'rating',
+                                'quantity_target as quantity',
+                                'effectiveness_criteria as effectiveness',
+                                'timeliness_range as timeliness');
+                            },
+
+                            // 'performanceStandards.standardOutcomes:performance_standard_id,rating,quantity_target as quantity,effectiveness_criteria as effectiveness,timeliness_range as timeliness',
 
 
                         ]); //
@@ -422,7 +461,7 @@ class IpcrService
                         'quantity_actual as quantity',
                         'effectiveness_actual as effectiveness',
                         'timeliness_actual as timeliness'
-                    ]);
+                    ])->where('status','Approved');
                 }
             ])
             ->get();
@@ -551,8 +590,22 @@ class IpcrService
         ])
             ->where('target_period_id', $targetPeriodId)
             ->with([
-                'standardOutcomes:performance_standard_id,rating,quantity_target as quantity',
-                'performanceRating:id,performance_standard_id,date,quantity_actual as quantity,effectiveness_actual as effectiveness,timeliness_actual as timeliness'
+            // 'standardOutcomes:performance_standard_id,rating,quantity_target as quantity',
+            'standardOutcomes'=> function ($query){
+                $query->select('performance_standard_id', 'rating','quantity_target as quantity');
+
+            },
+            'performanceRating' => function ($query) {
+                $query->select(
+                    'id',
+                    'performance_standard_id',
+                    'date',
+                    'quantity_actual as quantity',
+                    'effectiveness_actual as effectiveness',
+                    'timeliness_actual as timeliness'
+                 )->where('status','Approved');
+            },
+                // 'performanceRating:id,performance_standard_id,date,quantity_actual as quantity,effectiveness_actual as effectiveness,timeliness_actual as timeliness'
             ])
             ->get();
 
