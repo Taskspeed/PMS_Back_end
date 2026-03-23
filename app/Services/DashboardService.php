@@ -8,15 +8,80 @@ use App\Models\OfficeOpcr;
 use App\Models\TargetPeriod;
 use App\Models\vwActive;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 
 class DashboardService
 {
 
 
-    // getting the current employee
-    public function currentEmployee()
-    {
+
+    //-----------------------------HR------------------------------------------//
+
+    // // getting the current employee
+    // public function currentEmployee()
+    // {
+    //     $statuses = [
+    //         'ELECTIVE',
+    //         'APPOINTED',
+    //         'CO-TERMINOUS',
+    //         'TEMPORARY',
+    //         'REGULAR',
+    //         'CASUAL',
+    //         'CONTRACTUAL',
+    //         'HONORARIUM'
+    //     ];
+    //     $counts = vwActive::select('status')
+    //         ->whereIn('status', $statuses)
+    //         ->get()
+    //         ->groupBy(function ($item) {
+    //             return strtoupper($item->status); // normalize casing
+    //         })
+    //         ->map(function ($group) {
+    //             return count($group);
+    //         });
+
+    //     // Ensure all statuses are present even if count is 0
+    //     $result = collect($statuses)->mapWithKeys(function ($status) use ($counts) {
+    //         return [$status => $counts->get($status, 0)];
+    //     });
+
+    //     return $result;
+    // }
+
+
+
+    // get the employee data base on the args year and semester
+    // public function filterEmployeeStatus($year, $semester)
+    // {
+
+    //     $data = EmployeeStatus::where('year', $year)
+    //         ->where('semester', $semester)
+    //         ->first();
+
+    //     if (!$data) {
+    //         return response()->json([
+    //             'message' => 'There is no data available yet.'
+    //         ], 200); // use 200,
+    //     }
+
+    //     return response()->json($data);
+    // }
+
+    // // fetching the available data of employee status
+    // public function availableDataEmployeeStatus()
+    // {
+
+    //     $data = EmployeeStatus::select('id', 'year', 'semester')
+    //         ->orderByDesc('year')
+    //         ->orderByDesc('semester')->get();
+
+    //     return $data;
+    // }
+
+    public function dashboard($year,$semester){
+
+
         $statuses = [
             'ELECTIVE',
             'APPOINTED',
@@ -25,8 +90,19 @@ class DashboardService
             'REGULAR',
             'CASUAL',
             'CONTRACTUAL',
-            'HONORARIUM'
+            'HONORARIUM',
+            'LSB',
+            'PROBATIONARY',
+            'SUBSTITUTE',
+            'JOB ORDER',
+            'RE-ELECT',
+            'EMERGENCY',
+            'PERMANENT',
+            'PROVISIONAL',
+            'NOT KNOWN',
+            'CONSULTANT',
         ];
+
         $counts = vwActive::select('status')
             ->whereIn('status', $statuses)
             ->get()
@@ -38,12 +114,36 @@ class DashboardService
             });
 
         // Ensure all statuses are present even if count is 0
-        $result = collect($statuses)->mapWithKeys(function ($status) use ($counts) {
+        $current_data = collect($statuses)->mapWithKeys(function ($status) use ($counts) {
             return [$status => $counts->get($status, 0)];
         });
 
-        return $result;
+
+        // filterEmployee status args $semester,$year
+        $previous_data = EmployeeStatus::where('year', $year)
+            ->where('semester', $semester)
+            ->first();
+
+        if (!$previous_data) {
+            return response()->json([
+                'message' => 'There is no data available yet.'
+            ], 200); // use 200,
+        }
+
+
+        return response()->json([
+            'current_status_of_employee' => $current_data,
+            'previous_status_of_employee' =>   $previous_data,
+
+        ]);
+
+
+
     }
+
+
+
+
 
 
 
@@ -131,60 +231,6 @@ class DashboardService
         );
     }
 
-    // get the employee data base on the args year and semester
-    public function filterEmployeeStatus($year, $semester)
-    {
-
-        $data = EmployeeStatus::where('year', $year)
-            ->where('semester', $semester)
-            ->first();
-
-        if (!$data) {
-            return response()->json([
-                'message' => 'There is no data available yet.'
-            ], 200); // use 200,
-        }
-
-        return $data;
-    }
-
-    // fetching the available data of employee status
-    public function availableDataEmployeeStatus()
-    {
-
-        $data = EmployeeStatus::select('id', 'year', 'semester')
-            ->orderByDesc('year')
-            ->orderByDesc('semester')->get();
-
-        return $data;
-    }
-
-
-
-
-    //-----------------------------HR------------------------------------------//
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     //-----------------------------HR------------------------------------------//
 
 
@@ -193,17 +239,28 @@ class DashboardService
     // number of status of opcr
     public function status($semester, $year)
     {
+        $opcrs = OfficeOpcr::with(['officeOpcrRecordLastestRecord'])
+            ->where('semester', $semester)
+            ->where('year', $year)
+            ->whereHas('officeOpcrRecordLastestRecord')
+            ->get();
 
-        $status = OfficeOpcr::with(['officeOpcrRecordLastestRecord'])->where('semester', $semester)->where('year', $year)->count();
-
-        if (!$status) {
+        if ($opcrs->isEmpty()) {
             return response()->json([
                 'message' => 'There is no data available yet.'
-            ], 200); // use 200,
+            ], 200);
         }
 
+        $counts = $opcrs->groupBy(function ($opcr) {
+            return $opcr->officeOpcrRecordLastestRecord->status ?? 'Unknown';
+        })->map(fn($group) => $group->count());
 
-        return response()->json($status);
+        return response()->json([
+            'opcr_status' => array_merge(
+                ['Total' => $opcrs->count()],
+                $counts->toArray()
+            )
+        ]);
     }
 
 

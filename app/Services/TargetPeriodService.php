@@ -44,6 +44,8 @@ class TargetPeriodService
             'targetPeriod' => $employeeTargetPeriods
         ], 200);
     }
+
+
     public function getTargetPeriodWithStandardsAndRatings($targetPeriodId, $month = null, $year = null, $week = null)
     {
         $targetPeriod = TargetPeriod::select('id')
@@ -60,7 +62,7 @@ class TargetPeriodService
                         'performance_indicator',
                         'success_indicator',
                         'required_output',
-                        ''
+
                     )
                         ->with([
                             'standardOutcomes' => function ($query) {
@@ -83,7 +85,7 @@ class TargetPeriodService
                                     'quantity_actual',
                                     'effectiveness_actual',
                                     'timeliness_actual'
-                                );
+                                )->with(['dropdownRating']);
                             },
                             'configurations' => function ($query) {
                                 $query->select(

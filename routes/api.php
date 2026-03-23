@@ -81,6 +81,9 @@ Route::prefix('ipcr')->group(function () {
     Route::get('employee/performance-record/{targetPeriodId}', [EmployeeRatingController::class, 'performanceRatingRecord']);
 
     Route::get('/employee/target-periods/details/{targetperiodId}/{month}/{year}/{week}', [EmployeeRatingController::class, 'targetPeriod']);
+
+    // storing rating
+    Route::post('employee/store/rating', [EmployeeRatingController::class, 'performanceRating']);
     });
 
 
@@ -162,8 +165,10 @@ Route::middleware('auth:sanctum')->group(function () {
             // old data of employee status
             Route::get('/employee/status/{year}/{semester}', [dashboardController::class, 'previousEmployeeStatus']);
 
+            Route::get('/{year}/{semester}', [dashboardController::class, 'dashboardSummaryData']);
+            Route::get('/plantilla', [dashboardController::class, 'plantillaEmployee']);
             // fetching the available old data employee status
-            Route::get('/employee/status/available', [dashboardController::class, 'fetchEmployeeStatus']);
+            // Route::get('/employee/status/available', [dashboardController::class, 'fetchEmployeeStatus']);
         });
 
 
@@ -224,8 +229,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Route::get('/unit_work_plan/employees', [Planning_Unit_work_planController::class, 'getEmployeesByDivision']);
 
         Route::prefix('dashboard')->group(function () {
-            Route::get('/status/{semester}/{year}', [PlanningDashboardController::class, 'numberOfStatus']);
+
             Route::get('/list-pending-opcr/{semester}/{year}', [PlanningDashboardController::class, 'listOfOpcrPending']);
+            Route::get('/status/{semester}/{year}', [PlanningDashboardController::class, 'numberOfStatus']);
         });
 
         Route::prefix('opcr')->group(function () {
@@ -304,8 +310,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/{controlNo}', [UnitWorkPlanController::class, 'findEmployee']);
 
-        // storing rating
-        Route::post('store/rating', [EmployeeRatingController::class, 'performanceRating']);
+
     });
 
     // Target Period Library

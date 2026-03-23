@@ -51,6 +51,379 @@
                 }
             }
         },
+        "/api/erms/employee/target-periods/details/{targetPeriodId}/{month}/{year}/{week}": {
+            "get": {
+                "tags": [
+                    "ERMS / Target Period"
+                ],
+                "summary": "Get Target Period with Performance Standards and Ratings",
+                "description": "Retrieves target period details including performance standards, standard outcomes, performance ratings filtered by month, year, and week based on calendar week, and configurations.",
+                "operationId": "b51a6b90a88be86a5505068ebab28237",
+                "parameters": [
+                    {
+                        "name": "targetPeriodId",
+                        "in": "path",
+                        "description": "Target Period ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 71
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "in": "path",
+                        "description": "Full month name (e.g. January, February, December)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "December"
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "path",
+                        "description": "4-digit year",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2026
+                        }
+                    },
+                    {
+                        "name": "week",
+                        "in": "path",
+                        "description": "Calendar week of the month (week1, week2, week3, week4, week5)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "week1",
+                                "week2",
+                                "week3",
+                                "week4",
+                                "week5"
+                            ],
+                            "example": "week3"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Target period details with filtered performance ratings\n *                      format date mm//dd//yy",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "id": 71,
+                                    "performance_standards": [
+                                        {
+                                            "id": 235,
+                                            "target_period_id": "71",
+                                            "category": "B. CORE FUNCTION",
+                                            "mfo": "Design, Development and Deployment of Information Systems",
+                                            "output": "Information Systems Design and Development",
+                                            "output_name": "Computer Programmer in Information System Design and Development",
+                                            "performance_indicator": [
+                                                {
+                                                    "id": 6,
+                                                    "name": "supervised",
+                                                    "category_id": "3",
+                                                    "category": "Decision-Making",
+                                                    "value": "supervised"
+                                                }
+                                            ],
+                                            "success_indicator": "3 Computer Programmer in Information System Design and Development supervised with minimal of less than 4 errors, in 6 months",
+                                            "required_output": "Number of Hired Computer Programmers",
+                                            "standard_outcomes": [
+                                                {
+                                                    "id": 1147,
+                                                    "performance_standard_id": "235",
+                                                    "rating": "5",
+                                                    "quantity": "3",
+                                                    "effectiveness": "with minimal of less than 4 errors",
+                                                    "timeliness": "in 4 months"
+                                                },
+                                                {
+                                                    "id": 1148,
+                                                    "performance_standard_id": "235",
+                                                    "rating": "4",
+                                                    "quantity": "2",
+                                                    "effectiveness": "with minimal of less than 6 errors",
+                                                    "timeliness": "in 5 months"
+                                                },
+                                                {
+                                                    "id": 1149,
+                                                    "performance_standard_id": "235",
+                                                    "rating": "3",
+                                                    "quantity": "1",
+                                                    "effectiveness": "with minimal of less than 8 errors",
+                                                    "timeliness": "in 6 months"
+                                                }
+                                            ],
+                                            "performance_rating": [
+                                                {
+                                                    "id": 5264,
+                                                    "performance_standard_id": "235",
+                                                    "control_no": "011790",
+                                                    "date": "12/14/2026",
+                                                    "quantity_actual": 3,
+                                                    "effectiveness_actual": 15,
+                                                    "timeliness_actual": 15
+                                                },
+                                                {
+                                                    "id": 5265,
+                                                    "performance_standard_id": "235",
+                                                    "control_no": "011790",
+                                                    "date": "12/15/2026",
+                                                    "quantity_actual": 3,
+                                                    "effectiveness_actual": 15,
+                                                    "timeliness_actual": 15
+                                                },
+                                                {
+                                                    "id": 5266,
+                                                    "performance_standard_id": "235",
+                                                    "control_no": "011790",
+                                                    "date": "12/16/2026",
+                                                    "quantity_actual": 5,
+                                                    "effectiveness_actual": 25,
+                                                    "timeliness_actual": 25
+                                                }
+                                            ],
+                                            "configurations": [
+                                                {
+                                                    "id": 233,
+                                                    "performance_standard_id": "235",
+                                                    "targetOutput": "3",
+                                                    "quantityIndicator": "numeric",
+                                                    "timelinessIndicator": "beforeDeadline",
+                                                    "range": "0",
+                                                    "date": "0",
+                                                    "description": "1"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Target period not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Target period not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid week provided",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid week."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/planning/dashboard/list-pending-opcr/{semester}/{year}": {
+            "get": {
+                "tags": [
+                    "Planning / Dashboard"
+                ],
+                "summary": "List of OPCR Pending",
+                "operationId": "9d1f247020bc5bdbe9821aa49e628659",
+                "parameters": [
+                    {
+                        "name": "semester",
+                        "in": "path",
+                        "description": "Semester (January-June, July-December)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "January-June"
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "path",
+                        "description": "Year",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2026
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of pending OPCR",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "office_name": {
+                                                "type": "string"
+                                            },
+                                            "semester": {
+                                                "type": "string"
+                                            },
+                                            "year": {
+                                                "type": "integer"
+                                            },
+                                            "date": {
+                                                "type": "string"
+                                            },
+                                            "status": {
+                                                "type": "string"
+                                            },
+                                            "office_head_name": {
+                                                "type": "string"
+                                            },
+                                            "control_no": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "id": 1,
+                                        "office_name": "OFFICE OF THE CITY INFORMATION AND COMMUNICATIONS TECHNOLOGY MANAGEMENT OFFICER",
+                                        "semester": "July-December",
+                                        "year": 2026,
+                                        "date": "03-19-2026",
+                                        "status": "Pending",
+                                        "office_head_name": "JOSEPH NELSON N. BRIONES",
+                                        "control_no": "003041"
+                                    },
+                                    {
+                                        "id": 2,
+                                        "office_name": "OFFICE OF THE CITY HUMAN RESOURCE MANAGEMENT OFFICER",
+                                        "semester": "July-December",
+                                        "year": 2026,
+                                        "date": "03-19-2026",
+                                        "status": "Pending",
+                                        "office_head_name": "KRISTINE JOYCE C. ISRAEL",
+                                        "control_no": "018692"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "204": {
+                        "description": "No data available",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "There is no data available yet."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/planning/dashboard/status/{semester}/{year}": {
+            "get": {
+                "tags": [
+                    "Planning / Dashboard"
+                ],
+                "summary": "Total Opcr, Reviewed, Returned, Draft",
+                "operationId": "9241e5ededf3126692fa14b7b05460be",
+                "parameters": [
+                    {
+                        "name": "semester",
+                        "in": "path",
+                        "description": "Semester (January-June, July-December)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "January-June"
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "path",
+                        "description": "Year",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2026
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Total count of Status",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "opcr_status": {
+                                            "properties": {
+                                                "Total": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "Reviewed": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "Pending": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "Draft": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/unit_work_plan/store": {
             "post": {
                 "tags": [
@@ -289,6 +662,14 @@
         {
             "name": "Unit Work Plan",
             "description": ""
+        },
+        {
+            "name": "ERMS / Target Period",
+            "description": "ERMS / Target Period"
+        },
+        {
+            "name": "Planning / Dashboard",
+            "description": "Planning / Dashboard"
         }
     ]
 }
