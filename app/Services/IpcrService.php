@@ -558,9 +558,6 @@ class IpcrService
 
         foreach ($standards as $standard) {
 
-
-
-
             $monthly = $this->groupRatingsByMonthlySummary(
                 $standard->performanceRating
             );

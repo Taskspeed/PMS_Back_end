@@ -58,6 +58,8 @@ Route::prefix('ipcr')->group(function () {
     //target detials  args targetperiodId
     Route::get('employee/target-periods/details/{targetperiodId}', [EmployeeRatingController::class, 'targetPeriodDetails']);
 
+
+
     // list of date that the employee rated already args controlNo
     Route::get('employee/list/rated/{control_no}', [EmployeeRatingController::class, 'getListOfRatingEmployee']);
 
@@ -70,13 +72,15 @@ Route::prefix('ipcr')->group(function () {
     Route::get('employee/target-periods/{controlNo}', [EmployeeRatingController::class, 'targetPeriodEmployee']);
 
     //target detials  args targetperiodId
-    Route::get('employee/target-periods/details/{targetperiodId}', [EmployeeRatingController::class, 'targetPeriodDetails']);
+    // Route::get('employee/target-periods/details/{targetperiodId}', [EmployeeRatingController::class, 'targetPeriodDetails']);
 
     // list of date that the employee rated already args controlNo
     Route::get('employee/list/rated/{control_no}', [EmployeeRatingController::class, 'getListOfRatingEmployee']);
 
 
     Route::get('employee/performance-record/{targetPeriodId}', [EmployeeRatingController::class, 'performanceRatingRecord']);
+
+    Route::get('/employee/target-periods/details/{targetperiodId}/{month}/{year}/{week}', [EmployeeRatingController::class, 'targetPeriod']);
     });
 
 
