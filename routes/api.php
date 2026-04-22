@@ -133,6 +133,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
         });
+
+        // todo: need to fix what is the flow
+        Route::get('/employee-draft-rating/{semester}/{year}', [OfficeController::class, 'listOfEmployeeRatingDraft']); // fetch all
     });
 
     Route::prefix('user')->group(function () {
@@ -151,6 +154,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // fetch the credential of user
         Route::get('/account', [AuthController::class, 'userAccount']);
+
+        // updating access role
+        Route::post('/edit',[AuthController::class, 'edit']);
+
+        // fetch role excluded supervisor_admin
+        Route::get('/role', [AuthController::class, 'adminRole']);
+
+        Route::get('/supervisor-role', [AuthController::class, 'supervisorRole']);
+
+        Route::post('/reset-password/{userId}', [AuthController::class, 'resetPassword']);
+
     });
 
 

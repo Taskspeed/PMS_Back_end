@@ -14,6 +14,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\addEmployeeRequest;
 use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Models\Role;
 
 
 class AuthController extends Controller
@@ -220,6 +221,62 @@ class AuthController extends Controller
                 'message' => 'Failed to retrieve password'
             ], 500);
         }
+    }
+
+    // user edit
+    // user edit
+    public function edit(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'userId' => 'required|exists:users,id',
+                'roleId'   => 'required|exists:roles,id'
+            ]);
+
+            $user = User::where('id', $validated['userId'])->first();
+
+            $user->role_id = $validated['roleId'];
+            $user->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User role updated successfully',
+                'data'    => $user
+            ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors'  => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    //  excluded supervisor_admin
+    public function adminRole(){
+
+    $roles = Role::whereNotIn('name',['supervisor_admin'])->get();
+
+    return response()->json($roles);
+
+    }
+
+    // reset password for user
+    public function resetPassword($userId)
+    {
+
+        $user = User::find($userId);
+
+        $user->password = Hash::make('admin');
+        $user->save();
+
+        return response()->json($user);
     }
 }
 
