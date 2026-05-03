@@ -166,4 +166,54 @@ class OfficeService
 
         return $officeData;
     }
+
+
+    // employeeRatingDraft
+    public function employeeRatingDraft($semester, $year)
+    {
+
+        $user = Auth::user();
+
+        //Ipcr Data of Employee
+        $employee = \App\Models\Employee::select('id', 'name', 'ControlNo', 'status', 'job_title', 'office_id')->where('office_id', $user->office_id)->whereNotIn('status', ['Contractual', 'Job Order'])
+            ->whereNot('job_title', 'Office Head')
+            ->with([
+                'targetPeriods' => function ($q) use ($semester, $year,) {
+                    $q->select('id', 'control_no', 'semester', 'year')->where('year', $year)
+                        ->where('semester', $semester)
+                        ->with([
+                            'performanceStandards' => function ($ps) {
+                                $ps->select(
+                                    'id',
+                                    'target_period_id', // ⚠️ REQUIRED (foreign key)
+                                    'mfo',
+
+                                )
+                                    ->with([
+                                        'performanceRating' => function ($query) {
+                                            $query->select(
+                                                'id',
+                                                'performance_standard_id', // ⚠️ REQUIRED
+                                                'date',
+                                                'status',
+                                                'quantity_actual as quantity',
+                                                'effectiveness_actual as effectiveness',
+                                                'timeliness_actual as timeliness'
+                                            )
+                                                ->where('status', 'Draft');
+                                        }
+                                    ]);
+                            }
+                        ]);
+                }
+            ])
+            ->get();
+
+        if (! $employee) {
+            return null;
+        }
+
+         return $employee;
+
+    }
 }

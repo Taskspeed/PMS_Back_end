@@ -11,7 +11,6 @@ class OfficeSeeder extends Seeder
     {
         $offices = [
             'OFFICE OF THE CITY ACCOUNTANT',
-            'OFFICE OF THE CITY ADMINISTRATOR',
             'OFFICE OF THE CITY AGRICULTURIST',
             'OFFICE OF THE CITY ARCHITECT',
             'OFFICE OF THE CITY ASSESSOR',
@@ -35,8 +34,6 @@ class OfficeSeeder extends Seeder
             'OFFICE OF THE CITY TREASURER',
             'OFFICE OF THE CITY VETERINARIAN',
             'OFFICE OF THE CITY VICE MAYOR / SANGGUNIANG PANLUNGSOD',
-            'OFFICE OF THE SANGGUNIANG PANLUNGSOD',
-            'OFFICE OF THE SECRETARY TO THE SANGGUNIAN',
         ];
 
         foreach ($offices as $officeName) {

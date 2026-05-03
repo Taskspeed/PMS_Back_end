@@ -9,7 +9,8 @@ class Role extends Model
 {
     //
     protected  $fillable =[
-        'name'
+        'name',
+        'label'
     ];
 
     public function users(): HasMany

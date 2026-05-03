@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\ListOfEmployeeDraftRatingResource;
 use App\Models\office;
 use App\Services\OfficeService;
 use Illuminate\Http\Request;
@@ -9,7 +10,19 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class OfficeController extends Controller
+
 {
+
+
+        protected $officeService;
+
+        public function __construct(OfficeService $officeService)
+        {
+            // throw new \Exception('Not implemented');
+
+            $this->officeService = $officeService;
+        }
+
     // getting the all office on the office table but need to change on the vwofficearrangement
     public function getOffices(){
 
@@ -178,6 +191,8 @@ class OfficeController extends Controller
     // }
 
 
+
+    // office structure
     public function officeStructure( Request $request, OfficeService $officeService){
 
 
@@ -186,5 +201,13 @@ class OfficeController extends Controller
         return response()->json([$officeStructure]);
 
 
+    }
+
+    public function listOfEmployeeRatingDraft($semester,$year)
+    {
+
+        $data = $this->officeService->employeeRatingDraft($semester, $year);
+        // return ListOfEmployeeDraftRatingResource::collection($data);
+        return $data;
     }
 }

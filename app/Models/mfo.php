@@ -5,7 +5,7 @@ namespace App\Models;
 use App\Models\office;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class mfo extends Model

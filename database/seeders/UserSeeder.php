@@ -16,40 +16,60 @@ class UserSeeder extends Seeder
       protected static ?string $password;
     public function run(): void
     {
-        // User::factory()->create([
-        //     'name' => 'admin',
-        //     'password' => static::$password ??= Hash::make('password'),
-        //     'office' => '1'
-        // ]);
+
         User::create([
-            'name' => 'admin',
+            'name' => 'admin', // hr admin
             'password' => static::$password ??= Hash::make('admin'),
             'office_id' => 20, // Ensure this office exists in the offices table
             'role_id' => 3, // Ensure this role exists in the roles table
             'remember_token' => Str::random(24),
+            'username' => 'admin'
+
         ]);
 
         User::create([
-            'name' => 'deniel',
+            'name' => 'deniel', // office
             'password' => static::$password ??= Hash::make('admin'),
             'office_id' => 16, // Ensure this office exists in the offices table
             'role_id' => 1, // Ensure this role exists in the roles table
             'remember_token' => Str::random(24),
+            'username' => 'tomenio',
         ]);
+
         User::create([
-            'name' => 'cliford',
+            'name' => 'cliford', // planning
             'password' => static::$password ??= Hash::make('admin'),
             'office_id' => 23, // Ensure this office exists in the offices table
             'role_id' => 2, // Ensure this role exists in the roles table
             'remember_token' => Str::random(24),
-        ]);
-        User::create([
-            'name' => 'flavs',
-            'password' => static::$password ??= Hash::make('admin'),
-            'office_id' => 20, // Ensure this office exists in the offices table
-            'role_id' => 1, // Ensure this role exists in the roles table
-            'remember_token' => Str::random(24),
+            'username' => 'millan',
         ]);
 
+        // User::create([
+        //     'name' => 'flavs', // planning
+        //     'password' => static::$password ??= Hash::make('admin'),
+        //     'office_id' => 20, // Ensure this office exists in the offices table
+        //     'role_id' => 1, // Ensure this role exists in the roles table
+        //     'remember_token' => Str::random(24),
+        //     'username' => '',
+        // ]);
+
+        User::create([
+            'name' => 'jeremie', // pmt
+            'password' => static::$password ??= Hash::make('admin'),
+            'office_id' => 20, // Ensure this office exists in the offices table
+            'role_id' => 4, // Ensure this role exists in the roles table
+            'remember_token' => Str::random(24),
+            'username' => 'diano',
+        ]);
+
+        User::create([
+            'name' => 'jeremie', // supervisor
+            'password' => static::$password ??= Hash::make('admin'),
+            'office_id' => 20, // Ensure this office exists in the offices table
+            'role_id' => 5, // Ensure this role exists in the roles table
+            'remember_token' => Str::random(24),
+            'username' => 'diano',
+        ]);
     }
 }

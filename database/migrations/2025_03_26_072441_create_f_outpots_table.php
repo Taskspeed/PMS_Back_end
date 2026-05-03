@@ -14,10 +14,19 @@ return new class extends Migration
         Schema::create('f_outpots', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->foreignId('mfo_id')->nullable()->constrained('mfos')->onDelete('cascade');
-            $table->foreignId('f_category_id')->constrained('f_categories')->onDelete('cascade');
-            $table->foreignId('office_id')->constrained('offices')->onDelete('cascade'); // keep one cascade
-            $table->softDeletes(); // Adds deleted_at column
+            // $table->foreignId('mfo_id')->nullable()->constrained('mfos')->onDelete('cascade');
+            // $table->foreignId('f_category_id')->constrained('f_categories')->onDelete('cascade');
+            // $table->foreignId('office_id')->constrained('offices')->onDelete('cascade'); // keep one cascade
+            $table->foreignId('mfo_id')
+                ->nullable()
+                ->constrained('mfos')
+                ->nullOnDelete();
+
+            $table->foreignId('f_category_id')
+                ->constrained('f_categories'); // NO ACTION
+
+            $table->foreignId('office_id')
+                ->constrained('offices'); // NO ACTION ✅
             $table->timestamps();
         });
     }

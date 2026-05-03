@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->foreignId('f_category_id')->constrained('f_categories')->onDelete('cascade');
             $table->foreignId('office_id')->constrained()->onDelete('cascade');
-            $table->softDeletes(); // Adds deleted_at column
+            // $table->softDeletes(); // Adds deleted_at column
             $table->timestamps();
         });
     }
