@@ -24,11 +24,12 @@ class AuthController extends Controller
     {
         // Fetch users with office data and format date using Carbon
         $data = User::with('office:id,name','role:id,name')
-            ->select('office_id', 'role_id','name', 'created_at')
+            ->select('id','office_id', 'role_id','name', 'created_at')
             ->orderBy('created_at', 'desc') // Add this line to sort by newest first
             ->get()
             ->map(function ($user) {
                 return [
+                    'user_id' => $user->id,
                     'name' => $user->name,
                     'password' => $user->password,
                     'office_name' => $user->office->name ?? 'N/A',
@@ -50,12 +51,12 @@ class AuthController extends Controller
         // ]);
 
         // Attempt to find the user
-        $user = User::with('office', 'role')->where('name', $request->name)->first();
+        $user = User::with('office', 'role')->where('username', $request->username)->first();
 
         if (!$user) {
             return response()->json([
                 'errors' => [
-                    'name' => ['Username does not exist.']
+                    'username' => ['Username does not exist.']
                 ]
             ], 422); // 422 = Unprocessable Entity for validation-style errors
         }
@@ -77,6 +78,7 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'username' => $user->username,
                 'office_id' => $user->office_id,
                 'role_id' => $user->role_id,
                 'role_name' => $user->role->name ?? null,
@@ -226,7 +228,6 @@ class AuthController extends Controller
     }
 
     // user edit
-    // user edit
     public function edit(Request $request)
     {
         try {
@@ -279,6 +280,23 @@ class AuthController extends Controller
         $user->save();
 
         return response()->json($user);
+    }
+
+    // user account details
+    public function viewDetailAccount($userId)
+    {
+        $user = User::with('office','role')->find($userId);
+
+        if (empty($user)) {
+            return response()->json([
+                'message' => 'User not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'User retrieved successfully.',
+            'data' => $user,
+        ], 200);
     }
 }
 

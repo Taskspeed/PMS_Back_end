@@ -165,6 +165,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::post('/reset-password/{userId}', [AuthController::class, 'resetPassword']);
 
+        Route::get('/view/account/{userId}', [AuthController::class, 'viewDetailAccount']);
+
     });
 
 
