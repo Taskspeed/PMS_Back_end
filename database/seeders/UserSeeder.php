@@ -33,7 +33,7 @@ class UserSeeder extends Seeder
             'office_id' => 16, // Ensure this office exists in the offices table
             'role_id' => 1, // Ensure this role exists in the roles table
             'remember_token' => Str::random(24),
-            'username' => 'tomenio',
+            'username' => 'deniel',
         ]);
 
         User::create([
@@ -42,34 +42,26 @@ class UserSeeder extends Seeder
             'office_id' => 23, // Ensure this office exists in the offices table
             'role_id' => 2, // Ensure this role exists in the roles table
             'remember_token' => Str::random(24),
-            'username' => 'millan',
+            'username' => 'cliford',
         ]);
 
-        // User::create([
-        //     'name' => 'flavs', // planning
-        //     'password' => static::$password ??= Hash::make('admin'),
-        //     'office_id' => 20, // Ensure this office exists in the offices table
-        //     'role_id' => 1, // Ensure this role exists in the roles table
-        //     'remember_token' => Str::random(24),
-        //     'username' => '',
-        // ]);
-
+    
         User::create([
             'name' => 'jeremie', // pmt
             'password' => static::$password ??= Hash::make('admin'),
             'office_id' => 20, // Ensure this office exists in the offices table
             'role_id' => 4, // Ensure this role exists in the roles table
             'remember_token' => Str::random(24),
-            'username' => 'diano',
+            'username' => 'jeremie',
         ]);
 
         User::create([
-            'name' => 'jeremie', // supervisor
+            'name' => 'niel', // supervisor
             'password' => static::$password ??= Hash::make('admin'),
             'office_id' => 20, // Ensure this office exists in the offices table
             'role_id' => 5, // Ensure this role exists in the roles table
             'remember_token' => Str::random(24),
-            'username' => 'diano',
+            'username' => 'niel',
         ]);
     }
 }

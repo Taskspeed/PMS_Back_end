@@ -99,6 +99,7 @@ class AuthController extends Controller
                 'role_id' => $request->role_id,
                 'remember_token' => Str::random(32),
                 'designation'=>$request->designation,
+                'username'=>$request->username,
             ]);
 
             return response()->json([
@@ -111,6 +112,7 @@ class AuthController extends Controller
                     'office_id' => $user->office_id,
                     'role_id' => $user->role_id,
                     'designation'=>$user->designation,
+                     'username'=>$user->username,
                 ]
             ], 201); // Use 201 Created status code
 
