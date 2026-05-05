@@ -43,7 +43,8 @@ class User extends Authenticatable
         'remember_token',
         'designation',
         'control_no',
-        'username'
+        'username',
+        'active'
 
     ];
     // Ensure office_id and role_id are returned as integers

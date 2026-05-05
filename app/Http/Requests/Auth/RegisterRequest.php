@@ -28,7 +28,8 @@ class RegisterRequest extends FormRequest
             'office_id' => 'required|exists:offices,id',
             'role_id' => 'required|exists:Roles,id',
             'designation' => 'required|string',
-         'username' => 'required|string|min:3|unique:users,username',
+            'username' => 'required|string|min:3|unique:users,username',
+            'active' => 'required|boolean'
         ];
     }
 }
