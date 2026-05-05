@@ -1,30 +1,29 @@
-#  Project TODO
-
-## High Priority
+# TODO
 
 
-##  Features
 
+# 05-04-2026
 
-##  Bugs
+  # added
+      -listOfSupervisory
+      -field username
+      -seeder offices
 
+ http://192.168.8.182:9000/api/employee/list-of-supervisory 
 
-##  Fix
- <!-- User management
-    - edit action -->
+ sample data
+ {
+    "success": true,
+    "message": "Fetch employee successfully",
+    "data": [
+        {
+            "name": "JOGRAD M. MAHUSAY",
+            "position": "INFORMATION SYSTEMS ANALYST III",
+            "ControlNo": "011790",
+            "office": "OFFICE OF THE CITY INFORMATION AND COMMUNICATIONS TECHNOLOGY MANAGEMENT OFFICER",
+            "status": "REGULAR"
+        }
+    ]
+}
 
-## Add
-
- User management
-    - username unique
-   
-    
-
-##  Done
-
-User Management
-  - edit action  api/user/edit
-  - fetch role  api/user/role
-  - fetch supervisor  api/user/supervisor-role
-  - reset password action api/user/reset-password/{userId}
-
+# 06-05-2026

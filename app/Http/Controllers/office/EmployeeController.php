@@ -7,15 +7,20 @@ use App\Http\Controllers\Controller;
 
 use App\Http\Requests\addEmployeeRequest;
 use App\Models\Employee;
+use App\Models\JobTitle;
 use App\Services\EmployeeService;
+use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 
 class EmployeeController extends Controller
 {
+    use ApiResponseTrait;
 
+    // arg  data,message
 
 
     // add an employee on the plantilla structure
@@ -100,17 +105,16 @@ class EmployeeController extends Controller
     }
 
     //Jobtitle update of employee
-    public function updateJobTitle(Request $request,$employeeId, EmployeeService $employeeService) // need to check  this code for review
+    public function updateJobTitle(Request $request, $employeeId, EmployeeService $employeeService) // need to check  this code for review
 
     {
         $validated = $request->validate([
             'job_title' => 'required|string'
         ]);
 
-        $job = $employeeService->jobTitle($employeeId,$validated);
+        $job = $employeeService->jobTitle($employeeId, $validated);
 
         return $job;
-
     }
 
     //remove employee on the plantilla
@@ -181,5 +185,22 @@ class EmployeeController extends Controller
             'success' => true,
             'data' => $employee
         ]);
+    }
+
+
+    // list of the employee supervisory on the office
+    public function listOfSupervisory()
+    {
+        $user = Auth::user();
+
+        $employee = Employee::select('name','position','ControlNo','office','status')->where('office_id', $user->office_id)
+            ->where('rank', 'Supervisory')
+            ->get();
+
+        if ($employee->isEmpty()) {
+            return $this->error('No employee found.', 404);
+        }
+
+        return $this->success($employee, 'Fetch employee successful');
     }
 }

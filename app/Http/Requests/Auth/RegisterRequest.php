@@ -24,11 +24,11 @@ class RegisterRequest extends FormRequest
         return [
             'control_no' => 'required|string',
             'name' => 'required|string|unique:users,name',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:3',
             'office_id' => 'required|exists:offices,id',
             'role_id' => 'required|exists:Roles,id',
             'designation' => 'required|string',
-            'username' => 'required|string|min:3',
+         'username' => 'required|string|min:3|unique:users,username',
         ];
     }
 }

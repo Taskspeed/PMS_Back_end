@@ -3,19 +3,22 @@
 namespace App\Http\Controllers\Auth;
 
 
-use Carbon\Carbon;
-use App\Models\User;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
-use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\addEmployeeRequest;
 use App\Http\Requests\Auth\ChangePasswordRequest;
+use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\Role;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Inertia\Testing\Concerns\Has;
 
+use function PHPUnit\Framework\returnSelf;
 
 class AuthController extends Controller
 {
@@ -23,8 +26,8 @@ class AuthController extends Controller
     public function userAccount()
     {
         // Fetch users with office data and format date using Carbon
-        $data = User::with('office:id,name','role:id,name')
-            ->select('id','office_id', 'role_id','name', 'created_at')
+        $data = User::with('office:id,name', 'role:id,name')
+            ->select('id', 'office_id', 'role_id', 'name', 'created_at')
             ->orderBy('created_at', 'desc') // Add this line to sort by newest first
             ->get()
             ->map(function ($user) {
@@ -34,8 +37,8 @@ class AuthController extends Controller
                     'password' => $user->password,
                     'office_name' => $user->office->name ?? 'N/A',
                     'role_name' => $user->role->name ?? 'N/A',
-                'role_id' => $user->role_id, // <-- Add this line
-                'datecreated' => Carbon::parse($user->created_at)->format('F d, Y'),
+                    'role_id' => $user->role_id, // <-- Add this line
+                    'datecreated' => Carbon::parse($user->created_at)->format('F d, Y'),
                 ];
             });
 
@@ -100,8 +103,8 @@ class AuthController extends Controller
                 'office_id' => $request->office_id,
                 'role_id' => $request->role_id,
                 'remember_token' => Str::random(32),
-                'designation'=>$request->designation,
-                'username'=>$request->username,
+                'designation' => $request->designation,
+                'username' => $request->username,
             ]);
 
             return response()->json([
@@ -113,8 +116,8 @@ class AuthController extends Controller
                     'name' => $user->name,
                     'office_id' => $user->office_id,
                     'role_id' => $user->role_id,
-                    'designation'=>$user->designation,
-                     'username'=>$user->username,
+                    'designation' => $user->designation,
+                    'username' => $user->username,
                 ]
             ], 201); // Use 201 Created status code
 
@@ -233,7 +236,8 @@ class AuthController extends Controller
         try {
             $validated = $request->validate([
                 'userId' => 'required|exists:users,id',
-                'roleId'   => 'required|exists:roles,id'
+                'roleId'   => 'required|exists:roles,id',
+                'officeId'   => 'required|exists:offices,id'
             ]);
 
             $user = User::where('id', $validated['userId'])->first();
@@ -262,12 +266,12 @@ class AuthController extends Controller
     }
 
     //  excluded supervisor_admin
-    public function adminRole(){
+    public function adminRole()
+    {
 
-    $roles = Role::whereNotIn('name',['supervisor_admin'])->get();
+        $roles = Role::whereNotIn('name', ['supervisor_admin'])->get();
 
-    return response()->json($roles);
-
+        return response()->json($roles);
     }
 
     // reset password for user
@@ -285,7 +289,7 @@ class AuthController extends Controller
     // user account details
     public function viewDetailAccount($userId)
     {
-        $user = User::with('office','role')->find($userId);
+        $user = User::with('office', 'role')->find($userId);
 
         if (empty($user)) {
             return response()->json([
@@ -298,6 +302,31 @@ class AuthController extends Controller
             'data' => $user,
         ], 200);
     }
+
+    //create account supervisor admin
+    public function createAccountSupervisor(Request $request)
+    {
+
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'designation' => 'required|string',
+            'role_id'     => 'required|exists:roles,id',  // fixed: 'exist' → 'exists', 'role' → 'roles' (use actual table name)
+            'controlNo' => 'required|string',
+            'username'    => 'required|string|unique:users,username', // added unique check
+            'password' => 'required|string|min:3',
+        ]);
+
+        $validated['office_id'] = $user->office_id; // force office_id from authenticated user
+        $validated['password']  = Hash::make($validated['password']); // fixed
+
+        $createUser = User::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Account created successfully.',
+            'data'    => $createUser->makeHidden(['password']), // hide password from response
+        ], 201);
+    }
 }
-
-
