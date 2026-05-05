@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Qpef;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class QpefService
@@ -24,12 +25,15 @@ class QpefService
     {
         DB::beginTransaction();
 
+         $user = Auth::user();
+
         try {
             // Create main QPEF record
             $qpef = Qpef::create([
                 'control_no' => $validated['control_no'],
                 'quarterly' => $validated['quarterly'],
                 'year' => $validated['year'],
+                'rated_by' => $user->name,
             ]);
 
             // Create Job Performance records

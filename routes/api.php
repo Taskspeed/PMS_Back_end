@@ -171,7 +171,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/view/account/{userId}', [AuthController::class, 'viewDetailAccount']);
 
         // create supervisor admin
-        Route::post('supervisor', [AuthController::class, 'createAccountSupervisor']);
+        Route::post('supervisory', [AuthController::class, 'createAccountSupervisor']);
     });
 
 

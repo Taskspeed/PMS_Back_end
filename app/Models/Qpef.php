@@ -16,6 +16,7 @@ class Qpef extends Model
         'control_no',
         'quarterly',
         'year',
+        'rated_by'
 
     ];
 

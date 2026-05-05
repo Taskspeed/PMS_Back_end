@@ -26,6 +26,7 @@ class QpefResource extends JsonResource
             'control_no' => $this->control_no,
             'quarterly' => $this->quarterly,
             'year' => $this->year,
+            'rated_by' => $this->rated_by,
 
             // Job Performance with sub_total and weighted score
             'job_performance' => [
