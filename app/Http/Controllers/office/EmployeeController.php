@@ -189,16 +189,16 @@ class EmployeeController extends Controller
 
 
     // list of the employee supervisory on the office
-    public function listOfSupervisory()
+    public function listOfHead()
     {
         $user = Auth::user();
 
-        $employee = Employee::select('name','position','ControlNo','office','status')->where('office_id', $user->office_id)
-            ->where('rank', 'Supervisory')
+        $employee = Employee::select('name','position','ControlNo','office','job_title','status')->where('office_id', $user->office_id)
+         ->whereNotIn('job_title', ['Employee'])
             ->get();
 
         if ($employee->isEmpty()) {
-            return $this->error('No employee found.', 404);
+          return $this->error('No head employees found for this office.', 404);
         }
 
         return $this->success($employee, 'Fetch employee successful');

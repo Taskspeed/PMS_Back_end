@@ -161,8 +161,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // fetch role excluded supervisor_admin
         Route::get('/role', [AuthController::class, 'adminRole']);
 
-        // fetch role of supervisor
-        Route::get('/supervisor-role', [AuthController::class, 'supervisorRole']);
+        // // fetch role of supervisory only
+        Route::get('/supervisor-role', [AuthController::class, 'supervisoryRole']);
 
         // reset password
         Route::post('/reset-password/{userId}', [AuthController::class, 'resetPassword']);
@@ -329,7 +329,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // deleting or remove the employee on the office plantilla
         Route::delete('/delete/{id}', [EmployeeController::class, 'deleteEmployee']);
         // list of supervisor 
-        Route::get('/list-of-supervisory', [EmployeeController::class, 'listOfSupervisory']);
+        Route::get('/list-of-Head', [EmployeeController::class, 'listOfHead']);
         
         Route::get('/{controlNo}', [UnitWorkPlanController::class, 'findEmployee']);
 
