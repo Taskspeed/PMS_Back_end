@@ -30,7 +30,8 @@ class AuthController extends Controller
     {
         // Fetch users with office data and format date using Carbon
         $data = User::with('office:id,name', 'role:id,name')
-            ->select('id', 'office_id', 'role_id', 'name', 'created_at')
+            ->select('id', 'office_id', 'role_id', 'name', 'created_at', 'active')
+            ->whereNotin('role_id',[4])
             ->orderBy('created_at', 'desc') // Add this line to sort by newest first
             ->get()
             ->map(function ($user) {
@@ -42,6 +43,7 @@ class AuthController extends Controller
                     'role_name' => $user->role->name ?? 'N/A',
                     'role_id' => $user->role_id, // <-- Add this line
                     'datecreated' => Carbon::parse($user->created_at)->format('F d, Y'),
+                    'active' => $user->active,
                 ];
             });
 
@@ -51,13 +53,9 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
-        // $request->validate([
-        //     'name' => 'required|string',
-        //     'password' => 'required|string',
-        // ]);
 
         // Attempt to find the user
-        $user = User::with('office', 'role')->where('username', $request->username)->first();
+        $user = User::with('office', 'role')->where('username', $request->username)->where('active', 1)->first();
 
         if (!$user) {
             return response()->json([
@@ -66,6 +64,16 @@ class AuthController extends Controller
                 ]
             ], 422); // 422 = Unprocessable Entity for validation-style errors
         }
+
+        //  User is inactive
+        if (!$user->active) {
+            return response()->json([
+                'errors' => [
+                    'username' => ['Your account is inactive. Please contact admin.']
+                ]
+            ], 403); // 🔥 better status for forbidden
+        }
+
 
         if (!Hash::check($request->password, $user->password)) {
             return response()->json([
@@ -89,6 +97,7 @@ class AuthController extends Controller
                 'role_id' => $user->role_id,
                 'role_name' => $user->role->name ?? null,
                 'designation' => $user->designation,
+                    'active' => $user->active,
             ],
             'token' => $token,
         ]);
@@ -108,6 +117,7 @@ class AuthController extends Controller
                 'remember_token' => Str::random(32),
                 'designation' => $request->designation,
                 'username' => $request->username,
+                'active' => $request->active,
             ]);
 
             return response()->json([
@@ -121,6 +131,7 @@ class AuthController extends Controller
                     'role_id' => $user->role_id,
                     'designation' => $user->designation,
                     'username' => $user->username,
+                    'active' => $user->active,
                 ]
             ], 201); // Use 201 Created status code
 
@@ -240,6 +251,7 @@ class AuthController extends Controller
             $validated = $request->validate([
                 'userId' => 'required|exists:users,id',
                 'roleId'   => 'required|exists:roles,id',
+                'active' => 'required|boolean'
                 // 'officeId'   => 'required|exists:offices,id'
             ]);
 
@@ -319,6 +331,7 @@ class AuthController extends Controller
             'controlNo' => 'required|string',
             'username'    => 'required|string|unique:users,username', // added unique check
             'password' => 'required|string|min:3',
+              'active' => 'required|boolean'
         ]);
 
         // $validated['office_id'] = $user->office_id; // force office_id from authenticated user
@@ -348,4 +361,73 @@ class AuthController extends Controller
         }
         return $this->success($roles, 'Fetch Successfully', 200);
     }
+
+
+    // list of head account on the office
+    public function headAccount()
+    {   
+        $user = Auth::user();
+
+        $account = User::where('role_id',4)->where('office_id',$user->office_id)->get();
+        
+
+        if ($account->isEmpty()) {
+            return $this->error('No data found', 404);
+
+        }
+        return $this->success($account, 'Fetch Successfully', 200);
+    }
+
+    // delete user account
+    public function userDelete($userId){
+
+        $user = User::find($userId);
+
+            if (!$user) {
+                return $this->error('User not found', 404);
+            }
+
+        $user->delete();
+
+        return $this->success($user,'deleted successfully',200);
+
+    }
+
+    // update the account of head account 
+    public function updateHeadAccount(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'userId' => 'required|exists:users,id',
+                'active' => 'required|boolean'
+              
+            ]);
+
+            $user = User::where('id', $validated['userId'])->first();
+
+            $user->active = $validated['active'];
+            $user->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User active updated successfully',
+                'data'    => $user
+            ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors'  => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    
 }
