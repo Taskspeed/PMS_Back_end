@@ -10,6 +10,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\Role;
 use App\Models\User;
+use App\Traits\ApiResponseTrait;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +23,8 @@ use function PHPUnit\Framework\returnSelf;
 
 class AuthController extends Controller
 {
+    use ApiResponseTrait;
+
     //test
     public function userAccount()
     {
@@ -237,7 +240,7 @@ class AuthController extends Controller
             $validated = $request->validate([
                 'userId' => 'required|exists:users,id',
                 'roleId'   => 'required|exists:roles,id',
-                'officeId'   => 'required|exists:offices,id'
+                // 'officeId'   => 'required|exists:offices,id'
             ]);
 
             $user = User::where('id', $validated['userId'])->first();
@@ -318,7 +321,9 @@ class AuthController extends Controller
             'password' => 'required|string|min:3',
         ]);
 
+        // $validated['office_id'] = $user->office_id; // force office_id from authenticated user
         $validated['office_id'] = $user->office_id; // force office_id from authenticated user
+
         $validated['password']  = Hash::make($validated['password']); // fixed
 
         $createUser = User::create($validated);
@@ -328,5 +333,19 @@ class AuthController extends Controller
             'message' => 'Account created successfully.',
             'data'    => $createUser->makeHidden(['password']), // hide password from response
         ], 201);
+    }
+
+    //  supervisory_admin
+    public function supervisoryRole()
+    {
+
+        $roles = Role::select('id as role_id', 'name')
+            ->where('name', 'supervisor_admin')->get();
+
+
+        if ($roles->isEmpty()) {
+            return $this->error('No data found', 404);
+        }
+        return $this->success($roles, 'Fetch Successfully', 200);
     }
 }
