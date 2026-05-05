@@ -52,21 +52,21 @@ Route::prefix('ipcr')->group(function () {
 
 });
 
-    // get the target period on the employee on erms
-    Route::get('employee/target-periods/{controlNo}', [EmployeeRatingController::class, 'targetPeriodEmployee']);
+// get the target period on the employee on erms
+Route::get('employee/target-periods/{controlNo}', [EmployeeRatingController::class, 'targetPeriodEmployee']);
 
-    //target detials  args targetperiodId
-    Route::get('employee/target-periods/details/{targetperiodId}', [EmployeeRatingController::class, 'targetPeriodDetails']);
-
-
-
-    // list of date that the employee rated already args controlNo
-    Route::get('employee/list/rated/{control_no}', [EmployeeRatingController::class, 'getListOfRatingEmployee']);
+//target detials  args targetperiodId
+Route::get('employee/target-periods/details/{targetperiodId}', [EmployeeRatingController::class, 'targetPeriodDetails']);
 
 
 
+// list of date that the employee rated already args controlNo
+Route::get('employee/list/rated/{control_no}', [EmployeeRatingController::class, 'getListOfRatingEmployee']);
 
-    Route::prefix('erms')->group(function(){
+
+
+
+Route::prefix('erms')->group(function () {
 
     // get the target period on the employee on erms
     Route::get('employee/target-periods/{controlNo}', [EmployeeRatingController::class, 'targetPeriodEmployee']);
@@ -84,7 +84,7 @@ Route::prefix('ipcr')->group(function () {
 
     // storing rating
     Route::post('employee/store/rating', [EmployeeRatingController::class, 'performanceRating']);
-    });
+});
 
 
 
@@ -130,8 +130,6 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/{semester}/{year}', [OfficeDashboardController::class, 'dashboardStatus']);
             // Route::get('/ipcr-status-counts', [OfficeDashboardController::class, 'getIpcrStatusCounts']);
             Route::get('/employee/{semester}/{year}', [OfficeDashboardController::class, 'listOfEmployeeNoIpcr']);
-
-
         });
 
         // todo: need to fix what is the flow
@@ -156,7 +154,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/account', [AuthController::class, 'userAccount']);
 
         // updating access role
-        Route::post('/edit',[AuthController::class, 'edit']);
+        Route::post('/edit', [AuthController::class, 'edit']);
+
+        // user delete
+        Route::delete('/delete/{userId}', [AuthController::class, 'userdelete']);
 
         // fetch role excluded supervisor_admin
         Route::get('/role', [AuthController::class, 'adminRole']);
@@ -172,13 +173,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // create supervisor admin
         Route::post('supervisory', [AuthController::class, 'createAccountSupervisor']);
+
+
+
+        // list of account of head account 
+        Route::get('/head-account', [AuthController::class, 'headAccount']);
+        // update the account of head 
+        Route::post('/update/head-account', [AuthController::class, 'updateHeadAccount']);
     });
 
 
     // HR Routes
     Route::prefix('hr')->group(function () {
 
-        Route::prefix('dashboard')->group(function (){
+        Route::prefix('dashboard')->group(function () {
 
             // get the current number of job-order, casual, regular, honoraruim, and others status
             Route::get('/current-employee', [dashboardController::class, 'currentEmployeeStatus']);
@@ -237,8 +245,6 @@ Route::middleware('auth:sanctum')->group(function () {
         // delete rank
         Route::delete('/rank/delete/{rankId}', [RankController::class, 'deleteRank']);
         Route::get('/category', [CategoryController::class, 'fetchCategory']);
-
-
     });
 
     // Planning
@@ -257,7 +263,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::prefix('opcr')->group(function () {
             Route::post('/update-status', [PlanningOpcrController::class, 'opcrStatus']);
-
         });
     });
 
@@ -278,7 +283,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // get the unit work plan of employee
         Route::get('/employee/{ControlNo}/{semester}/{year}', [UnitWorkPlanController::class, 'getUnitworkplan']);
-
     });
 
     // unit work plan of the employee
@@ -298,8 +302,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // deleting unit work plan
         Route::delete('/delete/{controlNo}/{semester}/{year}', [UnitWorkPlanController::class, 'deleteUnitWorkPlan']);
-
-
     });
 
     // Employee
@@ -330,10 +332,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/delete/{id}', [EmployeeController::class, 'deleteEmployee']);
         // list of supervisor 
         Route::get('/list-of-Head', [EmployeeController::class, 'listOfHead']);
-        
+
+
+        // get the employee on head
+        Route::get('/head', [SpmsController::class, 'getEmployeeUnderOfHead']);
+
+
         Route::get('/{controlNo}', [UnitWorkPlanController::class, 'findEmployee']);
-
-
 
 
     });
@@ -369,8 +374,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // updating qpef
         Route::put('/update/{qpefId}', [QpefController::class, 'qpefUpdate']);
-
-
     });
 
 
@@ -385,7 +388,4 @@ Route::middleware('auth:sanctum')->group(function () {
         //updating opcr
         Route::put('/update', [OpcrController::class, 'opcrUpdate']);
     });
-
-
-
 });
