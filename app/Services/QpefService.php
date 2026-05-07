@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Qpef;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Http\Request;
 class QpefService
 {
     /**
@@ -222,8 +222,6 @@ class QpefService
     }
 
 
-
-
     // Get qpef of employee $control_no, $quarterly, $year
     public function getEmployeeQpef($control_no, $quarterly, $year)
     {
@@ -249,61 +247,6 @@ class QpefService
         return $employeeQpef;
     }
 
-    /**
-     * Get the sub_total and weighted_score of job performance, competencies attitude,
-     * and physical mental of the employee QPEF
-     *
-     * @param int $control_no
-     * @param string $quarterly
-     * @param int $year
-     * @return array
-     */
-// public function computationQpef($control_no, $quarterly, $year)
-// {
-//     $qpef = $this->getEmployeeQpef($control_no, $quarterly, $year);
-
-//     // Calculate Job Performance average
-//     $jobPerformanceAvg = $qpef->jobPerformances->avg('rating') ?? 0;
-//     $jobPerformanceWeighted = $jobPerformanceAvg * self::JOB_PERFORMANCE_WEIGHT;
-
-//     // Calculate Competencies Attitude average
-//     $competenciesAvg = $qpef->competenciesAttitudes->avg('rating') ?? 0;
-//     $competenciesWeighted = $competenciesAvg * self::COMPETENCIES_WEIGHT;
-
-//     // Calculate Physical Mental average
-//     $physicalMentalAvg = $qpef->physicalMentals->avg('rating') ?? 0;
-//     $physicalMentalWeighted = $physicalMentalAvg * self::PHYSICAL_MENTAL_WEIGHT;
-
-//     // Calculate total weighted score
-//     $totalWeightedScore = $jobPerformanceWeighted + $competenciesWeighted + $physicalMentalWeighted;
-
-//     return [
-//         'job_performance' => [
-//             'sub_total' => round($jobPerformanceAvg, 2),
-//             'weight' => self::JOB_PERFORMANCE_WEIGHT * 100 . '%',
-//             'weighted_score' => round($jobPerformanceWeighted, 2),
-//         ],
-//         'competencies_attitude' => [
-//             'sub_total' => round($competenciesAvg, 2),
-//             'weight' => self::COMPETENCIES_WEIGHT * 100 . '%',
-//             'weighted_score' => round($competenciesWeighted, 2),
-//         ],
-//         'physical_mental' => [
-//             'sub_total' => round($physicalMentalAvg, 2),
-//             'weight' => self::PHYSICAL_MENTAL_WEIGHT * 100 . '%',
-//             'weighted_score' => round($physicalMentalWeighted, 2),
-//         ],
-
-//         'final_rating' => [
-//             'job_performance_weighted_score' => round($jobPerformanceWeighted, 2),
-//             'competencies_attitude_weighted_score' => round($competenciesWeighted, 2),
-//             'physical_mental_weighted_score' => round($physicalMentalWeighted, 2),
-//             'final_rating' => round($totalWeightedScore, 2),
-
-//         ],
-
-//     ];
-// }
 
 // /**
 //  * Alternative: If you already have the QPEF object loaded
@@ -354,4 +297,19 @@ public function computationQpef($control_no, $quarterly, $year)
 
         ];
     }
+
+
+
+  // Get qpef on multiple employee
+ public function getAllEmployeeQpefQuarter($validated)
+{
+    $employeeQpef = Qpef::with('jobPerformances', 'competenciesAttitudes', 'physicalMentals', 'recommendationDevelopment')
+        ->whereIn('control_no', $validated['controlNo']) // ✅ changed to whereIn
+        ->where('quarterly', $validated['quarter'])
+        ->where('year', $validated['year'])
+        ->get();
+
+    return $employeeQpef;
+}
+  
 }

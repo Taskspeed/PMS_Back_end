@@ -10,16 +10,18 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\UserOfficeAssign;
 use App\Traits\ApiResponseTrait;
 use Carbon\Carbon;
+use function PHPUnit\Framework\returnSelf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+
 use Illuminate\Support\Str;
 use Inertia\Testing\Concerns\Has;
-
-use function PHPUnit\Framework\returnSelf;
 
 class AuthController extends Controller
 {
@@ -331,13 +333,17 @@ class AuthController extends Controller
             'controlNo' => 'required|string',
             'username'    => 'required|string|unique:users,username', // added unique check
             'password' => 'required|string|min:3',
-              'active' => 'required|boolean'
+            'active' => 'required|boolean'
         ]);
 
         // $validated['office_id'] = $user->office_id; // force office_id from authenticated user
         $validated['office_id'] = $user->office_id; // force office_id from authenticated user
 
         $validated['password']  = Hash::make($validated['password']); // fixed
+
+        // camelCase → snake_case to match DB column and $fillable
+            $validated['control_no'] = $validated['controlNo'];
+    unset($validated['controlNo']);
 
         $createUser = User::create($validated);
 
@@ -427,7 +433,69 @@ class AuthController extends Controller
             ], 500);
         }
     }
+    // create pmt account
+ public function createPmtAccount(Request $request)
+{
+    $user = Auth::user();
 
+    $validated = $request->validate([
+        'controlNo'          => 'required|string',
+        'name'               => 'required|string',
+        'designation'        => 'required|string',
+        'role_id'            => 'required|exists:roles,id',
+        'office_id'          => 'required|exists:offices,id',
+        'password'           => 'required|string|min:6',
+        'username'           => 'required|string|min:3|unique:users,username',
+        'active'             => 'required|boolean',
+        'office_id_assign'   => 'required|array',
+        'office_id_assign.*' => 'required|exists:offices,id',
+    ]);
+
+    // hash password
+    $validated['password'] = Hash::make($validated['password']);
+
+    try {
+        $create_user_account = DB::transaction(function () use ($validated, $user) {
+
+            // create user
+            $create_user_account = User::create([
+                'controlNo'   => $validated['controlNo'],
+                'name'        => $validated['name'],
+                'designation' => $validated['designation'],
+                'role_id'     => $validated['role_id'],
+                'office_id'   => $validated['office_id'],
+                'password'    => $validated['password'],
+                'username'    => $validated['username'],
+                'active'      => $validated['active'],
+            ]);
+
+            // assign multiple offices
+            foreach ($validated['office_id_assign'] as $officeId) {
+                UserOfficeAssign::create([
+                    'assigned_by' => $user->name,
+                    'user_id'     => $create_user_account->id,
+                    'office_id'   => $officeId,
+                ]);
+            }
+
+            return $create_user_account;
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'PMT account created successfully.',
+            'data'    => $create_user_account,
+        ], 201);
+
+    } catch (\Exception $e) {
+        // If anything fails, DB::transaction auto rolls back everything
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to create account. No data was saved.',
+            'error'   => $e->getMessage(),
+        ], 500);
+    }
+}
 
     
 }

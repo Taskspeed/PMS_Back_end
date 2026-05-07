@@ -25,9 +25,10 @@ class RoleSeeder extends Seeder
 
             ['name' => 'office_admin', 'label' => 'Office Admin'], // 1
             ['name' => 'planning_admin', 'label' => 'Planning Admin'], // 2
-            ['name' => 'hr_admin', 'label' => 'HR Admin'], // 3
-            ['name' => 'pmt_admin', 'label' => 'PMT Admin'], // 4
-            ['name' => 'supervisor_admin', 'label' => 'Supervisor Admin'], // 5
+              ['name' => 'hr_admin', 'label' => 'HR Admin'], // 3
+          ['name' => 'supervisor_admin', 'label' => 'Supervisor Admin'], // 4
+            ['name' => 'pmt_admin', 'label' => 'PMT Admin'], // 5
+        
         ];
 
         foreach ($roles as $role) {

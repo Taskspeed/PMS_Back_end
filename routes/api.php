@@ -134,6 +134,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // todo: need to fix what is the flow
         Route::get('/employee-draft-rating/{semester}/{year}', [OfficeController::class, 'listOfEmployeeRatingDraft']); // fetch all
+
+        Route::get('/pmt/available', [OfficeController::class, 'pmtOfficeAvailable']); // fetch the office available
+
+
     });
 
     Route::prefix('user')->group(function () {
@@ -180,6 +184,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/head-account', [AuthController::class, 'headAccount']);
         // update the account of head 
         Route::post('/update/head-account', [AuthController::class, 'updateHeadAccount']);
+
+        Route::post('/create/pmt/account', [AuthController::class, 'createPmtAccount']);
+
+
     });
 
 
@@ -368,6 +376,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // get qpef Q1-Q2-Q3-Q4
         Route::get('/{control_no}/{quarterly}/{year}', [QpefController::class, 'employeeQpef']);
 
+        Route::post('/employee/quarter', [QpefController::class, 'getAllEmployeeQpefQuater']);
 
         // storing qpef
         Route::post('/store', [QpefController::class, 'qpefStore']);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\ListOfEmployeeDraftRatingResource;
 use App\Models\office;
+use App\Models\UserOfficeAssign;
 use App\Services\OfficeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +31,22 @@ class OfficeController extends Controller
 
         return response()->json($data);
     }
+
+
+      // fetch available office on the pmt
+        public function pmtOfficeAvailable()
+        {
+            // Get all office IDs already assigned in user_office_assigns
+            $assignedOfficeIds = UserOfficeAssign::pluck('office_id')->unique()->toArray();
+
+            // Fetch only offices NOT in the assigned list
+            $data = DB::table('offices')
+                ->select('id', 'name')
+                ->whereNotIn('id', $assignedOfficeIds)
+                ->get();
+
+            return response()->json($data);
+        }
 
     // public function officePlantilla(SpmsService $structure, Request $request)
     // {

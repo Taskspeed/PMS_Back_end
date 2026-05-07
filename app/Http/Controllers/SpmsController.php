@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Models\Qpef;
 use App\Models\TargetPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -541,6 +542,7 @@ class SpmsController extends BaseController
                 'e.name',
                 'e.status',
                 'e.position',
+                'e.job_title',
 
             )
             ->orderBy('e.office2')
@@ -690,12 +692,16 @@ class SpmsController extends BaseController
             'controlNo' => $row->ControlNo,
             'name'      => $row->name,
             'status' => $row->status,
-            'position' => $row->position
+            'position' => $row->position,
+            'job_title' => $row->job_title,
+            'office' => $row->office
         ];
     }
 
     public function getEmployeeUnderOfHead(Request $request)
     {
+        $year = $request->input('year');
+
         $user = Auth::user();
         $controlNo = $user->control_no;
 
@@ -708,9 +714,65 @@ class SpmsController extends BaseController
         // Search through the structure to find where this controlNo belongs
         $employees = $this->findEmployeesSameNode($structureData, $controlNo);
 
-        return response()->json($employees);
-    }
+        $department_office = Employee::select('id', 'name', 'rank', 'ControlNo', 'position', 'office', 'status', 'job_title')
+            ->where('office_id', $user->office_id)
+            ->where('job_title', 'Office Head')
+            ->first();
 
+        // Safely extract control numbers — handle both array key formats
+        $employeeControlNos = collect($employees)->map(function ($employee) {
+            // Try all possible key formats
+            if (is_array($employee)) {
+                return $employee['ControlNo']
+                    ?? $employee['control_no']
+                    ?? $employee['controlNo']
+                    ?? null;
+            }
+            // If it's an object
+            return $employee->ControlNo
+                ?? $employee->control_no
+                ?? null;
+        })->filter()->values();
+
+        // Fetch all QPEFs for those employees based on the year
+        $qpefs = Qpef::select('id', 'control_no', 'year', 'quarterly', 'rated_by')->where('year', $year)
+            ->whereIn('control_no', $employeeControlNos)
+            ->get()
+            ->groupBy('control_no');
+
+        // Map QPEF data into each employee
+        $employeesWithQpef = collect($employees)->map(function ($employee) use ($qpefs) {
+            // Safely get the control number from the employee
+            if (is_array($employee)) {
+                $empControlNo = $employee['ControlNo']
+                    ?? $employee['control_no']
+                    ?? $employee['controlNo']
+                    ?? null;
+            } else {
+                $empControlNo = $employee->ControlNo
+                    ?? $employee->control_no
+                    ?? null;
+            }
+
+            // Attach QPEFs to the employee
+            if (is_array($employee)) {
+                $employee['qpef'] = $qpefs->get($empControlNo, collect())->values();
+            } else {
+                $employee->qpef = $qpefs->get($empControlNo, collect())->values();
+            }
+
+            return $employee;
+        });
+
+        return response()->json([
+            'employee'             => $employeesWithQpef,
+            'immediate_supervisor' => [
+                'name'     => $user->name,
+                'position' => $user->designation,
+            ],
+            'department_office'    => $department_office,
+        ]);
+    }
     private function findEmployeesSameNode(array $structure, string $controlNo): array
     {
         foreach ($structure as $officeData) {

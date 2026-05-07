@@ -90,4 +90,31 @@ class QpefController extends Controller
 
         return  response()->json($qpef);
     }
+
+    // get multiple qpef of employee
+public function getAllEmployeeQpefQuater(Request $request, QpefService $QpefService)
+{
+    $validated = $request->validate([
+        'controlNo'   => 'required|array',
+        'controlNo.*' => 'required|string',
+        'quarter'     => 'required|string|min:2',
+        'year'        => 'required|date_format:Y',
+    ]);
+
+    // Check which controlNo don't have QPEF records
+    $qpef = $QpefService->getAllEmployeeQpefQuarter($validated);
+
+    $foundControlNos = $qpef->pluck('control_no')->toArray();
+
+    $missingControlNos = array_diff($validated['controlNo'], $foundControlNos);
+
+    if (!empty($missingControlNos)) {
+        return response()->json([
+            'message' => 'Some employees do not have QPEF yet.',
+            'error' => array_values($missingControlNos), // ✅ shows which ones are missing
+        ], 404);
+    }
+
+    return QpefResource::collection($qpef);
+}
 }
