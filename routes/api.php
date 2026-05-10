@@ -180,9 +180,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 
-        // list of account of head account 
+        // list of account of head account
         Route::get('/head-account', [AuthController::class, 'headAccount']);
-        // update the account of head 
+        // update the account of head
         Route::post('/update/head-account', [AuthController::class, 'updateHeadAccount']);
 
         Route::post('/create/pmt/account', [AuthController::class, 'createPmtAccount']);
@@ -196,14 +196,21 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::prefix('dashboard')->group(function () {
 
-            // get the current number of job-order, casual, regular, honoraruim, and others status
-            Route::get('/current-employee', [dashboardController::class, 'currentEmployeeStatus']);
+            // // get the current number of job-order, casual, regular, honoraruim, and others status
+            // Route::get('/current-employee', [dashboardController::class, 'currentEmployeeStatus']);
 
-            // old data of employee status
-            Route::get('/employee/status/{year}/{semester}', [dashboardController::class, 'previousEmployeeStatus']);
+            // // old data of employee status
+            // Route::get('/employee/status/{year}/{semester}', [dashboardController::class, 'previousEmployeeStatus']);
+            Route::get('/list/ipcr/{year}/{semester}', [dashboardController::class, 'listOfIpcr']);
+            Route::get('/list/opcr/{year}/{semester}', [dashboardController::class, 'listOfOpcr']);
+            Route::get('/list/unit-work-plan/{year}/{semester}', [dashboardController::class, 'listOfUnitWorkPlan']);
+
+            Route::get('/current/target-period/{year}/{semester}', [dashboardController::class, 'currentTargetPeriod']);
+            Route::get('/plantilla', [dashboardController::class, 'plantillaEmployee']);
 
             Route::get('/{year}/{semester}', [dashboardController::class, 'dashboardSummaryData']);
-            Route::get('/plantilla', [dashboardController::class, 'plantillaEmployee']);
+
+
             // fetching the available old data employee status
             // Route::get('/employee/status/available', [dashboardController::class, 'fetchEmployeeStatus']);
         });
@@ -338,7 +345,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // deleting or remove the employee on the office plantilla
         Route::delete('/delete/{id}', [EmployeeController::class, 'deleteEmployee']);
-        // list of supervisor 
+        // list of supervisor
         Route::get('/list-of-Head', [EmployeeController::class, 'listOfHead']);
 
 

@@ -38,10 +38,16 @@ class TargetPeriod extends Model
         return $this->belongsTo(Employee::class, 'control_no', 'ControlNo');
     }
 
+    public function xPersonal()
+    {
+        return $this->belongsTo(XPersonal::class, 'control_no', 'ControlNo');
+    }
+
     public function performanceStandards()
     {
         return $this->hasMany(PerformanceStandard::class, 'target_period_id');
     }
+    
     public function standardOutcomes()
     {
         return $this->hasMany(StandardOutcome::class, 'target_period_id');

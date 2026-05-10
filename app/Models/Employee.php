@@ -45,14 +45,17 @@ class Employee extends Model
         // 'position_id' => 'integer',
 
     ];
+
     public function office()
     {
         return $this->belongsTo(office::class);
     }
+
     public function position()
     {
         return $this->belongsTo(position::class);
     }
+
     public function targetPeriods()
     {
         return $this->hasMany(TargetPeriod::class, 'control_no', 'ControlNo');

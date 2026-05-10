@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\DB;
 
 class dashboardController extends Controller
 {
+    protected $dashboardService;
+
+    public function __construct(DashboardService $dashboardService)
+    {
+        $this->dashboardService = $dashboardService;
+
+    }
 
     // get the number of employee base of status
     // public function currentEmployeeStatus(DashboardService $dashboardService)
@@ -37,9 +44,43 @@ class dashboardController extends Controller
     // }
 
 
-    public function dashboardSummaryData(DashboardService $dashboardService, $year, $semester)
+    public function dashboardSummaryData($year, $semester)
     {
-        $employee = $dashboardService->dashboard($year, $semester);
+        $employee = $this->dashboardService->dashboard($year, $semester);
+
+        return $employee;
+    }
+
+    // get the current target period of spms
+    public function currentTargetPeriod($year, $semester)
+    {
+
+        $employee = $this->dashboardService->currentTargetPeriod($year, $semester);
+
+        return $employee;
+    }
+
+    // get the list of IPCR target period of spms
+    public function listOfIpcr($year, $semester)
+    {
+        $employee = $this->dashboardService->listOfIpcr($year, $semester);
+
+        return $employee;
+    }
+
+    // get the list of unit work plans
+    public function listOfUnitWorkPlan($year, $semester)
+    {
+        $employee = $this->dashboardService->listOfUnitWorkPlan($year, $semester);
+
+        return $employee;
+    }
+
+
+    // get the list of IPCR target period of spms
+    public function listOfOpcr($year, $semester)
+    {
+        $employee = $this->dashboardService->listOfOpcr($year, $semester);
 
         return $employee;
     }

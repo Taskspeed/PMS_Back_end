@@ -36,8 +36,8 @@ class TargetPeriodLock
 
         // ✅ Just save directly
         $target_period_lock =  TargetPeriodLockCreated::create([
-            'semester' => $target_period_lock->semester, // ✅ correct
-            'year'     => $target_period_lock->year,     // ✅ correct
+            'semester' => $target_period_lock->semester, //
+            'year'     => $target_period_lock->year,     //
             'status'     => 'Draft',     // ✅ correct
             'date' => Carbon::now()->format('m-d-Y'),
             'lock_by'    => $user->id,

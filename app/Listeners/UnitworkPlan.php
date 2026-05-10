@@ -28,8 +28,8 @@ class UnitWorkPlan
         $employee = $unitworkplan->employee;
 
         // ✅ Just save directly
-        $unitworkplan =  UnitWorkPlanCreate::create([
-            'office_name' => $employee->office_id,
+        $newunitworkplan =  UnitWorkPlanCreate::create([
+            'office_id' => $employee->office_id,
             'office_name' => $employee->office,
             'year'        => $unitworkplan->year,
             'semester'    => $unitworkplan->semester,
@@ -37,7 +37,7 @@ class UnitWorkPlan
         ]);
 
       $unitworkplan_record  = UnitWorkPlanRecord::create([
-            'unitworkplan_id' => $unitworkplan->id,
+            'unitworkplan_id' => $newunitworkplan->id,
             'date' => now()->format('m-d-Y'),
             'status'    =>  'Draft',
             'remarks'    => 'Created',
