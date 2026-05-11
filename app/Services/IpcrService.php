@@ -67,6 +67,12 @@ class IpcrService
                 }
             ])
             ->first();
+        // ✅ Guard clause — return null so the controller can handle the 404
+
+        if (!$officeHeadOpcr) {
+            return null;
+        }
+
 
         $opcr_status = OfficeOpcr::with(['officeOpcrRecordLastestRecord' => function ($query) {
             $query->select(
@@ -132,9 +138,8 @@ class IpcrService
 
         return [
             'employee'    => $officeHeadOpcr,
-
             'opcr_status'    => $opcr_status,
-            'average_rating' => $averageRating,   // ✅ add this
+            'average_rating' => $averageRating,   // add this
         ];
     }
 
@@ -155,28 +160,28 @@ class IpcrService
                 $q->where('year', $year)
                     ->where('semester', $semester)
                     ->with([
-                    // 'performanceStandards.performanceRating:id,performance_standard_id,date,quantity_actual as quantity,effectiveness_actual as effectiveness,timeliness_actual as timeliness',
-                    'performanceStandards.performanceRating' => function ($query) {
-                        $query->select(
-                            'id',
-                            'performance_standard_id',
-                            'date',
-                            'status',
-                            'quantity_actual as quantity',
-                            'effectiveness_actual as effectiveness',
-                            'timeliness_actual as timeliness'
-                        )
-                            ->where('status', 'Approved');
-                    },
-                    'performanceStandards.standardOutcomes' => function ($query) {
-                        $query->select(
-                            'performance_standard_id',
-                            'rating',
-                            'quantity_target as quantity',
-                            'effectiveness_criteria as effectiveness',
-                            'timeliness_range as timeliness'
-                        );
-                    },
+                        // 'performanceStandards.performanceRating:id,performance_standard_id,date,quantity_actual as quantity,effectiveness_actual as effectiveness,timeliness_actual as timeliness',
+                        'performanceStandards.performanceRating' => function ($query) {
+                            $query->select(
+                                'id',
+                                'performance_standard_id',
+                                'date',
+                                'status',
+                                'quantity_actual as quantity',
+                                'effectiveness_actual as effectiveness',
+                                'timeliness_actual as timeliness'
+                            );
+                            // ->where('status', 'Approved');
+                        },
+                        'performanceStandards.standardOutcomes' => function ($query) {
+                            $query->select(
+                                'performance_standard_id',
+                                'rating',
+                                'quantity_target as quantity',
+                                'effectiveness_criteria as effectiveness',
+                                'timeliness_range as timeliness'
+                            );
+                        },
                         // 'performanceStandards.standardOutcomes:performance_standard_id,rating,quantity_target as quantity,effectiveness_criteria as effectiveness,timeliness_range as timeliness',
                     ]);
             }
@@ -310,9 +315,6 @@ class IpcrService
                 // ],
                 'employee_count' => $count,
             ];
-
-
-
         }
         // ✅ Step 3: Compute weighted category averages
         $strategicAvg = $categoryRatings['strategic']['count'] > 0
@@ -329,10 +331,61 @@ class IpcrService
 
 
         // ✅ Step 4: Apply weights and compute final rating
-        $strategicWeighted = round($strategicAvg * 0.2, 2);
-        $coreWeighted      = round($coreAvg      * 0.6, 2);
-        $supportWeighted   = round($supportAvg   * 0.2, 2);
-        $finalRating       = round($strategicWeighted + $coreWeighted + $supportWeighted, 2);
+
+        // $strategicWeighted = round($strategicAvg * 0.2, 2);
+        // $coreWeighted      = round($coreAvg      * 0.6, 2);
+        // $supportWeighted   = round($supportAvg   * 0.2, 2);
+        // $finalRating       = round($strategicWeighted + $coreWeighted + $supportWeighted, 2);
+
+        // ✅ Step 4: Apply weights and compute final rating
+
+
+        // $hasStrategic = $categoryRatings['strategic']['count'] > 0;
+
+        // if ($hasStrategic) {
+        //     // Standard weights: Strategic 20%, Core 60%, Support 20%
+        //     $strategicWeighted = round($strategicAvg * 0.2, 2);
+        //     $coreWeighted      = round($coreAvg      * 0.6, 2);
+        //     $supportWeighted   = round($supportAvg   * 0.2, 2);
+        // } else {
+        //     // No Strategic Function: redistribute Strategic 20% → Core becomes 80%, Support stays 20%
+        //     $strategicWeighted = 0;
+        //     $coreWeighted      = round($coreAvg   * 0.8, 2);
+        //     $supportWeighted   = round($supportAvg * 0.2, 2);
+        // }
+
+        // $finalRating = round($strategicWeighted + $coreWeighted + $supportWeighted, 2);
+
+
+        $hasStrategic = $categoryRatings['strategic']['count'] > 0;
+        $hasSupport   = $categoryRatings['support']['count'] > 0;
+
+        if ($hasStrategic && $hasSupport) {
+            // All 3 categories: Strategic 20% + Core 60% + Support 20%
+            $strategicWeighted = round($strategicAvg * 0.2, 2);
+            $coreWeighted      = round($coreAvg      * 0.6, 2);
+            $supportWeighted   = round($supportAvg   * 0.2, 2);
+
+        } elseif ($hasStrategic && !$hasSupport) {
+            // No Support: Strategic 20% + Core 80% + Support 0%
+            $strategicWeighted = round($strategicAvg * 0.2, 2);
+            $coreWeighted      = round($coreAvg      * 0.8, 2);
+            $supportWeighted   = 0;
+
+        } elseif (!$hasStrategic && $hasSupport) {
+            // No Strategic: Strategic 0% + Core 80% + Support 20%
+            $strategicWeighted = 0;
+            $coreWeighted      = round($coreAvg   * 0.8, 2);
+            $supportWeighted   = round($supportAvg * 0.2, 2);
+
+        } else {
+            // Core only: Strategic 0% + Core 100% + Support 0%
+            $strategicWeighted = 0;
+            $coreWeighted      = round($coreAvg * 1.0, 2);
+            $supportWeighted   = 0;
+        }
+
+        $finalRating = round($strategicWeighted + $coreWeighted + $supportWeighted, 2);
 
         $averageRating = [
             'strategic_functions' => $strategicWeighted,
@@ -358,23 +411,27 @@ class IpcrService
                     $q->where('year', $year)
                         ->where('semester', $semester)
                         ->with([
-                            'performanceStandards.performanceRating' => function ($query){
-                                $query->select('id',
-                                'performance_standard_id',
-                                'date',
-                                'status',
-                                'quantity_actual as quantity',
-                                'effectiveness_actual as effectiveness',
-                                'timeliness_actual as timeliness')
-                                    ->where('status', 'Approved');
+                            'performanceStandards.performanceRating' => function ($query) {
+                                $query->select(
+                                    'id',
+                                    'performance_standard_id',
+                                    'date',
+                                    'status',
+                                    'quantity_actual as quantity',
+                                    'effectiveness_actual as effectiveness',
+                                    'timeliness_actual as timeliness'
+                                );
+                                // ->where('status', 'Approved');
 
                             },
-                              'performanceStandards.standardOutcomes' => function ($query) {
-                                $query->select('performance_standard_id',
-                                'rating',
-                                'quantity_target as quantity',
-                                'effectiveness_criteria as effectiveness',
-                                'timeliness_range as timeliness');
+                            'performanceStandards.standardOutcomes' => function ($query) {
+                                $query->select(
+                                    'performance_standard_id',
+                                    'rating',
+                                    'quantity_target as quantity',
+                                    'effectiveness_criteria as effectiveness',
+                                    'timeliness_range as timeliness'
+                                );
                             },
 
                             // 'performanceStandards.standardOutcomes:performance_standard_id,rating,quantity_target as quantity,effectiveness_criteria as effectiveness,timeliness_range as timeliness',
@@ -461,7 +518,8 @@ class IpcrService
                         'quantity_actual as quantity',
                         'effectiveness_actual as effectiveness',
                         'timeliness_actual as timeliness'
-                    ])->where('status','Approved');
+                    ]);
+                    // ->where('status','Approved');
                 }
             ])
             ->get();
@@ -590,21 +648,21 @@ class IpcrService
         ])
             ->where('target_period_id', $targetPeriodId)
             ->with([
-            // 'standardOutcomes:performance_standard_id,rating,quantity_target as quantity',
-            'standardOutcomes'=> function ($query){
-                $query->select('performance_standard_id', 'rating','quantity_target as quantity');
-
-            },
-            'performanceRating' => function ($query) {
-                $query->select(
-                    'id',
-                    'performance_standard_id',
-                    'date',
-                    'quantity_actual as quantity',
-                    'effectiveness_actual as effectiveness',
-                    'timeliness_actual as timeliness'
-                 )->where('status','Approved');
-            },
+                // 'standardOutcomes:performance_standard_id,rating,quantity_target as quantity',
+                'standardOutcomes' => function ($query) {
+                    $query->select('performance_standard_id', 'rating', 'quantity_target as quantity');
+                },
+                'performanceRating' => function ($query) {
+                    $query->select(
+                        'id',
+                        'performance_standard_id',
+                        'date',
+                        'quantity_actual as quantity',
+                        'effectiveness_actual as effectiveness',
+                        'timeliness_actual as timeliness'
+                    );
+                    //  ->where('status','Approved');
+                },
                 // 'performanceRating:id,performance_standard_id,date,quantity_actual as quantity,effectiveness_actual as effectiveness,timeliness_actual as timeliness'
             ])
             ->get();
