@@ -8,15 +8,18 @@ use App\Models\opcr;
 use App\Models\Employee;
 use App\Services\IpcrService;
 use App\Services\OpcrService;
+use App\Traits\ApiResponseTrait;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Routing\Controller as BaseController;
 class OpcrController extends BaseController
 {
 
+    use ApiResponseTrait;
 
     protected $user;
     protected $officeId;
 
+    
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
@@ -34,9 +37,7 @@ class OpcrController extends BaseController
         $employeeOpcr = $ipcr->opcrOfficeHead($controlNo, $semester, $year);
 
         if (!$employeeOpcr) {
-            return response()->json([
-                'message' => 'No OPCR found for the specified year and semester.'
-            ], 404);
+           return $this->infoMessage('No record found',200);
         }
 
         return new OpcrResource([
