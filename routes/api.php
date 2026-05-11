@@ -19,6 +19,7 @@ use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\OpcrController;
 use App\Http\Controllers\Planning\DashboardController as PlanningDashboardController;
 use App\Http\Controllers\Planning\OpcrController as PlanningOpcrController;
+use App\Http\Controllers\PmtController;
 use App\Http\Controllers\QpefController;
 use App\Http\Controllers\SpmsController;
 use App\Http\Controllers\TargetPeriodController;
@@ -119,17 +120,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('office')->group(function () {
 
         Route::get('/', [OfficeController::class, 'getOffices']); // fetch all
-        Route::get('/dashboard/ipcr-status-counts', [OfficeDashboardController::class, 'getIpcrStatusCounts']);
-        Route::get('/dashboard', [OfficeDashboardController::class, 'getTotalEmployee']);
+        // Route::get('/dashboard/ipcr-status-counts', [OfficeDashboardController::class, 'getIpcrStatusCounts']);
+        // Route::get('/dashboard', [OfficeDashboardController::class, 'getTotalEmployee']);
         Route::get('/structure', [OfficeController::class, 'officeStructure']);
         Route::get('/structure/count', [VwplantillastructureController::class, 'plantillaStructureEmployeeWithCount']);
         Route::get('/mfo', [MfoController::class, 'Mfo']); // getting the mfo of user logged in
         Route::get('/head-mfo/{semester}/{year}', [MfoController::class, 'fetchMfo']); // getting the mfo of user logged in
 
         Route::prefix('dashboard')->group(function () {
-            Route::get('/{semester}/{year}', [OfficeDashboardController::class, 'dashboardStatus']);
-            // Route::get('/ipcr-status-counts', [OfficeDashboardController::class, 'getIpcrStatusCounts']);
-            Route::get('/employee/{semester}/{year}', [OfficeDashboardController::class, 'listOfEmployeeNoIpcr']);
+            Route::get('/', [OfficeDashboardController::class, 'dashboardStatus']);
+            Route::get('/employee/without-ipcr', [OfficeDashboardController::class, 'listOfEmployeeNoIpcr']);
         });
 
         // todo: need to fix what is the flow
@@ -201,11 +201,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
             // // old data of employee status
             // Route::get('/employee/status/{year}/{semester}', [dashboardController::class, 'previousEmployeeStatus']);
-            Route::get('/list/ipcr/{year}/{semester}', [dashboardController::class, 'listOfIpcr']);
-            Route::get('/list/opcr/{year}/{semester}', [dashboardController::class, 'listOfOpcr']);
-            Route::get('/list/unit-work-plan/{year}/{semester}', [dashboardController::class, 'listOfUnitWorkPlan']);
 
-            Route::get('/current/target-period/{year}/{semester}', [dashboardController::class, 'currentTargetPeriod']);
+            Route::get('/list/ipcr', [dashboardController::class, 'listOfIpcr']); // OPTIONAL FILTER
+            Route::get('/list/opcr', [dashboardController::class, 'listOfOpcr']);  // OPTIONAL FILTER
+            Route::get('/list/unit-work-plan', [dashboardController::class, 'listOfUnitWorkPlan']);  // OPTIONAL FILTER
+
+            Route::get('/current/target-period', [dashboardController::class, 'currentTargetPeriod']);
             Route::get('/plantilla', [dashboardController::class, 'plantillaEmployee']);
 
             Route::get('/{year}/{semester}', [dashboardController::class, 'dashboardSummaryData']);
@@ -403,5 +404,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
         //updating opcr
         Route::put('/update', [OpcrController::class, 'opcrUpdate']);
+    });
+
+        Route::prefix('pmt')->group(function () {
+
+        // fetch only office assign on pmt account 
+        Route::get('/office', [PmtController::class, 'office']);
+
+           Route::get('ipcr', [PmtController::class, 'listOfEmployeeIpcr']);
+  
     });
 });
