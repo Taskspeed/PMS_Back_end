@@ -26,4 +26,14 @@ trait ApiResponseTrait
 
         return response()->json($response, $code);
     }
+
+    // informational responses — no data, not an error
+    protected function infoMessage(string $message = 'No data available.', int $code = 200)
+    {
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data'    => null,
+        ], $code);
+    }
 }
