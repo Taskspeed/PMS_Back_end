@@ -33,7 +33,7 @@ class AuthController extends Controller
         // Fetch users with office data and format date using Carbon
         $data = User::with('office:id,name', 'role:id,name')
             ->select('id', 'office_id', 'role_id', 'name', 'created_at', 'active')
-            ->whereNotin('role_id',[4])
+            ->whereNotin('role_id', [4])
             ->orderBy('created_at', 'desc') // Add this line to sort by newest first
             ->get()
             ->map(function ($user) {
@@ -99,7 +99,7 @@ class AuthController extends Controller
                 'role_id' => $user->role_id,
                 'role_name' => $user->role->name ?? null,
                 'designation' => $user->designation,
-                    'active' => $user->active,
+                'active' => $user->active,
             ],
             'token' => $token,
         ]);
@@ -342,8 +342,8 @@ class AuthController extends Controller
         $validated['password']  = Hash::make($validated['password']); // fixed
 
         // camelCase → snake_case to match DB column and $fillable
-            $validated['control_no'] = $validated['controlNo'];
-    unset($validated['controlNo']);
+        $validated['control_no'] = $validated['controlNo'];
+        unset($validated['controlNo']);
 
         $createUser = User::create($validated);
 
@@ -363,40 +363,39 @@ class AuthController extends Controller
 
 
         if ($roles->isEmpty()) {
-            return $this->error('No data found', 404);
+            return $this->infoMessage('No record foung', 200);
         }
-        return $this->success($roles, 'Fetch Successfully', 200);
+        return $this->successMessage($roles, 'Fetch Successfully', 200);
     }
 
 
     // list of head account on the office
     public function headAccount()
-    {   
+    {
         $user = Auth::user();
 
-        $account = User::where('role_id',4)->where('office_id',$user->office_id)->get();
-        
+        $account = User::where('role_id', 4)->where('office_id', $user->office_id)->get();
+
 
         if ($account->isEmpty()) {
-            return $this->error('No data found', 404);
-
+            return $this->infoMessage('No data found', 200);
         }
-        return $this->success($account, 'Fetch Successfully', 200);
+        return $this->successMessage($account, 'Fetch Successfully', 200);
     }
 
     // delete user account
-    public function userDelete($userId){
+    public function userDelete($userId)
+    {
 
         $user = User::find($userId);
 
-            if (!$user) {
-                return $this->error('User not found', 404);
-            }
+        if (!$user) {
+            return $this->errorMessage('User not found', 404);
+        }
 
         $user->delete();
 
-        return $this->success($user,'deleted successfully',200);
-
+        return $this->successMessage($user, 'deleted successfully', 200);
     }
 
     // update the account of head account 
@@ -406,7 +405,7 @@ class AuthController extends Controller
             $validated = $request->validate([
                 'userId' => 'required|exists:users,id',
                 'active' => 'required|boolean'
-              
+
             ]);
 
             $user = User::where('id', $validated['userId'])->first();
@@ -433,69 +432,69 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
     // create pmt account
- public function createPmtAccount(Request $request)
-{
-    $user = Auth::user();
+    public function createPmtAccount(Request $request)
+    {
+        $user = Auth::user();
 
-    $validated = $request->validate([
-        'controlNo'          => 'required|string',
-        'name'               => 'required|string',
-        'designation'        => 'required|string',
-        'role_id'            => 'required|exists:roles,id',
-        'office_id'          => 'required|exists:offices,id',
-        'password'           => 'required|string|min:6',
-        'username'           => 'required|string|min:3|unique:users,username',
-        'active'             => 'required|boolean',
-        'office_id_assign'   => 'required|array',
-        'office_id_assign.*' => 'required|exists:offices,id',
-    ]);
+        $validated = $request->validate([
+            'controlNo'          => 'required|string',
+            'name'               => 'required|string',
+            'designation'        => 'required|string',
+            'role_id'            => 'required|exists:roles,id',
+            'office_id'          => 'required|exists:offices,id',
+            'password'           => 'required|string|min:6',
+            'username'           => 'required|string|min:3|unique:users,username',
+            'active'             => 'required|boolean',
+            'office_id_assign'   => 'required|array',
+            'office_id_assign.*' => 'required|exists:offices,id',
+            'pmt_type'           => 'nullable|string'
+        ]);
 
-    // hash password
-    $validated['password'] = Hash::make($validated['password']);
+        // hash password
+        $validated['password'] = Hash::make($validated['password']);
 
-    try {
-        $create_user_account = DB::transaction(function () use ($validated, $user) {
+        try {
+            $create_user_account = DB::transaction(function () use ($validated, $user) {
 
-            // create user
-            $create_user_account = User::create([
-                'controlNo'   => $validated['controlNo'],
-                'name'        => $validated['name'],
-                'designation' => $validated['designation'],
-                'role_id'     => $validated['role_id'],
-                'office_id'   => $validated['office_id'],
-                'password'    => $validated['password'],
-                'username'    => $validated['username'],
-                'active'      => $validated['active'],
-            ]);
-
-            // assign multiple offices
-            foreach ($validated['office_id_assign'] as $officeId) {
-                UserOfficeAssign::create([
-                    'assigned_by' => $user->name,
-                    'user_id'     => $create_user_account->id,
-                    'office_id'   => $officeId,
+                // create user
+                $create_user_account = User::create([
+                    'controlNo'   => $validated['controlNo'],
+                    'name'        => $validated['name'],
+                    'designation' => $validated['designation'],
+                    'role_id'     => $validated['role_id'],
+                    'office_id'   => $validated['office_id'],
+                    'password'    => $validated['password'],
+                    'username'    => $validated['username'],
+                    'active'      => $validated['active'],
+                    'pmt_type'      => $validated['pmt_type'] ?? null
                 ]);
-            }
 
-            return $create_user_account;
-        });
+                // assign multiple offices
+                foreach ($validated['office_id_assign'] as $officeId) {
+                    UserOfficeAssign::create([
+                        'assigned_by' => $user->name,
+                        'user_id'     => $create_user_account->id,
+                        'office_id'   => $officeId,
+                    ]);
+                }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'PMT account created successfully.',
-            'data'    => $create_user_account,
-        ], 201);
+                return $create_user_account;
+            });
 
-    } catch (\Exception $e) {
-        // If anything fails, DB::transaction auto rolls back everything
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to create account. No data was saved.',
-            'error'   => $e->getMessage(),
-        ], 500);
+            return response()->json([
+                'success' => true,
+                'message' => 'PMT account created successfully.',
+                'data'    => $create_user_account,
+            ], 201);
+        } catch (\Exception $e) {
+            // If anything fails, DB::transaction auto rolls back everything
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create account. No data was saved.',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
     }
-}
-
-    
 }
