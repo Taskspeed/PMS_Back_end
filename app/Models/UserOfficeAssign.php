@@ -18,4 +18,9 @@ class UserOfficeAssign extends Model
         'assigned_by',
         'office_id_assign'
     ];  
+
+
+    public function user(){
+          return $this->belongsTo(User::class);
+    }
 }

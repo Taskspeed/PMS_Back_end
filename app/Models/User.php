@@ -44,7 +44,8 @@ class User extends Authenticatable
         'designation',
         'control_no',
         'username',
-        'active'
+        'active',
+        'pmt_type',
 
     ];
     // Ensure office_id and role_id are returned as integers
@@ -61,6 +62,11 @@ class User extends Authenticatable
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
+    }
+
+        public function pmt_assign()
+    {
+        return $this->hasMany(UserOfficeAssign::class);
     }
 
     /**
