@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Hr;
 use App\Http\Controllers\Controller;
 use App\Models\vwActive;
 use App\Services\DashboardService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class dashboardController extends Controller
@@ -52,35 +53,47 @@ class dashboardController extends Controller
     }
 
     // get the current target period of spms
-    public function currentTargetPeriod($year, $semester)
+    public function currentTargetPeriod(Request $request)
     {
-
+       //  FIX — specify the key for each parameter
+        $year     = $request->input('year');
+        $semester = $request->input('semester');     
         $employee = $this->dashboardService->currentTargetPeriod($year, $semester);
 
         return $employee;
     }
 
     // get the list of IPCR target period of spms
-    public function listOfIpcr($year, $semester)
+    public function listOfIpcr(Request $request)
     {
-        $employee = $this->dashboardService->listOfIpcr($year, $semester);
+        $year  = $request->input('year');
+        $semester = $request->input('semester');       
+        $office = $request->input('office');   
+        $employee = $this->dashboardService->listOfIpcr($year, $semester,$office);
 
         return $employee;
     }
 
     // get the list of unit work plans
-    public function listOfUnitWorkPlan($year, $semester)
+    public function listOfUnitWorkPlan(Request $request)
     {
-        $employee = $this->dashboardService->listOfUnitWorkPlan($year, $semester);
+        $year  = $request->input('year');
+        $semester = $request->input('semester');       
+        $office = $request->input('office');    
+
+        $employee = $this->dashboardService->listOfUnitWorkPlan($year, $semester,$office);
 
         return $employee;
     }
 
 
     // get the list of IPCR target period of spms
-    public function listOfOpcr($year, $semester)
+    public function listOfOpcr(Request $request)
     {
-        $employee = $this->dashboardService->listOfOpcr($year, $semester);
+        $year  = $request->input('year');
+        $semester = $request->input('semester');       
+        $office = $request->input('office');    
+        $employee = $this->dashboardService->listOfOpcr($year, $semester,$office);
 
         return $employee;
     }

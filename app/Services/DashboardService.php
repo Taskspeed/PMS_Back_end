@@ -310,7 +310,6 @@ class DashboardService
     public function currentTargetPeriod($year,$semester)
     {
 
-
         $targetPeriod = TargetPeriod::where('semester', $semester)
             ->where('year', $year)
             ->first();
@@ -351,7 +350,7 @@ class DashboardService
         ];
 
         return [
-            'targetPeriod' => $targetPeriod,
+            // 'targetPeriod' => $targetPeriod,
             'opcr'         => $opcrCounts,
             'ipcr'         => $ipcrCounts,
             'uwp'          => $uwpCounts,
@@ -383,11 +382,15 @@ class DashboardService
 
 
     //list of UnitWorkPlan target period of spms
-    public function listOfUnitWorkPlan($year, $semester)
-    {
+    public function listOfUnitWorkPlan($year,$semester,$office)
+
+    {   
+
         $unitworkplan = UnitWorkPlan::select('id', 'office_name', 'semester', 'year')
             ->where('semester', $semester)
             ->where('year', $year)
+            ->when($office, fn($q) => $q->where('office_name', $office)) // only filter if provided
+
             ->with('unitworkplanLastestRecord')
             ->get();
 
