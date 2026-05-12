@@ -106,45 +106,107 @@ class AuthController extends Controller
     }
 
 
-    public function register(RegisterRequest $request) // creating user account
+    // public function register(RegisterRequest $request) // creating user account
+    // {
+    //     try {
+
+    //         $user = User::create([
+    //             'control_no' => $request->control_no,
+    //             'name' => $request->name,
+    //             'password' => Hash::make($request->password),
+    //             'office_id' => $request->office_id,
+    //             'role_id' => $request->role_id,
+    //             'remember_token' => Str::random(32),
+    //             'designation' => $request->designation,
+    //             'username' => $request->username,
+    //             'active' => $request->active,
+    //         ]);
+
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'message' => 'User created successfully',
+    //             'user' => [
+    //                 'id' => $user->id,
+    //                 'control_no' => $user->control_no,
+    //                 'name' => $user->name,
+    //                 'office_id' => $user->office_id,
+    //                 'role_id' => $user->role_id,
+    //                 'designation' => $user->designation,
+    //                 'username' => $user->username,
+    //                 'active' => $user->active,
+    //             ]
+    //         ], 201); // Use 201 Created status code
+
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+    const ALLOWED_ROLES = [1, 2, 3, 4, 5, 6];
+    public function register(RegisterRequest $request)
     {
         try {
+            // ✅ Prevent duplicate: same control_no + same role_id
+            $alreadyExists = User::where('control_no', $request->control_no)
+                ->where('role_id', $request->role_id)
+                ->exists();
+
+            if ($alreadyExists) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'This employee already has this role assigned.'
+                ], 422);
+            }
+
+            // ✅ Prevent registering if employee already has all 6 roles
+            $currentRoleCount = User::where('control_no', $request->control_no)
+                ->whereIn('role_id', self::ALLOWED_ROLES)
+                ->distinct('role_id')
+                ->count('role_id');
+
+            if ($currentRoleCount >= count(self::ALLOWED_ROLES)) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'This employee already has all roles assigned and cannot be registered again.'
+                ], 422);
+            }
 
             $user = User::create([
-                'control_no' => $request->control_no,
-                'name' => $request->name,
-                'password' => Hash::make($request->password),
-                'office_id' => $request->office_id,
-                'role_id' => $request->role_id,
+                'control_no'     => $request->control_no,
+                'name'           => $request->name,
+                'password'       => Hash::make($request->password),
+                'office_id'      => $request->office_id,
+                'role_id'        => $request->role_id,
                 'remember_token' => Str::random(32),
-                'designation' => $request->designation,
-                'username' => $request->username,
-                'active' => $request->active,
+                'designation'    => $request->designation,
+                'username'       => $request->username,
+                'active'         => $request->active,
             ]);
 
             return response()->json([
-                'status' => 'success',
+                'status'  => 'success',
                 'message' => 'User created successfully',
-                'user' => [
-                    'id' => $user->id,
+                'user'    => [
+                    'id'         => $user->id,
                     'control_no' => $user->control_no,
-                    'name' => $user->name,
-                    'office_id' => $user->office_id,
-                    'role_id' => $user->role_id,
+                    'name'       => $user->name,
+                    'office_id'  => $user->office_id,
+                    'role_id'    => $user->role_id,
                     'designation' => $user->designation,
-                    'username' => $user->username,
-                    'active' => $user->active,
+                    'username'   => $user->username,
+                    'active'     => $user->active,
                 ]
-            ], 201); // Use 201 Created status code
-
+            ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => $e->getMessage()
             ], 500);
         }
     }
-
 
     public function logout(Request $request)
     {
@@ -247,24 +309,40 @@ class AuthController extends Controller
     }
 
     // user edit
+    // user edit
     public function edit(Request $request)
     {
         try {
             $validated = $request->validate([
-                'userId' => 'required|exists:users,id',
-                'roleId'   => 'required|exists:roles,id',
-                'active' => 'required|boolean'
-                // 'officeId'   => 'required|exists:offices,id'
+                'userId'             => 'required|exists:users,id',
+                'roleId'             => 'required|exists:roles,id',
+                'active'             => 'required|boolean',
+                'office_id_assign'   => 'nullable|array',
+                'office_id_assign.*' => 'nullable|exists:offices,id',
             ]);
 
             $user = User::where('id', $validated['userId'])->first();
 
             $user->role_id = $validated['roleId'];
+            $user->active  = $validated['active'];
             $user->save();
+
+            // assign multiple offices (delete old ones first to avoid duplicates)
+            if (!empty($validated['office_id_assign'])) {
+                UserOfficeAssign::where('user_id', $user->id)->delete();
+
+                foreach ($validated['office_id_assign'] as $officeId) {
+                    UserOfficeAssign::create([
+                        'assigned_by' => $user->name,
+                        'user_id'     => $user->id,   // was $create_user_account->id (undefined variable)
+                        'office_id'   => $officeId,
+                    ]);
+                }
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'User role updated successfully',
+                'message' => 'User updated successfully',
                 'data'    => $user
             ], 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -460,7 +538,7 @@ class AuthController extends Controller
 
                 // create user
                 $create_user_account = User::create([
-                    'controlNo'   => $validated['controlNo'],
+                    'control_no'   => $validated['controlNo'],
                     'name'        => $validated['name'],
                     'designation' => $validated['designation'],
                     'role_id'     => $validated['role_id'],
