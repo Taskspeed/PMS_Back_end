@@ -34,7 +34,7 @@ class opcrRequest extends FormRequest
             'data.*.performance_standard_id' => 'required|exists:performance_standards,id',
             'data.*.budget' => 'required',
             'data.*.accountable' => 'required',
-            'data.*.accomplishment' => 'required',
+            'data.*.accomplishment' => 'nullable',
         ];
     }
 }
