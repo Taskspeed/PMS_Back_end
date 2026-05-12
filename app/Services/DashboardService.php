@@ -22,69 +22,14 @@ class DashboardService
 
     use ApiResponseTrait;
 
+    protected $structureService;
+
+    public function __construct(StructureService $structureService)
+    {
+        $this->structureService = $structureService;
+    }
+
     //-----------------------------HR------------------------------------------//
-
-    // // getting the current employee
-    // public function currentEmployee()
-    // {
-    //     $statuses = [
-    //         'ELECTIVE',
-    //         'APPOINTED',
-    //         'CO-TERMINOUS',
-    //         'TEMPORARY',
-    //         'REGULAR',
-    //         'CASUAL',
-    //         'CONTRACTUAL',
-    //         'HONORARIUM'
-    //     ];
-    //     $counts = vwActive::select('status')
-    //         ->whereIn('status', $statuses)
-    //         ->get()
-    //         ->groupBy(function ($item) {
-    //             return strtoupper($item->status); // normalize casing
-    //         })
-    //         ->map(function ($group) {
-    //             return count($group);
-    //         });
-
-    //     // Ensure all statuses are present even if count is 0
-    //     $result = collect($statuses)->mapWithKeys(function ($status) use ($counts) {
-    //         return [$status => $counts->get($status, 0)];
-    //     });
-
-    //     return $result;
-    // }
-
-
-
-    // get the employee data base on the args year and semester
-    // public function filterEmployeeStatus($year, $semester)
-    // {
-
-    //     $data = EmployeeStatus::where('year', $year)
-    //         ->where('semester', $semester)
-    //         ->first();
-
-    //     if (!$data) {
-    //         return response()->json([
-    //             'message' => 'There is no data available yet.'
-    //         ], 200); // use 200,
-    //     }
-
-    //     return response()->json($data);
-    // }
-
-    // // fetching the available data of employee status
-    // public function availableDataEmployeeStatus()
-    // {
-
-    //     $data = EmployeeStatus::select('id', 'year', 'semester')
-    //         ->orderByDesc('year')
-    //         ->orderByDesc('semester')->get();
-
-    //     return $data;
-    // }
-
     public function dashboard($year, $semester)
     {
 
@@ -282,7 +227,7 @@ class DashboardService
         // ─── Plantilla Structure ─────────────────────────────────────────────────
         $plantilla = $this->plantillaStructure();  // ✅ call the method
         $structure = $plantilla['structure'];       // ✅ extract the counts
-    
+
 
 
         return [
@@ -316,6 +261,7 @@ class DashboardService
             return $this->errorMessage('There is no data available for IPCR.', 404);
         }
 
+
         return  $this->successMessage($ipcrList, 'IPCR list fetched successfully.');
     }
 
@@ -337,7 +283,10 @@ class DashboardService
             return $this->errorMessage('There is no data available for unit work plans.', 404);
         }
 
+
         $data = $unitworkplan->map(function ($item) {
+
+            $structure = $this->structureService->structure($item->office_name);
             return [
                 'id'          => $item->id,
                 'office_name' => $item->office_name,
@@ -346,6 +295,7 @@ class DashboardService
                 'date'        => $item->unitworkplanLastestRecord?->date,
                 'status'      => $item->unitworkplanLastestRecord?->status,
                 'remarks'     => $item->unitworkplanLastestRecord?->remarks,
+                'structure'     => $structure,
             ];
         });
 
@@ -360,25 +310,43 @@ class DashboardService
             ->where('semester', $semester)
             ->where('year', $year)
             ->with('officeOpcrRecordLastestRecord')
-            ->get();
+            ->get()
+            ->keyBy('office_name');
 
         if ($opcr->isEmpty()) {
             return $this->errorMessage('There is no data available for OPCR.', 404);
         }
 
-        $data = $opcr->map(fn($item) => [
-            'id'          => $item->id,
-            'office_name' => $item->office_name,
-            'semester'    => $item->semester,
-            'year'        => $item->year,
-            'date'        => $item->officeOpcrRecordLastestRecord?->date,
-            'status'      => $item->officeOpcrRecordLastestRecord?->status,
-            'remarks'     => $item->officeOpcrRecordLastestRecord?->remarks,
-        ]);
+        $officeNames = $opcr->keys();
+
+        $officeHeads = Employee::select('ControlNo', 'name', 'job_title', 'office_id', 'office')
+            ->whereIn('office', $officeNames)
+            ->where('job_title', 'Office Head')
+            ->get()
+            ->keyBy('office');
+
+        // ✅ Fix 1: correct closure syntax — was `=>` should be `use(...) { return [...] }`
+        // ✅ Fix 2: $head was undefined — get it from $officeHeads inside the closure
+        // ✅ Fix 3: $opcrItem was undefined — the variable is $item
+        $data = $opcr->map(function ($item) use ($officeHeads) {
+            $head = $officeHeads->get($item->office_name); // ✅ resolve head per office
+
+            return [
+                'opcr_id'    => $item->id,
+                'ControlNo'  => $head?->ControlNo,
+                'name'       => $head?->name,
+                'office'     => $item->office_name,        //was $opcrItem->office_name
+                // 'office_name' => $item->office_name,
+                'semester'   => $item->semester,
+                'year'       => $item->year,
+                'date'       => $item->officeOpcrRecordLastestRecord?->date,
+                'status'     => $item->officeOpcrRecordLastestRecord?->status,
+                'remarks'    => $item->officeOpcrRecordLastestRecord?->remarks,
+            ];
+        })->values();
 
         return $this->successMessage($data, 'OPCR fetched successfully.');
     }
-
     private function plantillaStructure()
     {
         $rows = DB::table('vwplantillastructure as p')
