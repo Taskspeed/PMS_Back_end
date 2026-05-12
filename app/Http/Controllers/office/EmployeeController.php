@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\addEmployeeRequest;
 use App\Models\Employee;
 use App\Models\JobTitle;
+use App\Models\User;
 use App\Services\EmployeeService;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
@@ -193,12 +194,20 @@ class EmployeeController extends Controller
     {
         $user = Auth::user();
 
-        $employee = Employee::select('name','position','ControlNo','office','job_title','status')->where('office_id', $user->office_id)
-         ->whereNotIn('job_title', ['Employee'])
+        // Filter out null values to prevent SQL NOT IN null issue
+        $existingControlNos = User::where('role_id', 4)
+            ->whereNotNull('control_no')
+            ->pluck('control_no')
+            ->toArray();
+
+        $employee = Employee::select('name', 'position', 'ControlNo', 'office', 'job_title', 'status')
+            ->where('office_id', $user->office_id)
+            ->whereNotIn('job_title', ['Employee'])
+            ->whereNotIn('ControlNo', $existingControlNos)
             ->get();
 
         if ($employee->isEmpty()) {
-          return $this->errorMessage('No head employees found for this office.', 404);
+            return $this->infoMessage('No head employees found for this office.', 200);
         }
 
         return $this->successMessage($employee, 'Fetch employee successful');

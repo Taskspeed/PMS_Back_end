@@ -21,6 +21,7 @@ use App\Http\Controllers\Planning\DashboardController as PlanningDashboardContro
 use App\Http\Controllers\Planning\OpcrController as PlanningOpcrController;
 use App\Http\Controllers\PmtController;
 use App\Http\Controllers\QpefController;
+use App\Http\Controllers\ReceivingController;
 use App\Http\Controllers\SpmsController;
 use App\Http\Controllers\TargetPeriodController;
 use App\Http\Controllers\UserController;
@@ -53,6 +54,10 @@ Route::prefix('ipcr')->group(function () {
 
 });
 
+
+// list of date that the employee rated already args controlNo
+Route::get('employee/list/rated/{control_no}', [EmployeeRatingController::class, 'getListOfRatingEmployee']);
+
 // get the target period on the employee on erms
 Route::get('employee/target-periods/{controlNo}', [EmployeeRatingController::class, 'targetPeriodEmployee']);
 
@@ -60,9 +65,6 @@ Route::get('employee/target-periods/{controlNo}', [EmployeeRatingController::cla
 Route::get('employee/target-periods/details/{targetperiodId}', [EmployeeRatingController::class, 'targetPeriodDetails']);
 
 
-
-// list of date that the employee rated already args controlNo
-Route::get('employee/list/rated/{control_no}', [EmployeeRatingController::class, 'getListOfRatingEmployee']);
 
 
 
@@ -123,6 +125,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Route::get('/dashboard/ipcr-status-counts', [OfficeDashboardController::class, 'getIpcrStatusCounts']);
         // Route::get('/dashboard', [OfficeDashboardController::class, 'getTotalEmployee']);
         Route::get('/structure', [OfficeController::class, 'officeStructure']);
+        Route::get('/structure/number', [OfficeController::class, 'officeStructure']);
         Route::get('/structure/count', [VwplantillastructureController::class, 'plantillaStructureEmployeeWithCount']);
         Route::get('/mfo', [MfoController::class, 'Mfo']); // getting the mfo of user logged in
         Route::get('/head-mfo/{semester}/{year}', [MfoController::class, 'fetchMfo']); // getting the mfo of user logged in
@@ -152,7 +155,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
 
         // updating the password
-        Route::post('/update/credentials/{id}', [AuthController::class, 'changePassword']);
+        Route::post('/update/credentials', [AuthController::class, 'changePassword']);
 
         // fetch the credential of user
         Route::get('/account', [AuthController::class, 'userAccount']);
@@ -177,7 +180,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // create supervisor admin
         Route::post('supervisory', [AuthController::class, 'createAccountSupervisor']);
-
 
 
         // list of account of head account
@@ -412,6 +414,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/office', [PmtController::class, 'office']);
 
            Route::get('ipcr', [PmtController::class, 'listOfEmployeeIpcr']);
+
+         Route::get('/office-employee', [PmtController::class, 'getOfficeEmployeePmt']);
   
     });
+
+            Route::prefix('receiving')->group(function () {
+
+        // fetch only office assign on pmt account 
+        Route::get('/draft/ipcr', [ReceivingController::class, 'getDraftIpcr']); // get all draft ipcr
+
+        Route::get('/draft/target-period', [ReceivingController::class, 'getTargetPeriod']); // get  draft unitworkplan and opcr
+   
+
+    });
+
+
 });
