@@ -31,11 +31,13 @@ class DashboardController extends Controller
         $year     = $request->input('year');
         $semester = $request->input('semester');
 
+        $totalEmployeesOnOffice = \App\Models\Employee::where('office_id', $officeId)->pluck('ControlNo');
+
         // get control_nos belonging to this office
-        $employeeControlNos = \App\Models\Employee::where('office_id', $officeId)->pluck('ControlNo');
+        $employeeControlNos = \App\Models\Employee::where('office_id', $officeId)->whereNotIn('job_title',['Office Head'])->pluck('ControlNo');
 
         // total employee count in office
-        $totalEmployees = $employeeControlNos->count();
+        $totalEmployees = $totalEmployeesOnOffice->count();
 
         // ipcr status counts — filtered by office employees only ✅
         $ipcr_status = \App\Models\TargetPeriod::whereIn('control_no', $employeeControlNos)
@@ -75,7 +77,7 @@ class DashboardController extends Controller
             'year'        => $item->year,
             'date'        => $item->officeOpcrRecordLastestRecord?->date,
             'status'      => $item->officeOpcrRecordLastestRecord?->status,
-            'remarks'     => $item->officeOpcrRecordLastestRecord?->remarks,
+            // 'remarks'     => $item->officeOpcrRecordLastestRecord?->remarks,
         ]) : 'No record found'; // ← no error, just null // ←
 
 
@@ -100,7 +102,7 @@ class DashboardController extends Controller
             'year'        => $item->year,
             'date'        => $item->unitworkplanLastestRecord?->date,
             'status'      => $item->unitworkplanLastestRecord?->status,
-            'remarks'     => $item->unitworkplanLastestRecord?->remarks,
+            // 'remarks'     => $item->unitworkplanLastestRecord?->remarks,
         ])
         : 'No record found'; // ← no error, just null
 
@@ -118,10 +120,11 @@ class DashboardController extends Controller
 
         return $this->successMessage([
             'opcr_rating' => $opcr_rating,
-            'opcr' => $opcr_data,
-            'ipcr_status'    => $ipcr_data,
-            'unitworkplan_status'    => $unitworkplan_data,
             'total_employee' => $totalEmployees,
+            'ipcr_status'    => $ipcr_data,
+            'opcr_status' => $opcr_data,
+            'unitworkplan_status'    => $unitworkplan_data,
+        
         ], 'Successfully fetch');
     }
 
@@ -153,7 +156,9 @@ class DashboardController extends Controller
         // Filter out employees who already have a target period
         $employeesWithoutIpcr = $employees->whereNotIn('ControlNo', $withTargetPeriod)->values();
 
-        return $this->successMessage($employeesWithoutIpcr, 'Successfully fetch');
+        $countEmployeeNoIpcr = $employeesWithoutIpcr->count();
+
+        return $this->successMessage(['employee'=> $employeesWithoutIpcr,'total_employe_no_ipcr' => $countEmployeeNoIpcr ],'Successfully fetch');
     }
 
 
