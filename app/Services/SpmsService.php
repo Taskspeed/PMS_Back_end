@@ -179,7 +179,8 @@ class SpmsService
 
 
     // fetch employee belong to the office
-    public function employees($request){
+    public function employees($request)
+    {
 
         $user = Auth::user();
         $officeId = $user->office_id;
@@ -201,14 +202,27 @@ class SpmsService
 
                 // Look for target period based on user request
                 $existing = $emp->targetPeriods()
+                    ->select('id', 'control_no', 'year', 'semester', 'supervisory_control_no')
                     ->where('semester', $semester)
                     ->where('year', $year)
+                    ->with('ipcrLastestRecord')
                     ->first();
 
                 $emp->has_target_period = $existing ? true : false;
-                $emp->existing_target_period = $existing;
 
-                // Remove auto-loaded relation if exists
+                if ($existing) {
+                    $latestRecord = $existing->ipcrLastestRecord;
+
+                    // ✅ Flatten only the fields you need
+                    $existing->status           = $latestRecord?->status ?? null;
+                    $existing->processed_by_name = $latestRecord?->processed_by_name ?? null;
+                    $existing->date             = $latestRecord?->date ?? null;
+
+                   // ✅ Use makeHidden() to remove the relation from serialization
+                      $existing->makeHidden('ipcrLastestRecord');
+                }
+
+                $emp->existing_target_period = $existing;
                 unset($emp->target_periods);
 
                 return $emp;
@@ -304,7 +318,7 @@ class SpmsService
                 // ✅ Attach opcr_status only for Office Head
 
                 if ($emp->job_title === 'Office Head' && $existing) {
-                    $emp->existing_target_period->opcr_status = $opcrStatus ? :'Draft';
+                    $emp->existing_target_period->opcr_status = $opcrStatus ?: 'Draft';
                     $emp->existing_target_period->makeHidden('status'); // ✅ hide status for Office Head only
                 }
 
@@ -315,5 +329,4 @@ class SpmsService
 
         return $employees;
     }
-
 }
