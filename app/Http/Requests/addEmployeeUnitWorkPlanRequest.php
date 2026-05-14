@@ -34,7 +34,7 @@ class addEmployeeUnitWorkPlanRequest extends FormRequest
             'employees.*.division' => 'nullable|string',
             'employees.*.section' => 'nullable|string',
             'employees.*.unit' => 'nullable|string',
-            // 'employees.*.supervisory_control_no' => 'nullable|string',
+            'employees.*.supervisory_control_no' => 'nullable|string',
 
             // semester and year
             'employees.*.semester' => 'required|string',
@@ -50,7 +50,7 @@ class addEmployeeUnitWorkPlanRequest extends FormRequest
             'employees.*.performance_standards.*.technical_competency' => 'nullable|array',
             'employees.*.performance_standards.*.leadership_competency' => 'nullable|array',
             'employees.*.performance_standards.*.success_indicator' => 'required|string',
-            'employees.*.performance_standards.*.supervisory_control_no' => 'required|string',
+            'employees.*.performance_standards.*.supervisory_control_no' => 'nullable|string',
             // 'employees.*.performance_standards.*.performance_indicator' => 'required|array',
             'employees.*.performance_standards.*.required_output' => 'nullable|string',
 
