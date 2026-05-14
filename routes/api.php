@@ -23,14 +23,13 @@ use App\Http\Controllers\PmtController;
 use App\Http\Controllers\QpefController;
 use App\Http\Controllers\ReceivingController;
 use App\Http\Controllers\SpmsController;
+use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\TargetPeriodController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\vwActiveController;
 use App\Http\Controllers\VwplantillastructureController;
 use Illuminate\Support\Facades\Route;
-
-
-
+use Symfony\Component\HttpKernel\HttpCache\SurrogateInterface;
 
 Route::post('/login', [AuthController::class, 'login']);  // change route login
 
@@ -413,21 +412,44 @@ Route::middleware('auth:sanctum')->group(function () {
         // fetch only office assign on pmt account 
         Route::get('/office', [PmtController::class, 'office']);
 
-           Route::get('ipcr', [PmtController::class, 'listOfEmployeeIpcr']);
+           Route::get('ipcr', [PmtController::class, 'listOfEmployeeIpcr']); // fetch only if they already receive by the hr staff
 
          Route::get('/office-employee', [PmtController::class, 'getOfficeEmployeePmt']);
   
     });
 
-            Route::prefix('receiving')->group(function () {
+         Route::prefix('receiving')->group(function () {
 
         // fetch only office assign on pmt account 
-        Route::get('/draft/ipcr', [ReceivingController::class, 'getDraftIpcr']); // get all draft ipcr
+        Route::get('/ipcr', [ReceivingController::class, 'getApproveIpcr']); // get all draft ipcr
 
-        Route::get('/draft/target-period', [ReceivingController::class, 'getTargetPeriod']); // get  draft unitworkplan and opcr
+        //get the unit work plan and opcr
+        Route::get('/target-period', [ReceivingController::class, 'getTargetPeriod']); 
+
+        // update  status of the ipcr to receive
+        Route::post('/ipcr/receive', [ReceivingController::class, 'updateIpcrReceive']); 
+
+        // update  status of the opcr to receive
+        Route::post('opcr/receive', [ReceivingController::class, 'updateOpcrReceive']); 
+
+        // update  status of the unit work plan to receive
+        Route::post('/unitworkplan/receive', [ReceivingController::class, 'updateUnitWorkPlanReceive']); 
    
 
     });
+
+    
+        Route::prefix('supervisor')->group(function () {
+
+        // fetch the list of the ipcr of the employee 
+        Route::get('/ipcr', [SupervisorController::class, 'getAdvisoryEmployeeIpcr']); 
+
+        // updating ipcr of my advisory
+        Route::post('/update/ipcr', [SupervisorController::class, 'updateIpcr']); 
+
+
+    });
+
 
 
 });
