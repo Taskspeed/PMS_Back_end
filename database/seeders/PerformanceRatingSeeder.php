@@ -11,7 +11,7 @@ class PerformanceRatingSeeder extends Seeder
 {
     public function run()
     {
-        $performanceStandardIds = [201, 202, 203, 204, 211, 212, 213, 239, 240, 216, 217, 232, 233, 234, 235, 236, 237, 238,];
+        $performanceStandardIds = [14, 30, 31, 32, 33, 34, 46, 47, 48, 49, 52, 53, 54, 91, 92, 93, 94, 95, 96, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 201, 202, 203, 204, 211, 212, 213, 216, 217, 224, 225, 226, 227, 232, 233, 234, 235, 236, 237, 238, 239, 240];
 
         $startDate = Carbon::create(2026, 7, 1);
         $endDate   = Carbon::create(2026, 12, 31);
