@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\IpcrEvent;
 use App\Events\UnitWorkPlanEvent;
 use App\Models\Employee;
 use App\Models\PerformanceConfigurations;
@@ -52,8 +53,11 @@ class UnitWorkPlanService
                     'unit'       => $employeeData['unit'] ?? null,
                     // 'supervisory_control_no'  => $employeeData['supervisory_control_no'] ?? null,
                     'office_id'  => $user->office_id,
-                    'status'     => 'Draft',
+                    // 'status'     => 'Draft',
                 ]);
+
+              IpcrEvent::dispatch($targetPeriod,$user); //closed properly
+
 
                 $employee = Employee::where('ControlNo', $employeeData['control_no'])->first();
 
