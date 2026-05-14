@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\EmployeeStatus;
+use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,24 +30,22 @@ class PmtController extends Controller
             ->select('id', 'name')
             ->whereIn('id', $assignedOfficeIds)
             ->get();
-        if($offices->isEmpty()){
+        if ($offices->isEmpty()) {
             return $this->infoMessage('No office record found');
         }
 
         return $this->successMessage($offices, 'Successfully fetch');
     }
 
-    // list of employee ipcr base on the pmt assign
+    // fetch the list of employee ipcr
     public function listOfEmployeeIpcr(Request $request)
     {
         $year     = $request->input('year');
         $semester = $request->input('semester');
-        $office = $request->input('office');
+        $office   = $request->input('office');
         $pmt_user = Auth::user();
 
-        // DEBUG — remove these after fixing
         $assignedOfficeIds = $pmt_user->pmt_assign->pluck('office_id');
-   
 
         if ($assignedOfficeIds->isEmpty()) {
             return $this->infoMessage('No assigned offices found for this user.');
@@ -54,16 +53,24 @@ class PmtController extends Controller
 
         $employee = Employee::select('ControlNo', 'name', 'rank', 'office', 'status', 'job_title', 'position')
             ->whereNotIn('status', ['CONTRACTUAL', 'JOB ORDER'])
-            ->when($office, fn($q) => $q->where('office', $office)) // only filter if provided
+            ->when($office, fn($q) => $q->where('office', $office))
 
+            // ✅ Only return employees WHO HAVE an approved target period
+            ->whereHas('targetPeriods', function ($query) use ($year, $semester) {
+                $query->where('status', 'Receive')
+                    ->where('year', $year)
+                    ->where('semester', $semester);
+            })
+
+            // Eager load the matching target period for display
             ->with(['targetPeriods' => function ($query) use ($year, $semester) {
                 $query->select('control_no', 'year', 'semester', 'status')
+                    ->where('status', 'Receive')
                     ->where('year', $year)
                     ->where('semester', $semester);
             }])
             ->whereIn('office_id', $assignedOfficeIds)
             ->get();
-
 
         $data = $employee->map(function ($item) {
             $ipcr = $item->targetPeriods->first();
@@ -88,5 +95,40 @@ class PmtController extends Controller
         }
 
         return $this->successMessage($data, 'Successfully fetch');
+    }
+
+    // list of the employee for pmt
+    public function getOfficeEmployeePmt(Request $request)
+    {
+        $office_name = $request->query('office_name');
+
+        if (!$office_name) {
+            return $this->errorMessage('office_name is required', 422);
+        }
+
+        // Get control_nos that already have role_id 5
+        $existingUsers = User::where('role_id', 5)
+            ->whereNotNull('control_no')
+            ->pluck('control_no')
+            ->toArray();
+
+        $data = DB::table('vwActive')
+            ->select(
+                'ControlNo',
+                'BirthDate',
+                'Office',
+                'name4',
+                'Designation',
+                'status'
+            )
+            ->where('Office', $office_name)
+            ->whereNotIn('ControlNo', $existingUsers) // exclude employees already with role_id 5
+            ->get();
+
+        if ($data->isEmpty()) {
+            return $this->infoMessage('No employees found for this office.', 200);
+        }
+
+        return response()->json($data);
     }
 }
