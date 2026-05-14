@@ -20,12 +20,14 @@ class OpcrEvent
     public $opcr;
     public $year;
     public $semester;
+      public $user;
 
-    public function __construct($opcr, $year, $semester)
+    public function __construct($opcr, $year, $semester,$user)
     {
         $this->opcr = $opcr;
         $this->year = $year;
         $this->semester = $semester;
+        $this->user = $user;
     }
 
 

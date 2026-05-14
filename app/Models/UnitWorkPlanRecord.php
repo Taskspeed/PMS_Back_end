@@ -16,7 +16,8 @@ class UnitWorkPlanRecord extends Model
           'date',
             'status',
             'remarks',
-            'reviewed_by'
+            'processed_by_name',
+            'processed_by',
     ];
 
 

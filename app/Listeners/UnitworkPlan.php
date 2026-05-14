@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Events\UnitWorkPlanEvent;
 use App\Models\UnitWorkPlan as UnitWorkPlanCreate;
 use App\Models\UnitWorkPlanRecord;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 
@@ -24,6 +25,7 @@ class UnitWorkPlan
     public function handle(UnitWorkPlanEvent $event): void
     {
         $unitworkplan = $event->unitworkplan;
+        $user = $event->user;
 
         $employee = $unitworkplan->employee;
 
@@ -38,10 +40,11 @@ class UnitWorkPlan
 
       $unitworkplan_record  = UnitWorkPlanRecord::create([
             'unitworkplan_id' => $newunitworkplan->id,
-            'date' => now()->format('m-d-Y'),
+            'date' => Carbon::now()->format('Y-m-d'), // ✅ standard DB date format
             'status'    =>  'Draft',
             'remarks'    => 'Created',
-            'reviewed_by'    => NULL,
+            'processed_by'    => $user->id,
+           'processed_by_name'    => $user->name,
         ]);
 
 

@@ -17,7 +17,8 @@ class OfficeOpcrRecord extends Model
         'date',
         'status',
         'remarks',
-        'reviewed_by'
+        'processed_by',
+        'processed_by_name'
 
     ];
 

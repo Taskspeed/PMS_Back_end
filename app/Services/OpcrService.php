@@ -141,7 +141,8 @@ class OpcrService
             OpcrEvent::dispatch(
                 $records,
                 $validatedData['year'],
-                $validatedData['semester']
+                $validatedData['semester'],
+                $user
             );
 
 

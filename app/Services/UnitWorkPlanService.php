@@ -45,7 +45,7 @@ class UnitWorkPlanService
                     'control_no' => $employeeData['control_no'],
                     'semester'   => $employeeData['semester'],
                     'year'       => $employeeData['year'],
-                    'office'     => $employeeData['office'],
+                    'office'     => $employeeData['office'] ?? null,
                     'office2'    => $employeeData['office2'] ?? null,
                     'group'      => $employeeData['group'] ?? null,
                     'division'   => $employeeData['division'] ?? null,
@@ -69,7 +69,7 @@ class UnitWorkPlanService
 
                 if ($employee && $employee->job_title == 'Office Head') {
                     // \Illuminate\Support\Facades\Log::info('Dispatching UnitWorkPlanRecord event...');
-                    UnitWorkPlanEvent::dispatch($targetPeriod);
+                    UnitWorkPlanEvent::dispatch($targetPeriod,$user);
                 }
 
                 // Create Performance Standards

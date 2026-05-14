@@ -17,11 +17,13 @@ class UnitWorkPlanEvent
      */
 
     public $unitworkplan;
+      public $user;
 
-    public function __construct($unitworkplan)
+    public function __construct($unitworkplan,$user)
     {
 
         $this->unitworkplan = $unitworkplan;
+              $this->user = $user;
 
     }
 

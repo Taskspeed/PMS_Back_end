@@ -5,8 +5,6 @@ namespace App\Listeners;
 use App\Events\TargetPeriodLockEvent;
 use App\Models\TargetPeriodLock as TargetPeriodLockCreated;
 use Carbon\Carbon;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
 
 use function Symfony\Component\Clock\now;
@@ -38,8 +36,8 @@ class TargetPeriodLock
         $target_period_lock =  TargetPeriodLockCreated::create([
             'semester' => $target_period_lock->semester, //
             'year'     => $target_period_lock->year,     //
-            'status'     => 'Draft',     // ✅ correct
-            'date' => Carbon::now()->format('m-d-Y'),
+            'status'     => 'Open',    // ✅ correct
+            'date' => Carbon::now()->format('Y-m-d'), // ✅ standard DB date format
             'lock_by'    => $user->id,
 
 

@@ -4,8 +4,10 @@ namespace App\Listeners;
 
 use App\Events\IpcrEvent;
 use App\Models\TargetPeriodRecord;
+use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+
 
 class Ipcr
 {
@@ -16,7 +18,7 @@ class Ipcr
 
         TargetPeriodRecord::create([
             'target_period_id' => $targetPeriod->id,  // ✅ access id directly
-            'date'             => now()->format('m-d-Y'),
+            'date'             => Carbon::now()->format('Y-m-d'), // ✅ standard DB date format
             'status'           => 'Draft',
             'remarks'          => 'Create',
             'processed_by'     => $user->id,
