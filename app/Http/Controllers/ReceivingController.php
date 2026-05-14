@@ -5,10 +5,16 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\OfficeOpcr;
+use App\Models\OfficeOpcrRecord;
+use App\Models\TargetPeriod;
+use App\Models\TargetPeriodRecord;
 use App\Models\UnitWorkPlan;
+use App\Models\UnitWorkPlanRecord;
 use App\Services\StructureService;
 use App\Traits\ApiResponseTrait;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ReceivingController extends Controller
@@ -23,51 +29,56 @@ class ReceivingController extends Controller
         $this->structureService = $structureService;
     }
 
-    // get the list of draftIpcr
-    public function getDraftIpcr(Request $request)
+    // get the list of ApproveIpcr
+    public function getApproveIpcr(Request $request)
     {
-
         $year     = $request->input('year');
         $semester = $request->input('semester');
         $office   = $request->input('office');
 
-
         $employee = Employee::select('ControlNo', 'name', 'rank', 'office', 'status', 'job_title', 'position')
             ->whereNotIn('status', ['CONTRACTUAL', 'JOB ORDER'])
+            ->whereNotIn('job_title', ['Office Head'])
             ->when($office, fn($q) => $q->where('office', $office))
 
-            // ✅ Only return employees WHO HAVE an approved target period
+            // ✅ Filter: only employees who have an Approved target period for this semester/year
             ->whereHas('targetPeriods', function ($query) use ($year, $semester) {
-                $query->where('status', 'Draft')
-                    ->where('year', $year)
-                    ->where('semester', $semester);
+                $query->where('year', $year)
+                    ->where('semester', $semester)
+                    ->whereHas('ipcrLastestRecord', function ($q) {
+                        $q->where('status', 'Aprroved'); // ✅ fix typo: was 'Aprroved'
+                    });
             })
 
-            // Eager load the matching target period for display
+            // ✅ Eager load the matching target period with its latest record
             ->with(['targetPeriods' => function ($query) use ($year, $semester) {
-                $query->select('control_no', 'year', 'semester', 'status')
-                    ->where('status', 'Draft')
+                $query->select('id', 'control_no', 'year', 'semester')
                     ->where('year', $year)
-                    ->where('semester', $semester);
+                    ->where('semester', $semester)
+                    ->with('ipcrLastestRecord'); // ✅ load latest record on the period
             }])
-            // ->whereIn('office_id', $assignedOfficeIds)
             ->get();
 
         $data = $employee->map(function ($item) {
-            $ipcr = $item->targetPeriods->first();
+            $ipcr          = $item->targetPeriods->first();
+            $latestRecord  = $ipcr?->ipcrLastestRecord;
 
             return [
-                'ControlNo'   => $item->ControlNo,
-                'name'        => $item->name,
-                'rank'        => $item->rank,
-                'office'      => $item->office,
-                'job_title'   => $item->job_title,
-                'position'    => $item->position,
-                'emp_status'  => $item->status,
-                'ipcr_status' => $ipcr?->status,
-                'year'        => $ipcr?->year,
-                'semester'    => $ipcr?->semester,
-                'has_ipcr'    => $ipcr !== null,
+                'ipcr_id'            => $ipcr?->id,
+                'ControlNo'          => $item->ControlNo,
+                'name'               => $item->name,
+                'rank'               => $item->rank,
+                'office'             => $item->office,
+                'job_title'          => $item->job_title,
+                'position'           => $item->position,
+                'emp_status'         => $item->status,
+
+                'semester'           => $ipcr?->semester,
+                'ipcr_status'        => $latestRecord?->status,       // ✅ from latest record
+                'processed_by_name'  => $latestRecord?->processed_by_name,
+                'date'               => $latestRecord?->date,
+                'year'               => $ipcr?->year,
+                'has_ipcr'           => $ipcr !== null,
             ];
         });
 
@@ -79,90 +90,169 @@ class ReceivingController extends Controller
     }
 
     // get the targetperiod of  office opcr,unitworkplan,office
-public function getTargetPeriod(Request $request)
-{
-    $year     = $request->input('year');
-    $semester = $request->input('semester');
-    $office   = $request->input('office');
+    public function getTargetPeriod(Request $request)
+    {
+        $year     = $request->input('year');
+        $semester = $request->input('semester');
+        $office   = $request->input('office');
 
-    // =====================
-    // 1. GET UNIT WORK PLAN
-    // =====================
-    $unitworkplan = UnitWorkPlan::select('id', 'office_name', 'semester', 'year')
-        ->where('semester', $semester)
-        ->where('year', $year)
-        ->when($office, fn($q) => $q->where('office_name', $office))
-        ->whereHas('unitworkplanLastestRecord', function ($query) {
-            $query->where('status', 'Draft');
-        })
-        ->with('unitworkplanLastestRecord')
-        ->get()
-        ->keyBy('office_name');
+        // =====================
+        // 1. GET UNIT WORK PLAN
+        // =====================
+        $unitworkplan = UnitWorkPlan::select('id', 'office_name', 'semester', 'year')
+            ->where('semester', $semester)
+            ->where('year', $year)
+            ->when($office, fn($q) => $q->where('office_name', $office))
+            ->whereHas('unitworkplanLastestRecord', function ($query) {
+                $query->where('status', 'Draft');
+            })
+            ->with('unitworkplanLastestRecord')
+            ->get()
+            ->keyBy('office_name');
 
-    if ($unitworkplan->isEmpty()) {
-        return $this->infoMessage('There is no data available for unit work plans.', 200);
+        if ($unitworkplan->isEmpty()) {
+            return $this->infoMessage('There is no data available for unit work plans.', 200);
+        }
+
+        // =====================
+        // 2. GET OPCR
+        // =====================
+        // $opcr = OfficeOpcr::select('id', 'office_name', 'semester', 'year')
+        //     ->where('semester', $semester)
+        //     ->where('year', $year)
+        //     ->when($office, fn($q) => $q->where('office_name', $office))
+        //     ->whereHas('officeOpcrRecordLastestRecord', function ($query) {
+        //         $query->where('status', 'Draft');
+        //     })
+        //     ->with('officeOpcrRecordLastestRecord')
+        //     ->get()
+        //     ->keyBy('office_name');
+
+        // if ($opcr->isEmpty()) {
+        //     return $this->infoMessage('There is no data available for OPCR.', 200);
+        // }
+
+        // =====================
+        // 3. GET OFFICE HEADS
+        // =====================
+        // $officeNames = $opcr->keys();
+
+        // $officeHeads = Employee::select('ControlNo', 'name', 'job_title', 'office_id', 'office')
+        //     ->whereIn('office', $officeNames)
+        //     ->where('job_title', 'Office Head')
+        //     ->get()
+        //     ->keyBy('office');
+
+        // =====================
+        // 4. MERGE ALL DATA + STRUCTURE
+        // =====================
+        // $data = $opcr->map(function ($opcrItem) use ($unitworkplan, $officeHeads) {
+        //     $uwp       = $unitworkplan->get($opcrItem->office_name);
+        //     $head      = $officeHeads->get($opcrItem->office_name);
+        $data = $unitworkplan->map(function ($uwp) {
+
+            $structure = $this->structureService->structure($uwp->office_name);
+
+            return [
+                'office'              => $uwp->office_name,        // ✅ was $unitworkplan->office_name
+                'semester'            => $uwp->semester,           // ✅ was $unitworkplan->semester
+                'year'                => $uwp->year,               // ✅ was $unitworkplan->year
+                'unitworkplan_id'     => $uwp->id,
+                'unitworkplan_status' => $uwp->unitworkplanLastestRecord?->status,
+                'structure'           => $structure,
+            ];
+        })->values();
+
+        if ($data->isEmpty()) {
+            return $this->infoMessage('No records found.', 200);
+        }
+
+        return $this->successMessage($data, 'Successfully fetched.');
     }
 
-    // =====================
-    // 2. GET OPCR
-    // =====================
-    $opcr = OfficeOpcr::select('id', 'office_name', 'semester', 'year')
-        ->where('semester', $semester)
-        ->where('year', $year)
-        ->when($office, fn($q) => $q->where('office_name', $office))
-        ->whereHas('officeOpcrRecordLastestRecord', function ($query) {
-            $query->where('status', 'Draft');
-        })
-        ->with('officeOpcrRecordLastestRecord')
-        ->get()
-        ->keyBy('office_name');
 
-    if ($opcr->isEmpty()) {
-        return $this->infoMessage('There is no data available for OPCR.', 200);
+    // updating  ipcr status to receive
+    public function updateIpcrReceive(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'ipcr_id'   => 'required|array',
+            'ipcr_id.*' => 'required|exists:target_periods,id',
+            'status'    => 'required|in:Received Target,Received Accomplishment',
+            'remarks'   => 'nullable|string',
+        ], [
+            'status.in' => "Status must be either 'Received Target' or 'Received Accomplishment'.",
+        ]);
+
+        $records = [];
+
+        foreach ($validated['ipcr_id'] as $ipcrId) {
+            $records[] = TargetPeriodRecord::create([
+                'target_period_id'   => $ipcrId,          // single ID per record
+                'date'               => Carbon::now()->format('Y-m-d'), // ✅ standard DB date format
+                'status'             => $validated['status'],
+                'remarks'            => $validated['remarks'] ?? null,
+                'processed_by'       => $user->id,
+                'processed_by_name'  => $user->name,
+            ]);
+        }
+
+        return $this->successMessage($records, 'Successfully Updated', 200);
     }
 
-    // =====================
-    // 3. GET OFFICE HEADS
-    // =====================
-    $officeNames = $opcr->keys();
+    // updating opcr status to receive
+    public function updateOpcrReceive(Request $request)
+    {
+        $user = Auth::user();
 
-    $officeHeads = Employee::select('ControlNo', 'name', 'job_title', 'office_id', 'office')
-        ->whereIn('office', $officeNames)
-        ->where('job_title', 'Office Head')
-        ->get()
-        ->keyBy('office');
+        $validated = $request->validate([
+            'office_opcr_id' => 'required|exists:office_opcrs,id',
+            'status'    => 'required|in:Received Target,Received Accomplishment',
+            'remarks' => 'nullable|string',
 
-    // =====================
-    // 4. MERGE ALL DATA + STRUCTURE
-    // =====================
-    $data = $opcr->map(function ($opcrItem) use ($unitworkplan, $officeHeads) {
-        $uwp       = $unitworkplan->get($opcrItem->office_name);
-        $head      = $officeHeads->get($opcrItem->office_name);
+        ], [
+            'status.in' => "Status must be either 'Received Target' or 'Received Accomplishment'.",
+        ]);
 
-        // ✅ Call structure() with just the office_name string
-        $structure = $this->structureService->structure($opcrItem->office_name);
+        $opcr = OfficeOpcrRecord::create([
+            'office_opcr_id' => $validated['office_opcr_id'],
+            'date' => Carbon::now()->format('Y-m-d'), // standard DB date format
+            'status' => $validated['status'],
+            'remarks' => $validated['remarks'] ?? null,
+            'processed_by' => $user->id,
+            'processed_by_name' => $user->name,
+        ]);
 
 
-
-        return [
-            'ControlNo'           => $head?->ControlNo,
-            'name'                => $head?->name,
-            'office'              => $opcrItem->office_name,
-            'semester'            => $opcrItem->semester,
-            'year'                => $opcrItem->year,
-            'opcr_id'             => $opcrItem->id,
-            'opcr_status'         => $opcrItem->officeOpcrRecordLastestRecord?->status,
-            'unitworkplan_id'     => $uwp?->id,
-            'unitworkplan_status' => $uwp?->unitworkplanLastestRecord?->status,
-            'structure'           => $structure, // ✅ merged here
-        ];
-    })->values();
-
-    if ($data->isEmpty()) {
-        return $this->infoMessage('No records found.', 200);
+      return $this->successMessage($opcr, 'Successfully Updated', 200);
     }
 
-    return $this->successMessage($data, 'Successfully fetched.');
-}
 
+     // updating unitworkplan status to receive
+    public function updateUnitWorkPlanReceive(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'unitworkplan_id' => 'required|exists:unitworkplans,id',
+            'status'    => 'required|in:Received Target,Received Accomplishment',
+            'remarks' => 'nullable|string',
+
+        ], [
+            'status.in' => "Status must be either 'Received Target' or 'Received Accomplishment'.",
+        ]);
+
+        $unwp = UnitWorkPlanRecord::create([
+            'unitworkplan_id' => $validated['unitworkplan_id'],
+            'date' => Carbon::now()->format('Y-m-d'), // standard DB date format
+            'status' => $validated['status'],
+            'remarks' => $validated['remarks'] ?? null,
+            'processed_by' => $user->id,
+            'processed_by_name' => $user->name,
+        ]);
+
+
+      return $this->successMessage($unwp, 'Successfully Updated', 200);
+    }
 }
