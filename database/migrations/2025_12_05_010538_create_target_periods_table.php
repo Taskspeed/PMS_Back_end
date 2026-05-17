@@ -44,6 +44,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('target_period');
+        Schema::dropIfExists('target_periods');
     }
 };

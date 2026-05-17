@@ -10,18 +10,7 @@ class OfficeSeeder extends Seeder
 {
    public function run(): void
     {
-        // Disable FK constraints
-        DB::statement('ALTER TABLE offices NOCHECK CONSTRAINT ALL');
-
-        // Delete all records
-        DB::table('offices')->delete();
-
-        // Reset identity/auto-increment back to 1
-        DB::statement('DBCC CHECKIDENT (\'offices\', RESEED, 0)');
-
-        // Re-enable FK constraints
-        DB::statement('ALTER TABLE offices WITH CHECK CHECK CONSTRAINT ALL');
-
+      
         $offices = [
             'OFFICE OF THE CITY ACCOUNTANT',
             'OFFICE OF THE CITY AGRICULTURIST',

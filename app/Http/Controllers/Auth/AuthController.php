@@ -57,7 +57,7 @@ class AuthController extends Controller
     {
 
         // Attempt to find the user
-        $user = User::with('office', 'role')->where('username', $request->username)->where('active', 1)->first();
+        $user = User::with('office', 'role')->where('username', $request->username)->first();
 
         if (!$user) {
             return response()->json([
@@ -476,7 +476,7 @@ class AuthController extends Controller
         return $this->successMessage($user, 'deleted successfully', 200);
     }
 
-    // update the account of head account 
+    // update the account of head account
     public function updateHeadAccount(Request $request)
     {
         try {

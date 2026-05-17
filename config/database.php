@@ -97,19 +97,16 @@ return [
             'sslmode' => 'prefer',
         ],
 
-        'sqlsrv2' => [
-            'driver' => 'sqlsrv',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST_SECOND', 'localhost'),
-            'port' => env('DB_PORT_SECOND', '1433'),
+        'second_db' => [
+            'driver'   => 'sqlsrv',
+            'host'     => env('DB_HOST_SECOND', 'localhost'),
+            'port'     => env('DB_PORT_SECOND', '1433'),
             'database' => env('DB_DATABASE_SECOND', 'laravel'),
-            'username' => env('DB_USERNAME_SECOND', 'root'),
+            'username' => env('DB_USERNAME_SECOND', ''),
             'password' => env('DB_PASSWORD_SECOND', ''),
-            'charset' => env('DB_CHARSET', 'utf8'),
-            'prefix' => '',
+            'charset'  => 'utf8',
+            'prefix'   => '',
             'prefix_indexes' => true,
-            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
-            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
         'sqlsrv' => [
