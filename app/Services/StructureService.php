@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\vwplantillastructure;
 use Illuminate\Support\Facades\DB;
 
 class StructureService
@@ -30,8 +31,7 @@ class StructureService
         'office2' => []
     ];
 
-    $allunits = DB::table('vwplantillastructure')
-        ->where('office', $office_name) // ✅ use the string, not the object
+    $allunits = vwplantillastructure::where('office', $office_name) // ✅ use the string, not the object
         ->orderBy('office2')
         ->orderBy('group')
         ->orderBy('division')

@@ -8,7 +8,8 @@ class vwplantillastructure extends Model
 {
     //
 
-    protected $table = 'vwplantillastructure';
+    protected $connection = 'second_db'; 
+    protected $table = 'vwplantillaStructure';
 
     protected $fillable = [
         'office',

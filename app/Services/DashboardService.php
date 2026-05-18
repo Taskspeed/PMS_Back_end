@@ -11,6 +11,7 @@ use App\Models\PerformanceStandard;
 use App\Models\TargetPeriod;
 use App\Models\UnitWorkPlan;
 use App\Models\vwActive;
+use App\Models\vwplantillastructure;
 use App\Traits\ApiResponseTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -347,9 +348,11 @@ class DashboardService
 
         return $this->successMessage($data, 'OPCR fetched successfully.');
     }
+
+    
     private function plantillaStructure()
     {
-        $rows = DB::table('vwplantillastructure as p')
+        $rows = vwplantillastructure::from('vwplantillaStructure as p')
             ->leftJoin('vwofficearrangement as o', 'o.Office', '=', 'p.office')
             ->select('p.*', 'p.level', 'p.ControlNo', 'p.Name4', 'o.office_sort')
             ->orderBy('o.office_sort')

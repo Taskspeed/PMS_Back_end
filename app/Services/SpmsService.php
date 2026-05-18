@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Employee;
 use App\Models\OfficeOpcr;
+use App\Models\vwActive;
+use App\Models\vwplantillastructure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +34,7 @@ class SpmsService
         ];
 
         // GET ALL RECORDS FOR THE OFFICE
-        $allunits = DB::table('vwplantillastructure')->where('office', $officeName)
+        $allunits = vwplantillastructure::where('office', $officeName)
             ->orderBy('office2')
             ->orderBy('group')
             ->orderBy('division')

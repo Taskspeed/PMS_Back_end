@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\vwplantillastructure;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -38,8 +39,7 @@ class OfficeService
         ];
 
         // FETCH ALL RECORDS FOR THIS OFFICE
-        $allUnits = DB::table('vwplantillaStructure')
-            ->where('office', $officeName)
+        $allUnits = vwplantillastructure::where('office', $officeName)
             ->orderBy('office2')
             ->orderBy('group')
             ->orderBy('division')

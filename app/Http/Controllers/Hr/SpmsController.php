@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Hr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\vwplantillastructure;
 
 class SpmsController extends Controller
 {
@@ -257,7 +258,7 @@ class SpmsController extends Controller
         ];
 
         // GET ALL RECORDS FOR THE OFFICE
-        $allunits = DB::table('vwplantillastructure')->where('office', $officeName)
+        $allunits = vwplantillastructure::where('office', $officeName)
             ->orderBy('office2')
             ->orderBy('group')
             ->orderBy('division')

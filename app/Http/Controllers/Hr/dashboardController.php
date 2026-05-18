@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Hr;
 
 use App\Http\Controllers\Controller;
 use App\Models\vwActive;
+use App\Models\vwplantillastructure;
 use App\Services\DashboardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -101,7 +102,9 @@ class dashboardController extends Controller
 
     public function plantillaEmployee()
     {
-        $rows = DB::table('vwplantillastructure as p')
+        // DB::connection('second_db')
+        //   ->table('vwplantillaStructure as p')
+        $rows = vwplantillastructure::from('vwplantillaStructure as p')
             ->leftJoin('vwofficearrangement as o', 'o.Office', '=', 'p.office')
             ->select(
                 'p.*',
