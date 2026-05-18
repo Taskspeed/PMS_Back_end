@@ -13,7 +13,7 @@ class UserSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-      protected static ?string $password;
+    protected static ?string $password;
     public function run(): void
     {
 
@@ -23,7 +23,8 @@ class UserSeeder extends Seeder
             'office_id' => 20, // Ensure this office exists in the offices table
             'role_id' => 3, // Ensure this role exists in the roles table
             'remember_token' => Str::random(24),
-            'username' => 'admin'
+            'username' => 'admin',
+            'active' => true
 
         ]);
 
@@ -34,6 +35,7 @@ class UserSeeder extends Seeder
             'role_id' => 1, // Ensure this role exists in the roles table
             'remember_token' => Str::random(24),
             'username' => 'deniel',
+            'active' => true
         ]);
 
         User::create([
@@ -43,9 +45,10 @@ class UserSeeder extends Seeder
             'role_id' => 2, // Ensure this role exists in the roles table
             'remember_token' => Str::random(24),
             'username' => 'cliford',
+                  'active' => true
         ]);
 
-    
+
         User::create([
             'name' => 'jeremie', // pmt
             'password' => static::$password ??= Hash::make('admin'),
@@ -53,6 +56,7 @@ class UserSeeder extends Seeder
             'role_id' => 4, // Ensure this role exists in the roles table
             'remember_token' => Str::random(24),
             'username' => 'jeremie',
+            'active' => true
         ]);
 
         User::create([
@@ -62,6 +66,7 @@ class UserSeeder extends Seeder
             'role_id' => 5, // Ensure this role exists in the roles table
             'remember_token' => Str::random(24),
             'username' => 'niel',
+            'active' => true
         ]);
     }
 }
