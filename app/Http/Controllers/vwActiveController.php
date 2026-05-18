@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\vwActive;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -64,8 +65,7 @@ public function getOfficeEmployee(Request $request)
         ->pluck('control_no')
         ->toArray();
 
-    $data = DB::table('vwActive')
-        ->select(
+    $data = vwActive::select(
             'ControlNo',
             'BirthDate',
             'Office',

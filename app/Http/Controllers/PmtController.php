@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\EmployeeStatus;
 use App\Models\User;
+use App\Models\vwActive;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -112,8 +113,7 @@ class PmtController extends Controller
             ->pluck('control_no')
             ->toArray();
 
-        $data = DB::table('vwActive')
-            ->select(
+        $data = vwActive::select(
                 'ControlNo',
                 'BirthDate',
                 'Office',

@@ -8,6 +8,8 @@ class XPersonal extends Model
 {
     //
 
+
+    protected $connection = 'second_db'; 
     protected $table = 'xPersonal';
 
     public function targetPeriods()

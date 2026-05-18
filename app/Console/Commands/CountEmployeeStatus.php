@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\vwActive;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -21,8 +22,7 @@ class CountEmployeeStatus extends Command
         $semester = $month >= 1 && $month <= 6 ? 'Jan-June' : 'July-Dec';
 
         // Count employees by status
-        $data = DB::table('vwActive')
-            ->select('Status', DB::raw('COUNT(*) as total'))
+        $data = vwActive::select('Status', DB::raw('COUNT(*) as total'))
             ->whereIn('Status', $statuses)
             ->groupBy('Status')
             ->get()
