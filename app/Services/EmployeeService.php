@@ -68,6 +68,58 @@ class EmployeeService
     }
 
 
+     public function v1storeEmployees($validated){
+
+
+        $createdEmployees = [];
+
+        // Use a transaction to ensure data integrity
+        DB::beginTransaction();
+        try {
+            foreach ($validated['employees'] as $employeeData) {
+                // Set default rank to Employee if not provided
+                if (!isset($employeeData['rank'])) {
+                    $employeeData['rank'] = 'Employee';
+                }
+
+                $employee = Employee::create($employeeData);
+
+                // Enhanced activity logging
+                activity()
+                    ->performedOn($employee)
+                    ->causedBy(Auth::user())
+                    ->withProperties([
+                        'name' => $employee->name,
+                        // 'position_id' => $employee->position_id,
+                        'rank' => $employee->rank,
+                        'designation' => $employee->designation,
+                        'office' => $employee->office,
+                        'division' => $employee->division,
+                        'section' => $employee->section,
+                        'unit' => $employee->unit,
+                        'office_id' => $employee->office_id
+                    ])
+                    ->log('Employee Created');
+
+                $createdEmployees[] = $employee;
+            }
+
+            DB::commit();
+
+            return  $createdEmployees;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create employees',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
+
 
     // list of employee in the office
     public function employee($request, $user)

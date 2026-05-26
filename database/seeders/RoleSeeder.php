@@ -21,7 +21,7 @@ class RoleSeeder extends Seeder
             ['name' => 'hr_admin', 'label' => 'HR Admin'], // 3
             ['name' => 'supervisor_admin', 'label' => 'Supervisor Admin'], // 4
             ['name' => 'pmt_admin', 'label' => 'PMT Admin'], // 5
-            ['name' => 'receiving _officer', 'label' => 'Receiving Officer'], // 5
+            ['name' => 'receiving_officer', 'label' => 'Receiving Officer'], // 5
 
         ];
 

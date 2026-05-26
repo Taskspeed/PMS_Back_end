@@ -70,7 +70,7 @@ class TrackerService
         // $status = UnitWorkPlanRecord::findOrFail($unitworkplanRecordId);
         $status = UnitWorkPlanRecord::create([
             'unitworkplan_id' => $validated['unitworkplan_id'],
-            'reviewed_by' => $user->id,           // ✅ comma not semicolon
+            'processed_by' => $user->id,           // ✅ comma not semicolon
             'date' => now()->format('m-d-Y'),
             'status'  => $validated['status'],
             'remarks' => $validated['remarks'] ?? null,

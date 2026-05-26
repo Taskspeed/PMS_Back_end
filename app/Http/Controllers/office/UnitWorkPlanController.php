@@ -6,6 +6,7 @@ namespace App\Http\Controllers\office;
 use App\Http\Requests\addEmployeeUnitWorkPlanRequest;
 use App\Http\Requests\updateEmployeeUnitWorkPlanRequest;
 use App\Http\Resources\UnitWorkPlanOrganizationResource;
+use App\Http\Resources\UnitWorkPlanResource;
 use App\Models\Employee;
 use App\Models\TargetPeriod;
 use Illuminate\Http\Request;
@@ -69,19 +70,35 @@ class UnitWorkPlanController extends BaseController
     // updating unit work plan
 
     // args controlno, semester, year
-    public function updateUnitWorkPlan(updateEmployeeUnitWorkPlanRequest $request, $controlNo, $semester, $year, UnitWorkPlanService $unitworkplanService){
+    // public function updateUnitWorkPlan(updateEmployeeUnitWorkPlanRequest $request, $controlNo, $semester, $year, UnitWorkPlanService $unitworkplanService)
+    // {
+
+    //     $validated = $request->validated();
+
+    //     $unitworkplan = $this->unitWorkPlanService->update($validated, $controlNo, $semester, $year);
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'Unit Work Plan updated successfully.',
+    //         'data' => $unitworkplan
+    //     ]);
+    // }
+
+      // args controlno, semester, year
+    public function updateUnitWorkPlan(updateEmployeeUnitWorkPlanRequest $request,)
+    {
 
         $validated = $request->validated();
 
-        $unitworkplan = $this->unitWorkPlanService->update($validated, $controlNo, $semester, $year);
+        $unitworkplan = $this->unitWorkPlanService->update($validated);
 
         return response()->json([
             'success' => true,
             'message' => 'Unit Work Plan updated successfully.',
             'data' => $unitworkplan
         ]);
-
     }
+
 
 
     // find employee
@@ -103,7 +120,7 @@ class UnitWorkPlanController extends BaseController
         ]);
     }
 
-
+    
     // view the unitworkplant of the employee based on controlno , semester and year
     public function getUnitworkplan($controlNo, $semester, $year)
     {
@@ -116,7 +133,7 @@ class UnitWorkPlanController extends BaseController
                         ->where('semester', $semester)
                         ->with([
                             'performanceStandards.configurations',
-                            'performanceStandards.standardOutcomes:id,performance_standard_id,rating,quantity_target as quantity,effectiveness_criteria as effectiveness,timeliness_range as timeliness'
+                            'performanceStandards.standardOutcomes',
                         ]);
                 }
             ])
@@ -126,46 +143,71 @@ class UnitWorkPlanController extends BaseController
             return response()->json(['message' => 'Employee not found'], 404);
         }
 
-        // Transform the response
-        $employee = $employee->toArray();
-        foreach ($employee['target_periods'] as &$period) {
-
-            foreach ($period['performance_standards'] as &$ps) {
-
-                // Rename standard_outcomes → ratings
-                if (isset($ps['standard_outcomes'])) {
-                    $ps['ratings'] = $ps['standard_outcomes'];
-                    unset($ps['standard_outcomes']);
-                }
-
-                // Attach config PER performance standard
-                if (!empty($ps['configurations'])) {
-                    $config = $ps['configurations'][0]; // usually 1 per PS
-
-                    $ps['config'] = [
-                        'targetOutput' => $config['target_output'],
-                        'quantityIndicator' => $config['quantity_indicator'],
-                        'timelinessIndicator' => $config['timeliness_indicator'],
-                        'timelinessType' => [
-                            'range' => (bool) $config['timeliness_range'],
-                            'date' => (bool) $config['timeliness_date'],
-                            'description' => (bool) $config['timeliness_description'],
-                        ],
-                    ];
-                } else {
-                    $ps['config'] = null;
-                }
-
-                // remove raw configurations
-                unset($ps['configurations']);
-            }
-        }
-
-        unset($period, $ps);
-
-
-        return response()->json($employee);
+        return new UnitWorkPlanResource($employee);
     }
+
+    // // view the unitworkplant of the employee based on controlno , semester and year
+    // public function getUnitworkplan($controlNo, $semester, $year)
+    // {
+    //     $employee = Employee::where('ControlNo', $controlNo)
+    //         ->where('office_id', $this->officeId)
+    //         ->with([
+    //             'targetPeriods' => function ($q) use ($year, $semester) {
+    //                 $q->select('id', 'control_no', 'year', 'semester', 'status')
+    //                     ->where('year', $year)
+    //                     ->where('semester', $semester)
+    //                     ->with([
+    //                         'performanceStandards.configurations',
+    //                         'performanceStandards.standardOutcomes:id,performance_standard_id,rating,quantity_target as quantity,effectiveness_criteria as effectiveness,timeliness_range as timeliness'
+    //                     ]);
+    //             }
+    //         ])
+    //         ->first();
+
+    //     if (!$employee) {
+    //         return response()->json(['message' => 'Employee not found'], 404);
+    //     }
+
+    //     // Transform the response
+    //     $employee = $employee->toArray();
+    //     foreach ($employee['target_periods'] as &$period) {
+
+    //         foreach ($period['performance_standards'] as &$ps) {
+
+    //             // Rename standard_outcomes → ratings
+    //             if (isset($ps['standard_outcomes'])) {
+    //                 $ps['ratings'] = $ps['standard_outcomes'];
+    //                 unset($ps['standard_outcomes']);
+    //             }
+
+    //             // Attach config PER performance standard
+    //             if (!empty($ps['configurations'])) {
+    //                 $config = $ps['configurations'][0]; // usually 1 per PS
+
+    //                 $ps['config'] = [
+    //                     'targetOutput' => $config['target_output'],
+    //                     'quantityIndicator' => $config['quantity_indicator'],
+    //                     'timelinessIndicator' => $config['timeliness_indicator'],
+    //                     'timelinessType' => [
+    //                         'range' => (bool) $config['timeliness_range'],
+    //                         'date' => (bool) $config['timeliness_date'],
+    //                         'description' => (bool) $config['timeliness_description'],
+    //                     ],
+    //                 ];
+    //             } else {
+    //                 $ps['config'] = null;
+    //             }
+
+    //             // remove raw configurations
+    //             unset($ps['configurations']);
+    //         }
+    //     }
+
+    //     unset($period, $ps);
+
+
+    //     return response()->json($employee);
+    // }
 
 
     // delete the unit work plan of the employee based on semester and year
@@ -223,7 +265,6 @@ class UnitWorkPlanController extends BaseController
                 'message' => $e->getMessage()
             ]);
         }
-
     }
 
     // find the office head and supervisory on office

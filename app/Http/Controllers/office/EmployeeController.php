@@ -39,6 +39,21 @@ class EmployeeController extends Controller
         ]);
     }
 
+        // add an employee on the plantilla structure
+    public function v1addEmployee(addEmployeeRequest $request, EmployeeService $employeeStore)
+    {
+        $validated = $request->validated();
+
+        $employee = $employeeStore->v1storeEmployees($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Employees created successfully',
+            'employees' => $employee
+
+        ]);
+    }
+
     //rank update of employee
     public function updateRank(Request $request, $id) // need to check  this code for review
 
@@ -145,6 +160,7 @@ class EmployeeController extends Controller
             ->get();
         return response()->json($employees);
     }
+
 
     // fetch the employee base on the user office
     public function listOfEmployee(Request $request, EmployeeService $employeeList)

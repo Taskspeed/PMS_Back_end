@@ -19,9 +19,16 @@ class OpcrController extends Controller
     }
 
 
-     public function opcrStatus(OpcrStoreStatusRequest $request){
+     public function opcrStatus(Request $request){
 
-        $validated = $request->validated();
+         $validated = $request->validate([
+            'office_opcr_id'   => 'required|array',
+            'office_opcr_id.*' => 'required|exists:office_opcrs,id',
+            'status'    => 'required|in:Received Target,Received Accomplishment',
+            'remarks'   => 'nullable|string',
+        ], [
+            'status.in' => "Status must be either 'Received Target' or 'Received Accomplishment'.",
+        ]);
 
         $result = $this->opcrService->opcrStoreStatus($validated);
 

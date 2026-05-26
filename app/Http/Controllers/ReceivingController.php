@@ -32,6 +32,17 @@ class ReceivingController extends Controller
     // get the list of ApproveIpcr
     public function getApproveIpcr(Request $request)
     {
+
+        $user = Auth::user();
+
+        // ✅ Actually enforce the role check
+        if ($user->role_id != 6) {
+            return response()->json([
+                'message' => 'Unauthorized. Access restricted to authorized person only.'
+            ], 403);
+        }
+
+
         $year     = $request->input('year');
         $semester = $request->input('semester');
         $office   = $request->input('office');
@@ -46,7 +57,7 @@ class ReceivingController extends Controller
                 $query->where('year', $year)
                     ->where('semester', $semester)
                     ->whereHas('ipcrLastestRecord', function ($q) {
-                        $q->where('status', 'Aprroved'); // ✅ fix typo: was 'Aprroved'
+                        $q->where('status','Approved'); // ✅ fix typo: was 'Aprroved'
                     });
             })
 
@@ -90,8 +101,18 @@ class ReceivingController extends Controller
     }
 
     // get the targetperiod of  office opcr,unitworkplan,office
-    public function getTargetPeriod(Request $request)
+    public function getUnitworkplan(Request $request)
     {
+
+        $user = Auth::user();
+
+        // Actually enforce the role check
+        if ($user->role_id != 6) {
+            return response()->json([
+                'message' => 'Unauthorized. Access restricted to authorized person only.'
+            ], 403);
+        }
+
         $year     = $request->input('year');
         $semester = $request->input('semester');
         $office   = $request->input('office');
@@ -209,10 +230,10 @@ class ReceivingController extends Controller
         $validated = $request->validate([
             'office_opcr_id' => 'required|exists:office_opcrs,id',
             'status'    => 'required|in:Received Target,Received Accomplishment',
-            'remarks' => 'nullable|string',
+            'remarks' => 'nullable|string', 
 
         ], [
-            'status.in' => "Status must be either 'Received Target' or 'Received Accomplishment'.",
+            // 'status.in' => "Status must be either 'Received Target' or 'Received Accomplishment'.",
         ]);
 
         $opcr = OfficeOpcrRecord::create([

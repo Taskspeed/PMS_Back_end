@@ -612,7 +612,7 @@ class DashboardService
             ->where('semester', $semester)
             ->where('year', $year)
             ->whereHas('officeOpcrRecordLastestRecord', function ($query) {
-                $query->where('status', 'Pending');
+                $query->where('status', 'Draft');
             })->get();
 
         return $data;

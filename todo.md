@@ -766,3 +766,434 @@ succeess
    
 ]
 ]
+
+
+
+//-------------------------------hr--dashboard-----------------------------------------//
+
+METHOD:GET  
+http://192.168.8.182:9000/api/hr/dashboard/current/target-period?year=2026&semester=January-June
+
+
+//--------------------------------unitworkplan--------------------------------//
+METHOD:GET 
+http://192.168.8.182:9000/api/hr/dashboard/list/unit-work-plan?year=2026&semester=January-June
+
+METHOD:GET   OPTIONAL: OFFICE
+http://192.168.8.182:9000/api/hr/dashboard/list/unit-work-plan?year=2026&semester=January-June&office=OFFICE OF THE CITY INFORMATION AND COMMUNICATIONS TECHNOLOGY MANAGEMENT OFFICER
+
+
+//-------------------------------------------opcr------------------------------//
+
+METHOD:GET 
+http://192.168.8.182:9000/api/hr/dashboard/list/opcr?year=2026&semester=January-June
+
+METHOD:GET   OPTIONAL: OFFICE
+http://192.168.8.182:9000/api/hr/dashboard/list/opcr?year=2026&semester=January-June&office=OFFICE OF THE CITY INFORMATION AND COMMUNICATIONS TECHNOLOGY MANAGEMENT OFFICER
+
+
+//------------------------------------ipcr--------------------------------------//
+METHOD:GET 
+http://192.168.8.182:9000/api/hr/dashboard/list/ipcr?year=2026&semester=January-June
+
+METHOD:GET   OPTIONAL: OFFICE
+http://192.168.8.182:9000/api/hr/dashboard/list/ipcr?year=2026&semester=January-June&office=OFFICE OF THE CITY INFORMATION AND COMMUNICATIONS TECHNOLOGY MANAGEMENT OFFICER
+
+
+//create pmt account
+http://192.168.8.182:9000/api/user/create/pmt/account
+{
+    "controlNo": "2026-001",
+    "name": "Juan Dela Cruz",
+    "designation": "Administrative Officer",
+    "role_id": 1,
+    "office_id": 1,
+    "password": "password123",
+    "username": "juan.delacruz",
+    "active": true,
+    "office_id_assign": [1, 2, 3]
+}
+
+//----------------------------------office dashboard-----------------------------//
+
+METHOD:GET // office dashboard  kulang og opcr
+http://192.168.8.182:9000/api/office/dashboard?year=202&semester=January-June
+
+{
+    "success": true,
+    "message": "Successfully fetch",
+    "data": {
+        "opcr": "no data yet",
+        "ipcr_status": {
+            "ipcr": {
+                "Pending": 0,
+                "Approved": 0,
+                "Draft": 0,
+                "Reviewed": 0,
+                "total_ipcr": 0
+            }
+        },
+        "unitworkplan_status": "no data yet",
+        "total_employee": 7
+    }
+}
+
+
+
+METHOD:GET // list of employee dont have ipcr  base on the target period
+http://192.168.8.182:9000/api/office/dashboard/employee/without-ipcr?year=202&semester=January-June
+{
+    "success": true,
+    "message": "Successfully fetch",
+    "data": [
+        {
+            "ControlNo": "003041",
+            "name": "JOSEPH NELSON N. BRIONES",
+            "position": "CITY GOVERNMENT DEPARTMENT HEAD I",
+            "office_id": 15,
+            "status": "REGULAR",
+            "job_title": "Office Head"
+        },
+        {
+            "ControlNo": "012733",
+            "name": "CARLO LUIGE B. QUEZON",
+            "position": "INFORMATION TECHNOLOGY OFFICER I",
+            "office_id": 15,
+            "status": "REGULAR",
+            "job_title": "Section Head"
+        },
+        {
+            "ControlNo": "011790",
+            "name": "JOGRAD M. MAHUSAY",
+            "position": "INFORMATION SYSTEMS ANALYST III",
+            "office_id": 15,
+            "status": "REGULAR",
+            "job_title": "Section Head"
+        },
+        {
+            "ControlNo": "011789",
+            "name": "NEIL BENJAMIN P. ROBLE",
+            "position": "ADMINISTRATIVE AIDE III (CLERK I) (CASUAL)",
+            "office_id": 15,
+            "status": "CASUAL",
+            "job_title": "Employee"
+        },
+        {
+            "ControlNo": "010290",
+            "name": "JOHNSON O. SARIN",
+            "position": "INFORMATION TECHNOLOGY OFFICER I",
+            "office_id": 15,
+            "status": "REGULAR",
+            "job_title": "Employee"
+        }
+    ]
+}
+
+//----------------------------------PMT--------------------------------------------------
+
+METHOD:GET  // FETCH LIST OF THE IPCR
+http://192.168.8.182:9000/api/pmt/ipcr?year=2026&semester=January-June
+
+{
+    "success": true,
+    "message": "Successfully fetch",
+    "data": [
+        {
+            "ControlNo": "003041",
+            "name": "JOSEPH NELSON N. BRIONES",
+            "rank": "Employee",
+            "office": "OFFICE OF THE CITY INFORMATION AND COMMUNICATIONS TECHNOLOGY MANAGEMENT OFFICER",
+            "job_title": "Office Head",
+            "position": "CITY GOVERNMENT DEPARTMENT HEAD I",
+            "emp_status": "REGULAR",
+            "ipcr_status": "Draft",
+            "year": "2026",
+            "semester": "January-June",
+            "has_ipcr": true
+        },
+        {
+            "ControlNo": "012733",
+            "name": "CARLO LUIGE B. QUEZON",
+            "rank": "Employee",
+            "office": "OFFICE OF THE CITY INFORMATION AND COMMUNICATIONS TECHNOLOGY MANAGEMENT OFFICER",
+            "job_title": "Section Head",
+            "position": "INFORMATION TECHNOLOGY OFFICER I",
+            "emp_status": "REGULAR",
+            "ipcr_status": "Reviewed",
+            "year": "2026",
+            "semester": "January-June",
+            "has_ipcr": true
+        },
+        {
+            "ControlNo": "011790",
+            "name": "JOGRAD M. MAHUSAY",
+            "rank": "Supervisory",
+            "office": "OFFICE OF THE CITY INFORMATION AND COMMUNICATIONS TECHNOLOGY MANAGEMENT OFFICER",
+            "job_title": "Section Head",
+            "position": "INFORMATION SYSTEMS ANALYST III",
+            "emp_status": "REGULAR",
+            "ipcr_status": "Approved",
+            "year": "2026",
+            "semester": "January-June",
+            "has_ipcr": true
+        },
+        {
+            "ControlNo": "011789",
+            "name": "NEIL BENJAMIN P. ROBLE",
+            "rank": "Employee",
+            "office": "OFFICE OF THE CITY INFORMATION AND COMMUNICATIONS TECHNOLOGY MANAGEMENT OFFICER",
+            "job_title": "Employee",
+            "position": "ADMINISTRATIVE AIDE III (CLERK I) (CASUAL)",
+            "emp_status": "CASUAL",
+            "ipcr_status": "Approved",
+            "year": "2026",
+            "semester": "January-June",
+            "has_ipcr": true
+        },
+        {
+            "ControlNo": "010290",
+            "name": "JOHNSON O. SARIN",
+            "rank": "Employee",
+            "office": "OFFICE OF THE CITY INFORMATION AND COMMUNICATIONS TECHNOLOGY MANAGEMENT OFFICER",
+            "job_title": "Employee",
+            "position": "INFORMATION TECHNOLOGY OFFICER I",
+            "emp_status": "REGULAR",
+            "ipcr_status": "Reviewed",
+            "year": "2026",
+            "semester": "January-June",
+            "has_ipcr": true
+        }
+    ]
+}
+
+METHOD:GET // FETCH THE ONLY OFFICE ASSIGN ON PMT_USER
+http://192.168.8.182:9000/api/pmt/office
+
+{
+    "success": true,
+    "message": "Successfully fetch",
+    "data": [
+        {
+            "id": "15",
+            "name": "OFFICE OF THE CITY INFORMATION AND COMMUNICATIONS TECHNOLOGY MANAGEMENT OFFICER"
+        }
+    ]
+}
+
+
+
+
+# update  api  unit worplan edit
+
+//METHOOD: POST
+http://192.168.8.182:9000/api/unit_work_plan/update
+
+SAMPLE:
+{
+    "performance_standards": [
+        {
+            "performanceStandardId": 91,
+            "target_period_id": 7,
+            "category": "B. CORE FUNCTION",
+            "mfo": "ICT Network and Data Management",
+            "output": "ICT Network and Management Supervision",
+            "output_name": "Network Management Section Personnel SO",
+            "core_competency": [
+                {
+                    "code": "DSE",
+                    "level": "4",
+                    "description": "Delivering Service Excellence"
+                },
+                {
+                    "code": "EI",
+                    "level": "4",
+                    "description": "Exemplifying Integrity"
+                },
+                {
+                    "code": "IS",
+                    "level": "4",
+                    "description": "Interpersonal Skills"
+                }
+            ],
+            "performance_indicator": [
+                "supervised",
+                "verified"
+            ],
+            "success_indicator": "6 Network Management Section Personnel SO supervised without pending , within 6 months",
+            "required_output": "Number of pending SO",
+            "supervisory_control_no": null,
+            "ratings": [
+                {
+                    "ratingId": 451,
+                    "performance_standard_id": "91",
+                    "rating": "5",
+                    "quantity": "6",
+                    "effectiveness": "without pending",
+                    "timeliness": "within more than 6 months"
+                },
+                {
+                    "ratingId": 452,
+                    "performance_standard_id": "91",
+                    "rating": "4",
+                    "quantity": "5-4",
+                    "effectiveness": null,
+                    "timeliness": "20"
+                },
+                {
+                    "ratingId": 453,
+                    "performance_standard_id": "91",
+                    "rating": "3",
+                    "quantity": "3",
+                    "effectiveness": "with pending",
+                    "timeliness": "within 6 months"
+                },
+                {
+                    "ratingId": 454,
+                    "performance_standard_id": "91",
+                    "rating": "2",
+                    "quantity": "2-0",
+                    "effectiveness": null,
+                    "timeliness": "20"
+                },
+                {
+                    "ratingId": 455,
+                    "performance_standard_id": "91",
+                    "rating": "1",
+                    "quantity": "0",
+                    "effectiveness": null,
+                    "timeliness": "within 5 months"
+                }
+            ],
+            "config": {
+                "configurationId": 91,
+                "targetOutput": "6",
+                "quantityIndicator": "numeric",
+                "timelinessIndicator": "beforeDeadline",
+                "timelinessType": {
+                    "range": false,
+                    "date": false,
+                    "description": true
+                }
+            }
+        },
+        {
+            "performanceStandardId": 92,
+            "target_period_id": 7,
+            "category": "B. CORE FUNCTION",
+            "mfo": "ICT Network and Data Management",
+            "output": "ICT Network and Management Supervision",
+            "output_name": "racks in Data Center",
+            "core_competency": [
+                {
+                    "code": "DSE",
+                    "level": "4",
+                    "description": "Delivering Service Excellence"
+                },
+                {
+                    "code": "EI",
+                    "level": "4",
+                    "description": "Exemplifying Integrity"
+                },
+                {
+                    "code": "IS",
+                    "level": "4",
+                    "description": "Interpersonal Skills"
+                }
+            ],
+            "leadership_competency": [
+                {
+                    "code": "DSE",
+                    "level": "4",
+                    "description": "Delivering Service Excellence"
+                },
+                {
+                    "code": "EI",
+                    "level": "4",
+                    "description": "Exemplifying Integrity"
+                },
+                {
+                    "code": "IS",
+                    "level": "4",
+                    "description": "Interpersonal Skills"
+                }
+            ],
+            "technical_competency": [
+                {
+                    "code": "DSE",
+                    "level": "4",
+                    "description": "Delivering Service Excellence"
+                },
+                {
+                    "code": "EI",
+                    "level": "4",
+                    "description": "Exemplifying Integrity"
+                },
+                {
+                    "code": "IS",
+                    "level": "4",
+                    "description": "Interpersonal Skills"
+                }
+            ],
+            "performance_indicator": [
+                "supervised",
+                "managed1"
+            ],
+            "success_indicator": "3 racks in Data Center supervised and managed completely , as per schedule",
+            "supervisory_control_no": null,
+            "required_output": "Log Book and System Logs1",
+            "ratings": [
+                {
+                    "ratingId": 456,
+                    "performance_standard_id": "92",
+                    "rating": "5",
+                    "quantity": "3",
+                    "effectiveness": "completely",
+                    "timeliness": "before the scheduled week"
+                },
+                {
+                    "ratingId": 457,
+                    "performance_standard_id": "92",
+                    "rating": "4",
+                    "quantity": null,
+                    "effectiveness": null,
+                    "timeliness": null
+                },
+                {
+                    "ratingId": 458,
+                    "performance_standard_id": "92",
+                    "rating": "3",
+                    "quantity": "2",
+                    "effectiveness": "incomplete",
+                    "timeliness": "as per schedule"
+                },
+                {
+                    "ratingId": 459,
+                    "performance_standard_id": "92",
+                    "rating": "2",
+                    "quantity": null,
+                    "effectiveness": null,
+                    "timeliness": null
+                },
+                {
+                    "ratingId": 460,
+                    "performance_standard_id": "92",
+                    "rating": "1",
+                    "quantity": "1",
+                    "effectiveness": null,
+                    "timeliness": "beyond scheduled week"
+                }
+            ],
+            "config": {
+                "configurationId": 92,
+                "targetOutput": "3",
+                "quantityIndicator": "numeric",
+                "timelinessIndicator": "beforeDeadline",
+                "timelinessType": {
+                    "range": false,
+                    "date": false,
+                    "description": true
+                }
+            }
+        }
+    ]
+}

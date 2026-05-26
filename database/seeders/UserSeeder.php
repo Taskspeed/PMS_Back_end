@@ -20,53 +20,58 @@ class UserSeeder extends Seeder
         User::create([
             'name' => 'admin', // hr admin
             'password' => static::$password ??= Hash::make('admin'),
-            'office_id' => 20, // Ensure this office exists in the offices table
-            'role_id' => 3, // Ensure this role exists in the roles table
+            'office_id' => 14, 
+            'role_id' => 3, 
             'remember_token' => Str::random(24),
             'username' => 'admin',
             'active' => true
+            
 
         ]);
 
         User::create([
-            'name' => 'deniel', // office
+            'name' => 'DENEIL TOMENIO', // office
             'password' => static::$password ??= Hash::make('admin'),
-            'office_id' => 16, // Ensure this office exists in the offices table
+            'office_id' => 15, // Ensure this office exists in the offices table
             'role_id' => 1, // Ensure this role exists in the roles table
             'remember_token' => Str::random(24),
-            'username' => 'deniel',
-            'active' => true
+            'username' => 'cictmo',
+            'active' => true,
+            'control_no' => '022395'
         ]);
 
         User::create([
-            'name' => 'cliford', // planning
+            'name' => 'CLIFORD MILLAN', // planning
             'password' => static::$password ??= Hash::make('admin'),
-            'office_id' => 23, // Ensure this office exists in the offices table
-            'role_id' => 2, // Ensure this role exists in the roles table
+            'office_id' => 18, // Ensure this office exists in the offices table
+            'role_id' => 2, // planning
             'remember_token' => Str::random(24),
-            'username' => 'cliford',
-                  'active' => true
+            'username' => 'pdo',
+            'active' => true,
+            'control_no' => '022485'
         ]);
 
 
         User::create([
-            'name' => 'jeremie', // pmt
+            'name' => 'REIL IGONA', // pmt
             'password' => static::$password ??= Hash::make('admin'),
-            'office_id' => 20, // Ensure this office exists in the offices table
-            'role_id' => 4, // Ensure this role exists in the roles table
+            'office_id' => 14, // Ensure this office exists in the offices table
+            'role_id' => 5, // pmt
             'remember_token' => Str::random(24),
-            'username' => 'jeremie',
-            'active' => true
+            'username' => 'pmt',
+            'active' => true,
+            'control_no' => '011690'
         ]);
 
         User::create([
-            'name' => 'niel', // supervisor
+            'name' => 'JOHN VIR TAUTHO', // Receiving officer
             'password' => static::$password ??= Hash::make('admin'),
-            'office_id' => 20, // Ensure this office exists in the offices table
-            'role_id' => 5, // Ensure this role exists in the roles table
+            'office_id' => 15, //
+            'role_id' => 6, // receiving office
             'remember_token' => Str::random(24),
             'username' => 'niel',
-            'active' => true
+            'active' => true,
+            'control_no' => '000998'
         ]);
     }
 }

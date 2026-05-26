@@ -11,7 +11,7 @@ class Tracker extends Model
     protected $table = 'trackers';
 
     protected $fillable = [
-        'reviewed_by',
+        'processed_by',
         'office_name',
         'date',
         'status',

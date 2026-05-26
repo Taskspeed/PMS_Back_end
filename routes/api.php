@@ -232,6 +232,22 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
 
+        Route::prefix('receiving')->group(function () {
+
+        // fetch only office assign on pmt account, get all approve ipcr 
+        Route::get('/ipcr', [ReceivingController::class, 'getApproveIpcr']);
+
+        //get the unit work plan 
+        Route::get('/unitworkplan', [ReceivingController::class, 'getUnitworkplan']); //
+
+        // update  status of the ipcr to receive
+        Route::post('/ipcr/receive', [ReceivingController::class, 'updateIpcrReceive']); 
+
+        // update  status of the unit work plan to receive
+        Route::post('/unitworkplan/receive', [ReceivingController::class, 'updateUnitWorkPlanReceive']); 
+   
+    });
+
 
 
         // indicator library
@@ -266,20 +282,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Planning
     Route::prefix('planning')->group(function () {
-        // Route::get('/unit_work_plan/office', [Planning_Unit_work_planController::class, 'office']);
-        // Route::get('/unit_work_plan', [Planning_Unit_work_planController::class, 'unit_work_plan']);
-        // Route::get('/unit_work_plan/employee', [Planning_Unit_work_planController::class, 'employee']);
-        // Route::get('/unit_work_plan/divisions', [Planning_Unit_work_planController::class, 'getDivisionsWithWorkPlans']);
-        // Route::get('/unit_work_plan/employees', [Planning_Unit_work_planController::class, 'getEmployeesByDivision']);
+
 
         Route::prefix('dashboard')->group(function () {
-
-            Route::get('/list-pending-opcr/{semester}/{year}', [PlanningDashboardController::class, 'listOfOpcrPending']);
             Route::get('/status/{semester}/{year}', [PlanningDashboardController::class, 'numberOfStatus']);
         });
 
         Route::prefix('opcr')->group(function () {
+            Route::get('/list-received-opcr/{semester}/{year}', [PlanningDashboardController::class, 'listOfOpcrReceived']); // list of received opcr
             Route::post('/update-status', [PlanningOpcrController::class, 'opcrStatus']);
+        });
+
+        Route::prefix('receiving')->group(function(){
+            Route::get('/list-pending-opcr/{semester}/{year}', [PlanningDashboardController::class, 'listOfOpcrPending']); // list of draft
+
         });
     });
 
@@ -315,11 +331,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/store', [UnitWorkPlanController::class, 'addUnitWorkPlan']);
 
         // updating unit work plan
-        Route::put('/update/{controlNo}/{semester}/{year}', [UnitWorkPlanController::class, 'updateUnitWorkPlan']);
+        // Route::put('/update/{controlNo}/{semester}/{year}', [UnitWorkPlanController::class, 'updateUnitWorkPlan']);
+         Route::post('/update', [UnitWorkPlanController::class, 'updateUnitWorkPlan']);
 
         // deleting unit work plan
         Route::delete('/delete/{controlNo}/{semester}/{year}', [UnitWorkPlanController::class, 'deleteUnitWorkPlan']);
     });
+    
 
     // Employee
     Route::prefix('employee')->group(function () {
@@ -335,6 +353,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // storing employee on the office plantilla
         Route::post('/store', [EmployeeController::class, 'addEmployee']);
+        Route::post('v1/store', [EmployeeController::class, 'addEmployee']);
 
         // updating the rank of employee args  rank-in-file, supervisory, and others
         Route::post('/rank/{id}', [EmployeeController::class, 'updateRank']);
@@ -418,25 +437,24 @@ Route::middleware('auth:sanctum')->group(function () {
   
     });
 
-         Route::prefix('receiving')->group(function () {
+    //     Route::prefix('receiving')->group(function () {
 
-        // fetch only office assign on pmt account 
-        Route::get('/ipcr', [ReceivingController::class, 'getApproveIpcr']); // get all draft ipcr
+    //     // fetch only office assign on pmt account 
+    //     Route::get('/ipcr', [ReceivingController::class, 'getApproveIpcr']); // get all draft ipcr
 
-        //get the unit work plan and opcr
-        Route::get('/target-period', [ReceivingController::class, 'getTargetPeriod']); 
+    //     //get the unit work plan and opcr
+    //     Route::get('/target-period', [ReceivingController::class, 'getTargetPeriod']); 
 
-        // update  status of the ipcr to receive
-        Route::post('/ipcr/receive', [ReceivingController::class, 'updateIpcrReceive']); 
+    //     // update  status of the ipcr to receive
+    //     Route::post('/ipcr/receive', [ReceivingController::class, 'updateIpcrReceive']); 
 
-        // update  status of the opcr to receive
-        Route::post('opcr/receive', [ReceivingController::class, 'updateOpcrReceive']); 
+    //     // update  status of the opcr to receive
+    //     Route::post('opcr/receive', [ReceivingController::class, 'updateOpcrReceive']); 
 
-        // update  status of the unit work plan to receive
-        Route::post('/unitworkplan/receive', [ReceivingController::class, 'updateUnitWorkPlanReceive']); 
+    //     // update  status of the unit work plan to receive
+    //     Route::post('/unitworkplan/receive', [ReceivingController::class, 'updateUnitWorkPlanReceive']); 
    
-
-    });
+    // });
 
     
         Route::prefix('supervisor')->group(function () {
@@ -447,6 +465,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // updating ipcr of my advisory
         Route::post('/update/ipcr', [SupervisorController::class, 'updateIpcr']); 
 
+
+       // get the employee on head
+        Route::get('/list/employee/ipcr', [SupervisorController::class, 'getListOfEmployeeBaseOnSupervisor']);
 
     });
 

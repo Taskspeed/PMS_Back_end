@@ -287,7 +287,7 @@ class UnitWorkPlanService
                     'unitworkplan_records.unitworkplan_id',
                     'unitworkplan_records.status',
                     'unitworkplan_records.remarks',
-                    'unitworkplan_records.reviewed_by',
+                    'unitworkplan_records.processed_by',
                 );
             }
         ])->select('id', 'office_name','semester','year')
@@ -307,119 +307,207 @@ class UnitWorkPlanService
         ];
     }
 
-    // updating the unit work plan of employee
-    public function update($validated, $controlNo, $semester, $year)
-    {
-        $user = Auth::user();
+    // // updating the unit work plan of employee
+    // public function update($validated, $controlNo, $semester, $year)
+    // {
+    //     $user = Auth::user();
 
-        DB::beginTransaction();
+    //     DB::beginTransaction();
 
-        try {
-            // ✅ STEP 1: Employee + office restriction
-            $employee = Employee::where('ControlNo', $controlNo)
-                ->where('office_id', $user->office_id)
-                ->first();
+    //     try {
+    //         // ✅ STEP 1: Employee + office restriction
+    //         $employee = Employee::where('ControlNo', $controlNo)
+    //             ->where('office_id', $user->office_id)
+    //             ->first();
 
-            if (! $employee) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Employee not found or access denied.',
-                ], 404);
-            }
+    //         if (! $employee) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Employee not found or access denied.',
+    //             ], 404);
+    //         }
 
-            // ✅ STEP 2: Target Period
-            $targetPeriod = $employee->targetPeriods()
-                ->where('year', $year)
-                ->where('semester', $semester)
-                ->first();
+    //         // ✅ STEP 2: Target Period
+    //         $targetPeriod = $employee->targetPeriods()
+    //             ->where('year', $year)
+    //             ->where('semester', $semester)
+    //             ->first();
 
-            if (! $targetPeriod) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unit Work Plan not found.',
-                ], 404);
-            }
+    //         if (! $targetPeriod) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Unit Work Plan not found.',
+    //             ], 404);
+    //         }
 
-            // ✅ Reset status
-            $targetPeriod->update([
-                'status' => 'Draft',
-            ]);
+    //         // ✅ Reset status
+    //         $targetPeriod->update([
+    //             'status' => 'Draft',
+    //         ]);
 
-            // ✅ DELETE CHILD RECORDS IN CORRECT ORDER (reverse dependency)
-            // 1. Delete PerformanceConfigurations first
-            PerformanceConfigurations::whereIn(
-                'performance_standard_id',
-                PerformanceStandard::where('target_period_id', $targetPeriod->id)->pluck('id')
-            )->delete();
+    //         // ✅ DELETE CHILD RECORDS IN CORRECT ORDER (reverse dependency)
+    //         // 1. Delete PerformanceConfigurations first
+    //         PerformanceConfigurations::whereIn(
+    //             'performance_standard_id',
+    //             PerformanceStandard::where('target_period_id', $targetPeriod->id)->pluck('id')
+    //         )->delete();
 
-            // 2. Delete StandardOutcome
-            StandardOutcome::whereIn(
-                'performance_standard_id',
-                PerformanceStandard::where('target_period_id', $targetPeriod->id)->pluck('id')
-            )->delete();
+    //         // 2. Delete StandardOutcome
+    //         StandardOutcome::whereIn(
+    //             'performance_standard_id',
+    //             PerformanceStandard::where('target_period_id', $targetPeriod->id)->pluck('id')
+    //         )->delete();
 
-            // 3. Delete PerformanceStandard last
-            PerformanceStandard::where('target_period_id', $targetPeriod->id)->delete();
+    //         // 3. Delete PerformanceStandard last
+    //         PerformanceStandard::where('target_period_id', $targetPeriod->id)->delete();
 
-            // ✅ RE-CREATE PERFORMANCE STANDARDS
-            foreach ($validated['performance_standards'] as $standard) {
-                $performanceStandard = PerformanceStandard::create([
-                    'target_period_id'      => $targetPeriod->id,
+    //         // ✅ RE-CREATE PERFORMANCE STANDARDS
+    //         foreach ($validated['performance_standards'] as $standard) {
+    //             $performanceStandard = PerformanceStandard::create([
+    //                 'target_period_id'      => $targetPeriod->id,
+    //                 'category'              => $standard['category'],
+    //                 'mfo'                   => $standard['mfo'],
+    //                 'output'                => $standard['output'],
+    //                 'output_name'           => $standard['output_name'], // ✅ ADDED - was missing
+    //                 'core'                  => $standard['core_competency'] ?? null,
+    //                 'technical'             => $standard['technical_competency'] ?? null,
+    //                 'leadership'            => $standard['leadership_competency'] ?? null,
+    //                 'performance_indicator' => $standard['performance_indicator'],
+    //                 'success_indicator'     => $standard['success_indicator'],
+    //                 'required_output'       => $standard['required_output'],
+    //             ]);
+
+    //             // ✅ Create ratings (StandardOutcome)
+    //             foreach ($standard['ratings'] as $rating) {
+    //                 $standard_outcome = StandardOutcome::create([
+    //                     'performance_standard_id' => $performanceStandard->id,
+    //                     'rating'                  => $rating['rating'],
+    //                     'quantity_target'         => $rating['quantity'],
+    //                     'effectiveness_criteria'  => $rating['effectiveness'],
+    //                     'timeliness_range'        => $rating['timeliness'],
+    //                 ]);
+    //             }
+
+    //             // ✅ Create config
+    //             $config = $standard['config'];
+
+    //             $configuration = PerformanceConfigurations::create([
+    //                 'performance_standard_id' => $performanceStandard->id,
+    //                 'target_output'           => $config['target_output'],
+    //                 'quantity_indicator'      => $config['quantity_indicator'],
+    //                 'timeliness_indicator'    => $config['timeliness_indicator'],
+    //                 'timeliness_range'        => $config['timelinessType']['range'],
+    //                 'timeliness_date'         => $config['timelinessType']['date'],
+    //                 'timeliness_description'  => $config['timelinessType']['description'],
+    //             ]);
+    //         }
+
+    //         DB::commit();
+
+    //         return [
+    //             'target_period'        => $targetPeriod,
+    //             'performance_standard' => $performanceStandard,
+    //             'standard_outcome'     => $standard_outcome,
+    //             'configuration'        => $configuration,
+    //         ];
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to update Unit Work Plan.',
+    //             'error'   => $e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
+
+     // updating the unit work plan of employee
+  public function update($validated)
+{
+    DB::beginTransaction();
+
+    try {
+        $performanceStandard = null;
+        $standard_outcome    = null;
+        $configuration       = null;
+
+        foreach ($validated['performance_standards'] as $standard) {
+
+            // PERFORMANCE STANDARD
+            $performanceStandard = PerformanceStandard::updateOrCreate(
+                [
+                'id'        => $standard['performanceStandardId'],       // match by ID
+                // 'target_period_id' => $standard['target_period_id'], // ADD THIS
+            ],
+                [
+                    'target_period_id'      => $standard['target_period_id'], // ADD THIS
                     'category'              => $standard['category'],
-                    'mfo'                   => $standard['mfo'],
-                    'output'                => $standard['output'],
-                    'output_name'           => $standard['output_name'], // ✅ ADDED - was missing
+                    'mfo'                   => $standard['mfo'] ?? null,
+                    'output'                => $standard['output'] ?? null,
+                    'output_name'           => $standard['output_name'] ?? null,
                     'core'                  => $standard['core_competency'] ?? null,
                     'technical'             => $standard['technical_competency'] ?? null,
                     'leadership'            => $standard['leadership_competency'] ?? null,
-                    'performance_indicator' => $standard['performance_indicator'],
+                    'performance_indicator' => $standard['performance_indicator'] ?? null,
                     'success_indicator'     => $standard['success_indicator'],
-                    'required_output'       => $standard['required_output'],
-                ]);
+                    'required_output'       => $standard['required_output'] ?? null,
+                ]
+            );
 
-                // ✅ Create ratings (StandardOutcome)
-                foreach ($standard['ratings'] as $rating) {
-                    $standard_outcome = StandardOutcome::create([
+            // RATINGS (StandardOutcome)
+            foreach ($standard['ratings'] as $rating) {
+                $standard_outcome = StandardOutcome::updateOrCreate(
+                    [
+                        'id' => $rating['ratingId'] ?? null,  // unique match key
+                    ],
+                    [
                         'performance_standard_id' => $performanceStandard->id,
                         'rating'                  => $rating['rating'],
                         'quantity_target'         => $rating['quantity'],
                         'effectiveness_criteria'  => $rating['effectiveness'],
                         'timeliness_range'        => $rating['timeliness'],
-                    ]);
-                }
+                    ]
+                );
+            }
 
-                // ✅ Create config
-                $config = $standard['config'];
+            // CONFIG (PerformanceConfigurations)
+            $config = $standard['config'];
 
-                $configuration = PerformanceConfigurations::create([
+            $configuration = PerformanceConfigurations::updateOrCreate(
+                [
+                    'id' => $standard['config']['configurationId'] ?? null,  // unique match key
+                ],
+                [
                     'performance_standard_id' => $performanceStandard->id,
-                    'target_output'           => $config['target_output'],
-                    'quantity_indicator'      => $config['quantity_indicator'],
-                    'timeliness_indicator'    => $config['timeliness_indicator'],
+                    'target_output'           => $config['targetOutput'],
+                    'quantity_indicator'      => $config['quantityIndicator'],
+                    'timeliness_indicator'    => $config['timelinessIndicator'],
                     'timeliness_range'        => $config['timelinessType']['range'],
                     'timeliness_date'         => $config['timelinessType']['date'],
                     'timeliness_description'  => $config['timelinessType']['description'],
-                ]);
-            }
-
-            DB::commit();
-
-            return [
-                'target_period'        => $targetPeriod,
-                'performance_standard' => $performanceStandard,
-                'standard_outcome'     => $standard_outcome,
-                'configuration'        => $configuration,
-            ];
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update Unit Work Plan.',
-                'error'   => $e->getMessage(),
-            ], 500);
+                ]
+            );
         }
+
+        DB::commit();
+
+        return [
+            'performance_standard' => $performanceStandard,
+            'standard_outcome'     => $standard_outcome,
+            'configuration'        => $configuration,
+        ];
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to update Unit Work Plan.',
+            'error'   => $e->getMessage(),
+        ], 500);
     }
+}
 
     // // get the office-head and fetch the supervisory
     // public function supervisoryDeductionOfSuccessIndicator($year, $semester, $mfo)

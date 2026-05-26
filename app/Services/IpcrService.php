@@ -81,7 +81,7 @@ class IpcrService
                 'office_opcrs_records.date',
                 'office_opcrs_records.status',
                 'office_opcrs_records.remarks',
-                'office_opcrs_records.reviewed_by',
+                'office_opcrs_records.processed_by',
             );
         }])
             ->select('id', 'office_id', 'office_name', 'semester', 'year')

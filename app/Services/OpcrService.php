@@ -84,7 +84,7 @@ class OpcrService
     //             'office_opcrs_records.date',
     //             'office_opcrs_records.status',
     //             'office_opcrs_records.remarks',
-    //             'office_opcrs_records.reviewed_by',
+    //             'office_opcrs_records.processed_by',
     //         );
     //     }])
     //     ->select('id','office_id','office_name','semester','year')
@@ -194,23 +194,63 @@ class OpcrService
 
 
     // storing status of opcr
-    public function opcrStoreStatus($validated){
+    public function opcrStoreStatus($validated)
+    {
 
-    $user =  Auth::user();
+    
+        $user =  Auth::user();
 
-
-    $opcr = OfficeOpcrRecord::create([
-
-        'office_opcr_id' => $validated['office_opcr_id'],
+        $opcr = OfficeOpcrRecord::create([
+            'office_opcr_id' => $validated['office_opcr_id'],
             'date' => now()->format('m-d-Y'),
             'status' => $validated['status'],
             'remarks' => $validated['remarks'],
-            'reviewed_by' => $user->id,
+            'processed_by' => $user->id,
+            'processed_by_name' => $user->name,
+        ]);
+
+        return response()->json($opcr);
+    }
 
 
-    ]);
+    
+    // list of  opcr Received
+    public function opcrReceived($semester, $year)
+    {
 
-    return response()->json($opcr);
+        // opcr of office
+        $data = OfficeOpcr::select(
+            'office_opcrs.id',
+            'office_opcrs.office_id',
+            'office_opcrs.office_name', // add your fields here
+            'office_opcrs.semester',
+            'office_opcrs.year'
+        )->with([
+            'officeOpcrRecordLastestRecord' => function ($query) {
+                $query->select(
+                    'office_opcrs_records.id',
+                    'office_opcrs_records.office_opcr_id',
+                    'office_opcrs_records.date',
+                    'office_opcrs_records.status'
+                );
+            }, // eager load office head per office
+            'officeHead' => function ($query) {
+                $query->select(
+                    'employees.id',
+                    'employees.office_id',
+                    'employees.name',
+                    'employees.job_title',
+                    'employees.ControlNo'
+                );
+            },
 
+        ])
+            ->where('semester', $semester)
+            ->where('year', $year)
+            ->whereHas('officeOpcrRecordLastestRecord', function ($query) {
+                $query->where('status', 'Received');
+            })->get();
+
+        return $data;
     }
 }

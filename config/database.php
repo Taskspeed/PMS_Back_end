@@ -107,6 +107,8 @@ return [
             'charset'  => 'utf8',
             'prefix'   => '',
             'prefix_indexes' => true,
+                'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE_SECOND', 'true'), // 👈 add this
+    'encrypt'  => env('DB_ENCRYPT_SECOND', 'false'), // 👈 add this
         ],
 
         'sqlsrv' => [
@@ -120,8 +122,8 @@ return [
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
-         'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE_SECOND', 'true'), // 👈 add this
-    'encrypt'  => env('DB_ENCRYPT_SECOND', 'false'), // 👈 add this
+            //  'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE_SECOND', 'true'), // 👈 add this
+            //  'encrypt'  => env('DB_ENCRYPT_SECOND', 'false'), // 👈 add this
         ],
 
     ],
