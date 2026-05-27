@@ -456,7 +456,7 @@ class AuthController extends Controller
 
 
         if ($account->isEmpty()) {
-            return $this->infoMessage('No data found', 200);
+            return $this->errorMessage('No data found', 404);
         }
         return $this->successMessage($account, 'Fetch Successfully', 200);
     }
