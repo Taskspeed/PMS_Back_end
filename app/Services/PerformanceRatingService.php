@@ -7,16 +7,9 @@ use Illuminate\Support\Facades\DB;
 
 class PerformanceRatingService
 {
-    /**
-     * Create a new class instance.
-     */
-    // public function __construct()
-    // {
-    //     //
-    // }
 
     // store performance rating of employee
-    public function performanceRatingStore($validated)
+    public function performanceRatingStore(array $validated)
     {
         $saveRates = [];
 

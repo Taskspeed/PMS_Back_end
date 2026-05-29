@@ -223,7 +223,7 @@ class EmployeeController extends Controller
             ->get();
 
         if ($employee->isEmpty()) {
-            return $this->infoMessage('No head employees found for this office.', 200);
+            return $this->errorMessage('No head employees found for this office.', 200);
         }
 
         return $this->successMessage($employee, 'Fetch employee successful');

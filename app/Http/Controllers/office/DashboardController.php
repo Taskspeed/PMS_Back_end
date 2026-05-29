@@ -163,7 +163,7 @@ class DashboardController extends Controller
 
 
     
-    private function opcrOfficeHead($controlNo, $year, $semester)
+    private function opcrOfficeHead(string $controlNo,int $year, string $semester)
     {
         $officeHeadOpcr = Employee::select('id', 'ControlNo', 'name', 'office_id', 'office')
             ->where('ControlNo', $controlNo)
@@ -285,7 +285,7 @@ class DashboardController extends Controller
     /**
      * Aggregate IPCR by MFO — exclude the office head's own control number
      */
-    public function aggregateIpcrByMfoForOpcr($officeId, $year, $semester, $excludeControlNo = null,  $successIndicatorsByMfo = null)
+    public function aggregateIpcrByMfoForOpcr(int $officeId, int $year, string $semester, $excludeControlNo = null,  $successIndicatorsByMfo = null)
     {
         $query = Employee::where('office_id', $officeId);
 
@@ -468,34 +468,6 @@ class DashboardController extends Controller
             ? round($categoryRatings['support']['sum'] / $categoryRatings['support']['count'], 2)
             : 0;
 
-
-        // ✅ Step 4: Apply weights and compute final rating
-
-        // $strategicWeighted = round($strategicAvg * 0.2, 2);
-        // $coreWeighted      = round($coreAvg      * 0.6, 2);
-        // $supportWeighted   = round($supportAvg   * 0.2, 2);
-        // $finalRating       = round($strategicWeighted + $coreWeighted + $supportWeighted, 2);
-
-        // ✅ Step 4: Apply weights and compute final rating
-
-
-        // $hasStrategic = $categoryRatings['strategic']['count'] > 0;
-
-        // if ($hasStrategic) {
-        //     // Standard weights: Strategic 20%, Core 60%, Support 20%
-        //     $strategicWeighted = round($strategicAvg * 0.2, 2);
-        //     $coreWeighted      = round($coreAvg      * 0.6, 2);
-        //     $supportWeighted   = round($supportAvg   * 0.2, 2);
-        // } else {
-        //     // No Strategic Function: redistribute Strategic 20% → Core becomes 80%, Support stays 20%
-        //     $strategicWeighted = 0;
-        //     $coreWeighted      = round($coreAvg   * 0.8, 2);
-        //     $supportWeighted   = round($supportAvg * 0.2, 2);
-        // }
-
-        // $finalRating = round($strategicWeighted + $coreWeighted + $supportWeighted, 2);
-
-
         $hasStrategic = $categoryRatings['strategic']['count'] > 0;
         $hasSupport   = $categoryRatings['support']['count'] > 0;
 
@@ -538,7 +510,7 @@ class DashboardController extends Controller
     }
 
 
-    public function getMonthly($targetPeriodId)
+    public function getMonthly(int $targetPeriodId)
     {
         $standards = PerformanceStandard::select([
             'id',
@@ -676,7 +648,7 @@ class DashboardController extends Controller
 
 
     // get the summary-monthly-rate
-    public function getSummaryMonthly($targetPeriodId)
+    public function getSummaryMonthly(int $targetPeriodId)
     {
         $standards = PerformanceStandard::select([
             'id',
@@ -802,7 +774,7 @@ class DashboardController extends Controller
     }
 
     // get the monthly rate of employee Timeliness and Effectiveness
-    private function getComputationTotalAndRating(array $monthlyRatings, $standardOutcomes)
+    private function getComputationTotalAndRating(array $monthlyRatings, string $standardOutcomes)
     {
         $totals = [
             'quantity_total' => 0,
@@ -853,7 +825,7 @@ class DashboardController extends Controller
     }
 
     //getting the quantity rating based on the standard outcomes
-    private function getQuantityRating($quantityTotal, $standardOutcomes)
+    private function getQuantityRating(int $quantityTotal, $standardOutcomes)
     {
         if ($quantityTotal <= 0) {
             return 0;
@@ -914,7 +886,7 @@ class DashboardController extends Controller
     }
 
     // getting the value of standard outcomes based on the rating
-    private function getStandardOutcomeText($standardOutcomes, $rating)
+    private function getStandardOutcomeText($standardOutcomes, string $rating)
     {
         $outcome = $standardOutcomes->firstWhere('rating', (string) $rating);
 

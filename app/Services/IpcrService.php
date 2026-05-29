@@ -24,7 +24,7 @@ class IpcrService
     // {
     //     //
     // }
-    public function opcrOfficeHead($controlNo, $semester, $year)
+    public function opcrOfficeHead(string $controlNo, string $semester, int $year)
     {
         $officeHeadOpcr = Employee::select('id', 'ControlNo', 'name', 'office_id', 'office')
             ->where('ControlNo', $controlNo)
@@ -146,7 +146,7 @@ class IpcrService
     /**
      * Aggregate IPCR by MFO — exclude the office head's own control number
      */
-    public function aggregateIpcrByMfoForOpcr($officeId, $year, $semester, $excludeControlNo = null,  $successIndicatorsByMfo = null)
+    public function aggregateIpcrByMfoForOpcr(int $officeId, int $year, string $semester, $excludeControlNo = null,  $successIndicatorsByMfo = null)
     {
         $query = Employee::where('office_id', $officeId);
 
@@ -403,7 +403,7 @@ class IpcrService
     //---------------------------------------------------------------------------- Ipcr Data-----------------------------------------------------------------------------//
 
     //Ipcr Data of Employee
-    public function getIpcrData($controlNo, $year, $semester)
+    public function getIpcrData(string $controlNo, int $year, string $semester)
     {
         $employee = Employee::where('ControlNo', $controlNo)
             ->with([
@@ -499,7 +499,7 @@ class IpcrService
     //---------------------------------------------------------------------------- monthly-rate-----------------------------------------------------------------------------//
 
 
-    public function getMonthly($targetPeriodId)
+    public function getMonthly(int $targetPeriodId)
     {
         $standards = PerformanceStandard::select([
             'id',
@@ -927,7 +927,7 @@ class IpcrService
 
     //-----------------------approve the ipcr of the employee----------------------------------------------//
 
-    public function approveIpcr($controlNo, $semester, $year, Request $request)
+    public function approveIpcr(string $controlNo, string $semester, int $year, Request $request)
     {
         $validated = $request->validate([
             'status' => 'required|in:approve,reject,review,re-submit',
@@ -999,7 +999,7 @@ class IpcrService
     }
 
     // status of ipcr of employee
-    public function updateStatusIpcr($validateData, $targetPeriodId)
+    public function updateStatusIpcr(?array $validateData, int $targetPeriodId)
     {
 
         $ipcr = TargetPeriod::findOrFail($targetPeriodId);

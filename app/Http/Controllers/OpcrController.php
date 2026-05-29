@@ -9,6 +9,7 @@ use App\Models\Employee;
 use App\Services\IpcrService;
 use App\Services\OpcrService;
 use App\Traits\ApiResponseTrait;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Routing\Controller as BaseController;
 class OpcrController extends BaseController
@@ -16,8 +17,8 @@ class OpcrController extends BaseController
 
     use ApiResponseTrait;
 
-    protected $user;
-    protected $officeId;
+    protected ? Authenticatable $user = null;
+    protected ? int $officeId = null; 
 
     
     public function __construct()
@@ -31,7 +32,7 @@ class OpcrController extends BaseController
     }
 
     // get the opcr of the office head
-    public function opcr($controlNo, $semester, $year, IpcrService $ipcr)
+    public function opcr(string $controlNo, string $semester,int $year, IpcrService $ipcr)
     {
 
         $employeeOpcr = $ipcr->opcrOfficeHead($controlNo, $semester, $year);

@@ -56,7 +56,7 @@ class TargetPeriodController extends Controller
     }
 
     // updating target period
-    public function updateTargetPeriod(TargetPeriodUpdateRequest $request , $targetPeriodId)
+    public function updateTargetPeriod(TargetPeriodUpdateRequest $request ,int $targetPeriodId)
     {
         $validated = $request->validated();
 
@@ -73,7 +73,7 @@ class TargetPeriodController extends Controller
     }
 
     // delete target period
-    public function deleteTargetPeriod($targetPeriodId)
+    public function deleteTargetPeriod(int $targetPeriodId)
     {
         $targetPeriod = TargetPeriodLib::findOrFail($targetPeriodId);
 

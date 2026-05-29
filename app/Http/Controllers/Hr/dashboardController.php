@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class dashboardController extends Controller
 {
-    protected $dashboardService;
+    protected DashboardService $dashboardService;
 
     public function __construct(DashboardService $dashboardService)
     {
@@ -19,34 +19,8 @@ class dashboardController extends Controller
 
     }
 
-    // get the number of employee base of status
-    // public function currentEmployeeStatus(DashboardService $dashboardService)
-    // {
-
-    //     $employee = $dashboardService->currentEmployee();
-
-    //     return response()->json($employee);
-    // }
-
-    // get the number of employee base of status
-    // old data
-    // public function previousEmployeeStatus(DashboardService $dashboardService,$year,$semester)
-    // {
-    //     $employee = $dashboardService->filterEmployeeStatus($year,$semester);
-
-    //     return $employee;
-    // }
-
-    // fetching the list of data available employee status
-    // public function fetchEmployeeStatus(DashboardService $dashboardService)
-    // {
-    //     $employee = $dashboardService->availableDataEmployeeStatus();
-
-    //     return response()->json($employee);
-    // }
-
-
-    public function dashboardSummaryData($year, $semester)
+    // get the data  dashboard
+    public function dashboardSummaryData(int $year, string $semester)
     {
         $employee = $this->dashboardService->dashboard($year, $semester);
 
@@ -69,8 +43,8 @@ class dashboardController extends Controller
     {
         $year  = $request->input('year');
         $semester = $request->input('semester');       
-        $office = $request->input('office');   
-        $employee = $this->dashboardService->listOfIpcr($year, $semester,$office);
+        // $office = $request->input('office');   
+        $employee = $this->dashboardService->listOfIpcr($year, $semester);
 
         return $employee;
     }
@@ -93,8 +67,8 @@ class dashboardController extends Controller
     {
         $year  = $request->input('year');
         $semester = $request->input('semester');       
-        $office = $request->input('office');    
-        $employee = $this->dashboardService->listOfOpcr($year, $semester,$office);
+        // $office = $request->input('office');    
+        $employee = $this->dashboardService->listOfOpcr($year, $semester);
 
         return $employee;
     }
@@ -264,7 +238,7 @@ class dashboardController extends Controller
         return $result;
     }
 
-    private function mapEmployee($row): array
+    private function mapEmployee(vwplantillastructure $row): array
     {
         return [
             'controlNo' => $row->ControlNo, // ✅ fixed

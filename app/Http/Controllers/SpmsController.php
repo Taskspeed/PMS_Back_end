@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\vwplantillastructure;
 use App\Services\SpmsService;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Routing\Controller as BaseController;
 
@@ -16,8 +17,8 @@ class SpmsController extends BaseController
 {
 
 
-    protected $user;
-    protected $officeId;
+    protected ? Authenticatable $user = null;
+    protected ? int $officeId = null;
 
     public function __construct()
     {

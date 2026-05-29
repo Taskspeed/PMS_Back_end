@@ -31,7 +31,7 @@ class IndicatorController extends Controller
     }
 
     // update
-    public function updateIndicator($indicatorId, IndicatorUpdateRequest $request)
+    public function updateIndicator(int $indicatorId, IndicatorUpdateRequest $request)
     {
 
         $validated = $request->validated();
@@ -50,7 +50,7 @@ class IndicatorController extends Controller
     }
 
     // delete
-    public function deleteIndicator($indicatorId)
+    public function deleteIndicator(int $indicatorId)
     {
         $indicator = Indicator::findOrFail($indicatorId);
 

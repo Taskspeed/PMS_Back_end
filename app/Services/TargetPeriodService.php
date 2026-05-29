@@ -9,19 +9,11 @@ use Carbon\Carbon;
 
 class TargetPeriodService
 {
-    /**
-     * Create a new class instance.
-     */
-    // public function __construct()
-    // {
-    //     //
-    // }
 
+//============================================================== ERMS =============================================================//
     // fetch the targetperiod of employee
-    public function targetPeriod($controlNo)
+    public function targetPeriod(string $controlNo)
     {
-
-
         $employeeTargetPeriods = TargetPeriod::select(
             'id',
             'control_no',
@@ -45,8 +37,58 @@ class TargetPeriodService
         ], 200);
     }
 
+    
+    //  get the target peroid details the performance standard and standard outcome
+    public function targetPeriodDetails(int $targetPeriodId)
+    {
+        $targetperiod = TargetPeriod::select('id')->where('id', $targetPeriodId)
+            ->with([
+                'performanceStandards' => function ($query) {
+                    $query->select(
+                        'id',
+                        'target_period_id',
+                        'category',
+                        'mfo',
+                        'output',
+                        'output_name',
+                        'performance_indicator',
+                        'success_indicator',
+                        'required_output'
+                    )
+                        ->with([
+                            'standardOutcomes' => function ($query) {
+                                $query->select(
+                                    'id',
+                                    'performance_standard_id',
+                                    'rating',
+                                    'quantity_target as quantity',
+                                    'effectiveness_criteria as effectiveness',
+                                    'timeliness_range as timeliness'
+                                );
+                            },
+                            'configurations' => function ($query) {
+                                $query->select(
+                                    'id',
+                                    'performance_standard_id',
+                                    'target_output as targetOutput',
+                                    'quantity_indicator as quantityIndicator',
+                                    'timeliness_indicator as timelinessIndicator',
+                                    'timeliness_range as range',
+                                    'timeliness_date as date',
+                                    'timeliness_description as description'
+                                );
+                            }
+                        ]);
+                }
+            ])->get();
 
-    public function getTargetPeriodWithStandardsAndRatings($targetPeriodId, $month = null, $year = null, $week = null)
+        // check if the his office
+
+        return response()->json($targetperiod);
+    }
+
+    // get the target period with standard and rating
+    public function getTargetPeriodWithStandardsAndRatings(int $targetPeriodId, $month = null, $year = null, $week = null)
     {
         $targetPeriod = TargetPeriod::select('id')
             ->where('id', $targetPeriodId)
@@ -137,28 +179,9 @@ class TargetPeriodService
 
         return response()->json($targetPeriod);
     }
-// ```
 
-// **Example — July 2026 calendar:**
-
-// July 2026 starts on a Wednesday, so the actual weeks are:
-
-// | Week | Days | Date Range |
-// |------|------|------------|
-// | week1 | Wed–Sat | July 1–4 |
-// | week2 | Sun–Sat | July 5–11 |
-// | week3 | Sun–Sat | July 12–18 |
-// | week4 | Sun–Sat | July 19–25 |
-// | week5 | Sun–Thu | July 26–31 |
-
-// **Postman:**
-// ```
-// GET http://localhost:8000/api/target-period/71/ratings/July/2026/week1
-// GET http://localhost:8000/api/target-period/71/ratings/July/2026/week2
-// GET http://localhost:8000/api/target-period/71/ratings/July/2026/week3
-
-
-    private function getWeekRangeForMonth($month, $year, $week)
+    // week range of months
+    private function getWeekRangeForMonth(string $month, int $year, string $week)
     {
         // Get first day of the month
         $firstDay = Carbon::createFromFormat('F Y', "$month $year")->startOfMonth();
@@ -192,4 +215,43 @@ class TargetPeriodService
         return $weeks[$week] ?? null;
     }
 
+     //performance rating record
+    public function performanceRatingRecord(int $targetPeriodId)
+    {
+
+        $employee_rating_record = TargetPeriod::select('id')->where('id', $targetPeriodId)
+            ->with([
+                'performanceStandards' => function ($query) {
+                    $query->select(
+                        'id',
+                        'target_period_id',
+                        'category',
+                        'mfo',
+                        // 'output',
+                        // 'output_name',
+                        // 'performance_indicator',
+                        // 'success_indicator',
+                        // 'required_output'
+                    )
+                        ->with([
+                            'performanceRating' => function ($query) {
+                                $query->select(
+                                    'id',
+                                    'performance_standard_id',
+
+                                    'date',
+                                    'quantity_actual',
+                                    'effectiveness_actual',
+                                    'timeliness_actual'
+                                );
+                            },
+
+                        ]);
+                }
+            ])->get();
+
+
+        return response()->json($employee_rating_record);
+    }
+    //============================================================== ERMS =============================================================//
 }

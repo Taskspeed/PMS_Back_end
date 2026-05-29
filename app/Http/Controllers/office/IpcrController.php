@@ -31,7 +31,7 @@ class IpcrController extends BaseController
     //     });
     // }
 
-    public function getIpcrEmployee($controlNo, $year, $semester, IpcrService $ipcrService)
+    public function getIpcrEmployee(string $controlNo, int $year, string $semester, IpcrService $ipcrService)
     {
         $employee  = $ipcrService->getIpcrData($controlNo, $year, $semester);
 
@@ -41,11 +41,11 @@ class IpcrController extends BaseController
             ], 404);
         }
 
-        return new IpcrResource($employee); // ✅ SINGLE resource
+        return new IpcrResource($employee); 
     }
 
     // get the perfomance standard of employee
-    public function getPerformanceStandard($targetPeriodId)
+    public function getPerformanceStandard(int $targetPeriodId)
     {
         $employee = PerformanceStandard::select('id', 'target_period_id', 'category', 'mfo', 'success_indicator', 'core', 'technical', 'leadership', 'required_output')
             ->where('target_period_id', $targetPeriodId)
@@ -57,7 +57,7 @@ class IpcrController extends BaseController
     }
 
     // approving the ipcr of the employee
-    public function approveIpcrEmployee($controlNo, $semester, $year, Request $request, IpcrService $ipcrService)
+    public function approveIpcrEmployee(string $controlNo, string $semester, int $year, Request $request, IpcrService $ipcrService)
     {
         try {
 
@@ -80,7 +80,7 @@ class IpcrController extends BaseController
     // month - week1, week2, week 3, it depend of the month how many weeks
     // then get the rate of the employee every day  then total
     // the format of the date is mm/dd/yy
-    public function getMonthlyEmployee($targetPeriodId, IpcrService $ipcrService)
+    public function getMonthlyEmployee(int $targetPeriodId, IpcrService $ipcrService)
     {
         // access the MonthlyPerformanceService to get the monthly performance data
         $monthlyData = $ipcrService->getMonthly($targetPeriodId);
@@ -99,7 +99,7 @@ class IpcrController extends BaseController
     }
 
     // get the summary-monthly-rate
-    public function getSummaryMonthlyEmployee($targetPeriodId, IpcrService $ipcrService)
+    public function getSummaryMonthlyEmployee(int $targetPeriodId, IpcrService $ipcrService)
     {
         $monthSummaryData = $ipcrService->getSummaryMonthly($targetPeriodId);
 
@@ -136,7 +136,7 @@ class IpcrController extends BaseController
     }
 
     // updating - status ipcr of employee args approve,review,cancel and others
-    public function statusIpcr(Request $request, $targetPeriodId, IpcrService $updatingIpcr){
+    public function statusIpcr(Request $request, int $targetPeriodId, IpcrService $updatingIpcr){
 
     $validateData = $request->validate([
             'status' =>  'required|string'

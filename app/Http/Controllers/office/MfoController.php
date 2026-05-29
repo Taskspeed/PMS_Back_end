@@ -40,7 +40,7 @@ class MfoController extends Controller
     }
 
     // update mfo
-    public function updateMfo(MfoUpdateRequest $request, $id, MfoService $mfoService) // update
+    public function updateMfo(MfoUpdateRequest $request, int $id, MfoService $mfoService) // update
     {
         $validated = $request->validated();
         // find the MFO by id
@@ -54,7 +54,7 @@ class MfoController extends Controller
     }
 
     // Delete for MFO
-    public function delete($id){
+    public function delete(int $id){
 
         $mfos = mfo::findOrFail($id);
         $mfos->delete();
@@ -71,7 +71,7 @@ class MfoController extends Controller
 
 
     // fetch all mfo of office head
-    public function fetchMfo(Request $request, MfoService $mfoService, $semester, $year)
+    public function fetchMfo(Request $request, MfoService $mfoService, string $semester, int $year)
     {
         $mfo = $mfoService->getMfo($semester, $year);
 

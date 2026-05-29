@@ -5,6 +5,7 @@ use App\Http\Controllers\Activity_log_Controller;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Erms\EmployeeRatingController;
+use App\Http\Controllers\Erms\EmployeeSupervisorController;
 use App\Http\Controllers\Hr\dashboardController;
 use App\Http\Controllers\Hr\IndicatorController;
 use App\Http\Controllers\Hr\RankController;
@@ -86,6 +87,10 @@ Route::prefix('erms')->group(function () {
 
     // storing rating
     Route::post('employee/store/rating', [EmployeeRatingController::class, 'performanceRating']);
+
+    
+    // get my supervipor
+    Route::get('employee/supervisor', [EmployeeSupervisorController::class, 'getMySupervisor']);
 });
 
 
@@ -368,8 +373,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/delete/{id}', [EmployeeController::class, 'deleteEmployee']);
         // list of supervisor
         Route::get('/list-of-Head', [EmployeeController::class, 'listOfHead']);
-
-
+        
         // get the employee on head
         Route::get('/head', [SpmsController::class, 'getEmployeeUnderOfHead']);
 
@@ -467,7 +471,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
        // get the employee on head
-        Route::get('/list/employee/ipcr', [SupervisorController::class, 'getListOfEmployeeBaseOnSupervisor']);
+        Route::get('/list/employee/ipcr', [SupervisorController::class, 'getSupervisor']);
 
     });
 

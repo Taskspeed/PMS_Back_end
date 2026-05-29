@@ -22,7 +22,7 @@ class ReceivingController extends Controller
     //
     use ApiResponseTrait;
 
-    protected $structureService;
+    protected  StructureService $structureService;
 
     public function __construct(StructureService $structureService)
     {

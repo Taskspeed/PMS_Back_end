@@ -29,7 +29,7 @@ class FOutpotController extends Controller
     }
 
     // update output
-    public function updateOutput(OutputUpdateRequest $request, $id, OutputService $outputService)
+    public function updateOutput(OutputUpdateRequest $request, int $id, OutputService $outputService)
     {
 
         $validated = $request->validated();
@@ -43,7 +43,7 @@ class FOutpotController extends Controller
     }
 
     // Delete for outputs
-    public function deleteOutput($id)
+    public function deleteOutput(int $id)
     {
         $output = F_outpot::findOrFail($id); // Ensure the model use
         $output->delete();

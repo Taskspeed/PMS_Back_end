@@ -33,7 +33,7 @@ class RankController extends Controller
     }
 
     // update
-    public function updaterank($rankId, Request $request)
+    public function updaterank(int $rankId, Request $request)
     {
         $rank = Rank::findOrFail($rankId);
 
@@ -54,7 +54,7 @@ class RankController extends Controller
     }
 
     // delete
-    public function deleterank($rankId)
+    public function deleterank(int $rankId)
     {
         $rank = rank::findOrFail($rankId);
 

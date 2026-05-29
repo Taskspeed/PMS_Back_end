@@ -402,7 +402,7 @@ class SpmsController extends Controller
         return response()->json([$officeData]);
     }
 
-    private function mapEmployee($row)
+    private function mapEmployee(vwplantillastructure $row)
     {
         return [
             'controlNo'   => $row->controlNo, // ✅ FIX

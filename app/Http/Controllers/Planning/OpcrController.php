@@ -11,7 +11,7 @@ class OpcrController extends Controller
 {
     //upating the status of the Opcr
 
-    protected $opcrService;
+    protected OpcrService $opcrService;
 
     public function __construct(OpcrService $opcrService)
     {

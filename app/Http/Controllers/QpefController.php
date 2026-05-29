@@ -36,7 +36,7 @@ class QpefController extends Controller
     }
 
     // updating qpef of employee
-    public function qpefUpdate($qpefId,qpefRequest $request, QpefService $qpefService)
+    public function qpefUpdate(int $qpefId,qpefRequest $request, QpefService $qpefService)
     {
 
         $validated = $request->validated();
@@ -63,7 +63,7 @@ class QpefController extends Controller
     }
 
     // employee qpef
-    public function employeeQpef($control_no, $quarterly, $year, QpefService $getQpefService)
+    public function employeeQpef(string $control_no, string $quarterly, int $year, QpefService $getQpefService)
     {
         $qpef = $getQpefService->getEmployeeQpef($control_no, $quarterly, $year);
 
@@ -77,7 +77,7 @@ class QpefController extends Controller
     }
 
     //
-    public function employeeQpefAllQuarter($control_no,$year, QpefService $QpefService)
+    public function employeeQpefAllQuarter(string $control_no, int $year, QpefService $QpefService)
     {
         $qpef = $QpefService->fetchAllEmployeeQpef($control_no,$year);
 

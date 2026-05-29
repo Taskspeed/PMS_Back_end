@@ -15,8 +15,8 @@ class DashboardController extends Controller
     //
     use ApiResponseTrait;
 
-    protected $dashboardService;
-    protected $opcrService;
+    protected  DashboardService $dashboardService;
+    protected  OpcrService $opcrService;
 
 
     public function __construct(DashboardService $dashboardService,OpcrService $opcrService)
@@ -27,7 +27,7 @@ class DashboardController extends Controller
 
 
     // number of opcr status
-    public function numberOfStatus($semester, $year)
+    public function numberOfStatus(string $semester, int $year)
     {
 
         $result  =  $this->dashboardService->status($semester, $year);
@@ -36,7 +36,7 @@ class DashboardController extends Controller
     }
 
     //list of the opcr draft
-    public function listOfOpcrPending($semester, $year)
+    public function listOfOpcrPending(string $semester, int $year)
     {
 
         /** @var Collection $result */
@@ -50,7 +50,7 @@ class DashboardController extends Controller
     }
 
         //list of the opcr draft
-    public function listOfOpcrReceived($semester, $year)
+    public function listOfOpcrReceived(string $semester, int $year)
     {
 
         /** @var Collection $result */

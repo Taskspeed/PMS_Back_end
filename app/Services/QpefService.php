@@ -6,26 +6,20 @@ use App\Models\Qpef;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+
 class QpefService
 {
-    /**
-     * Create a new class instance.
-     */
-    // public function __construct()
-    // {
-    //     //
-    // }
 
     // Weight percentages
     const JOB_PERFORMANCE_WEIGHT = 0.40; // 40%
     const COMPETENCIES_WEIGHT = 0.50;    // 50%
     const PHYSICAL_MENTAL_WEIGHT = 0.10; // 10%
 
-    public function createQpef($validated)
+    public function createQpef(?array $validated)
     {
         DB::beginTransaction();
 
-         $user = Auth::user();
+        $user = Auth::user();
 
         try {
             // Create main QPEF record
@@ -75,9 +69,6 @@ class QpefService
                 ]);
             }
 
-
-
-
             DB::commit();
 
             return $qpef;
@@ -89,7 +80,7 @@ class QpefService
 
 
     // updating Qpef
-    public function updateQpef($qpefId, $validated)
+    public function updateQpef(int $qpefId, ?array $validated)
     {
         DB::beginTransaction();
 
@@ -115,15 +106,15 @@ class QpefService
         |--------------------------------------------------------------------------
         */
             /*
-|--------------------------------------------------------------------------
-| JOB PERFORMANCE UPDATE OR CREATE
-|--------------------------------------------------------------------------
-*/
+        |--------------------------------------------------------------------------
+        | JOB PERFORMANCE UPDATE OR CREATE
+        |--------------------------------------------------------------------------
+        */
             /*
-|--------------------------------------------------------------------------
-| JOB PERFORMANCE UPDATE OR CREATE
-|--------------------------------------------------------------------------
-*/
+        |--------------------------------------------------------------------------
+        | JOB PERFORMANCE UPDATE OR CREATE
+        |--------------------------------------------------------------------------
+        */
 
             foreach ($validated['job_performance'] as $performance) {
                 if (!empty($performance['id'])) {
@@ -223,7 +214,7 @@ class QpefService
 
 
     // Get qpef of employee $control_no, $quarterly, $year
-    public function getEmployeeQpef($control_no, $quarterly, $year)
+    public function getEmployeeQpef(string $control_no, string $quarterly, int $year)
     {
         $employeeQpef = Qpef::with('jobPerformances', 'competenciesAttitudes', 'physicalMentals', 'recommendationDevelopment')
             ->where('control_no', $control_no)
@@ -236,7 +227,7 @@ class QpefService
 
 
     // fetch all qpef of employee $control_no, $$year
-    public function fetchAllEmployeeQpef($control_no,$year)
+    public function fetchAllEmployeeQpef(string $control_no, int $year)
     {
         $control_no = str_pad($control_no, 6, '0', STR_PAD_LEFT); // ✅ 22485 → 022485
 
@@ -248,14 +239,14 @@ class QpefService
     }
 
 
-// /**
-//  * Alternative: If you already have the QPEF object loaded
-//  *
-//  * @param Qpef $qpef
-//  * @return array
-//  */
-public function computationQpef($control_no, $quarterly, $year)
-{
+    // /**
+    //  * Alternative: If you already have the QPEF object loaded
+    //  *
+    //  * @param Qpef $qpef
+    //  * @return array
+    //  */
+    public function computationQpef(string $control_no, string $quarterly, int $year)
+    {
         $qpef = $this->getEmployeeQpef($control_no, $quarterly, $year);
         // Calculate Job Performance average
         $jobPerformanceAvg = $qpef->jobPerformances->avg('rating') ?? 0;
@@ -298,18 +289,15 @@ public function computationQpef($control_no, $quarterly, $year)
         ];
     }
 
+    // Get qpef on multiple employee
+    public function getAllEmployeeQpefQuarter(?array $validated)
+    {
+        $employeeQpef = Qpef::with('jobPerformances', 'competenciesAttitudes', 'physicalMentals', 'recommendationDevelopment')
+            ->whereIn('control_no', $validated['controlNo']) // ✅ changed to whereIn
+            ->where('quarterly', $validated['quarter'])
+            ->where('year', $validated['year'])
+            ->get();
 
-
-  // Get qpef on multiple employee
- public function getAllEmployeeQpefQuarter($validated)
-{
-    $employeeQpef = Qpef::with('jobPerformances', 'competenciesAttitudes', 'physicalMentals', 'recommendationDevelopment')
-        ->whereIn('control_no', $validated['controlNo']) // ✅ changed to whereIn
-        ->where('quarterly', $validated['quarter'])
-        ->where('year', $validated['year'])
-        ->get();
-
-    return $employeeQpef;
-}
-  
+        return $employeeQpef;
+    }
 }

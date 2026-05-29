@@ -8,29 +8,10 @@ use Illuminate\Support\Facades\Auth;
 
 class OutputService
 {
-    /**
-     * Create a new class instance.
-     */
-    // public function __construct()
-    // {
-    //     //
-    // }
 
 
-    public function store($validated)
+    public function store(?array $validated)
     {
-        // $outputData = [
-        //     'f_category_id' => $request->f_category_id,
-        //     'office_id' => $request->office_id,
-        //     'name' => $request->name
-        // ];
-
-        // Only add mfo_id if it's present in the request
-        // if ($request->has('mfo_id')) {
-        //     $request->validate(['mfo_id' => 'exists:mfos,id']);
-        //     $outputData['mfo_id'] = $request->mfo_id;
-        // }
-
         $output = F_outpot::create($validated);
 
         activity()
@@ -42,7 +23,6 @@ class OutputService
         return $output;
 
     }
-
 
     public function update($validated, $id)
     {

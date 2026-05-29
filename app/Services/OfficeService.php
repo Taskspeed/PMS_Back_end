@@ -169,7 +169,7 @@ class OfficeService
 
 
     // employeeRatingDraft
-    public function employeeRatingDraft($semester, $year)
+    public function employeeRatingDraft(string $semester, int $year)
     {
 
         $user = Auth::user();

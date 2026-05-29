@@ -23,7 +23,7 @@ class DashboardService
 
     use ApiResponseTrait;
 
-    protected $structureService;
+    protected StructureService $structureService;
 
     public function __construct(StructureService $structureService)
     {
@@ -31,7 +31,7 @@ class DashboardService
     }
 
     //-----------------------------HR------------------------------------------//
-    public function dashboard($year, $semester)
+    public function dashboard(int $year, string $semester)
     {
 
 
@@ -175,7 +175,7 @@ class DashboardService
     }
 
     // current target period 
-    public function currentTargetPeriod($year, $semester)
+    public function currentTargetPeriod(int $year, string $semester)
     {
         $user = Auth::user();
 
@@ -242,7 +242,7 @@ class DashboardService
     }
 
     //list of IPCR target period of spms
-    public function listOfIpcr($year, $semester)
+    public function listOfIpcr(int $year, string $semester)
     {
 
         // ipcr
@@ -268,7 +268,7 @@ class DashboardService
 
 
     //list of UnitWorkPlan target period of spms
-    public function listOfUnitWorkPlan($year, $semester, $office)
+    public function listOfUnitWorkPlan(int $year, string $semester, string $office)
 
     {
 
@@ -305,7 +305,7 @@ class DashboardService
 
 
     //list of OPCR target period of spms
-    public function listOfOpcr($year, $semester)
+    public function listOfOpcr(int $year, string $semester)
     {
         $opcr = OfficeOpcr::select('id', 'office_name', 'semester', 'year')
             ->where('semester', $semester)
@@ -528,7 +528,7 @@ class DashboardService
         ];
     }
 
-    private function mapEmployee($row): array
+    private function mapEmployee(vwplantillastructure $row): array
     {
         return [
             'controlNo' => $row->ControlNo, // ✅ fixed
@@ -543,7 +543,7 @@ class DashboardService
     //-----------------------------Planning------------------------------------------//
 
     // number of status of opcr
-    public function status($semester, $year)
+    public function status(string $semester, int $year)
     {
         $opcrs = OfficeOpcr::with(['officeOpcrRecordLastestRecord'])
             ->where('semester', $semester)
@@ -571,7 +571,7 @@ class DashboardService
 
 
     // list of  opcr pending
-    public function opcrPending($semester, $year)
+    public function opcrPending(string $semester, int $year)
     {
         // opcr of office
         $data = OfficeOpcr::select(
