@@ -2,362 +2,96 @@
 
 namespace App\Http\Controllers\Auth;
 
-
 use App\Http\Controllers\Controller;
-use App\Http\Requests\addEmployeeRequest;
 use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\SupervisorCreateRequest;
 use App\Models\Role;
 use App\Models\User;
-use App\Models\UserOfficeAssign;
+use App\Services\AuthService;
 use App\Traits\ApiResponseTrait;
-use Carbon\Carbon;
-use function PHPUnit\Framework\returnSelf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 
-use Illuminate\Support\Str;
-use Inertia\Testing\Concerns\Has;
 
 class AuthController extends Controller
 {
     use ApiResponseTrait;
 
-    //test
-    public function userAccount()
-    {
-        // Fetch users with office data and format date using Carbon
-        $data = User::with('office:id,name', 'role:id,name')
-            ->select('id', 'office_id', 'role_id', 'name', 'created_at', 'active')
-            ->whereNotin('role_id', [4])
-            ->orderBy('created_at', 'desc') // Add this line to sort by newest first
-            ->get()
-            ->map(function ($user) {
-                return [
-                    'user_id' => $user->id,
-                    'name' => $user->name,
-                    'password' => $user->password,
-                    'office_name' => $user->office->name ?? 'N/A',
-                    'role_name' => $user->role->name ?? 'N/A',
-                    'role_id' => $user->role_id, // <-- Add this line
-                    'datecreated' => Carbon::parse($user->created_at)->format('F d, Y'),
-                    'active' => $user->active,
-                ];
-            });
 
-        return response()->json($data);
+    protected AuthService $authService;
+
+    public function __construct(AuthService $authService)
+    {
+
+        $this->authService = $authService;
     }
 
+    // fetch user credentials
+    public function userAccount()
+    {
+        $user = $this->authService->userAccount();
 
+        return $user;
+    }
+
+    // user login
     public function login(LoginRequest $request)
     {
 
-        // Attempt to find the user
-        $user = User::with('office', 'role')->where('username', $request->username)->first();
+        $userLogin = $this->authService->login($request);
 
-        if (!$user) {
-            return response()->json([
-                'errors' => [
-                    'username' => ['Username does not exist.']
-                ]
-            ], 422); // 422 = Unprocessable Entity for validation-style errors
-        }
-
-        //  User is inactive
-        if (!$user->active) {
-            return response()->json([
-                'errors' => [
-                    'username' => ['Your account is inactive. Please contact admin.']
-                ]
-            ], 403); // 🔥 better status for forbidden
-        }
-
-
-        if (!Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'errors' => [
-                    'password' => ['Password is incorrect.']
-                ]
-            ], 422);
-        }
-
-        // Generate token if credentials are valid
-        $token = $user->createToken('auth-token')->plainTextToken;
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Login successful',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'username' => $user->username,
-                'office_id' => $user->office_id,
-                'role_id' => $user->role_id,
-                'role_name' => $user->role->name ?? null,
-                'designation' => $user->designation,
-                'active' => $user->active,
-            ],
-            'token' => $token,
-        ]);
+        return $userLogin;
     }
 
-
-    // public function register(RegisterRequest $request) // creating user account
-    // {
-    //     try {
-
-    //         $user = User::create([
-    //             'control_no' => $request->control_no,
-    //             'name' => $request->name,
-    //             'password' => Hash::make($request->password),
-    //             'office_id' => $request->office_id,
-    //             'role_id' => $request->role_id,
-    //             'remember_token' => Str::random(32),
-    //             'designation' => $request->designation,
-    //             'username' => $request->username,
-    //             'active' => $request->active,
-    //         ]);
-
-    //         return response()->json([
-    //             'status' => 'success',
-    //             'message' => 'User created successfully',
-    //             'user' => [
-    //                 'id' => $user->id,
-    //                 'control_no' => $user->control_no,
-    //                 'name' => $user->name,
-    //                 'office_id' => $user->office_id,
-    //                 'role_id' => $user->role_id,
-    //                 'designation' => $user->designation,
-    //                 'username' => $user->username,
-    //                 'active' => $user->active,
-    //             ]
-    //         ], 201); // Use 201 Created status code
-
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'message' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-
-    const ALLOWED_ROLES = [1, 2, 3, 4, 5, 6];
+    // register account
     public function register(RegisterRequest $request)
     {
-        try {
-            // ✅ Prevent duplicate: same control_no + same role_id
-            $alreadyExists = User::where('control_no', $request->control_no)
-                ->where('role_id', $request->role_id)
-                ->exists();
+        $userRegister = $this->authService->register($request);
 
-            if ($alreadyExists) {
-                return response()->json([
-                    'status'  => 'error',
-                    'message' => 'This employee already has this role assigned.'
-                ], 422);
-            }
-
-            // ✅ Prevent registering if employee already has all 6 roles
-            $currentRoleCount = User::where('control_no', $request->control_no)
-                ->whereIn('role_id', self::ALLOWED_ROLES)
-                ->distinct('role_id')
-                ->count('role_id');
-
-            if ($currentRoleCount >= count(self::ALLOWED_ROLES)) {
-                return response()->json([
-                    'status'  => 'error',
-                    'message' => 'This employee already has all roles assigned and cannot be registered again.'
-                ], 422);
-            }
-
-            $user = User::create([
-                'control_no'     => $request->control_no,
-                'name'           => $request->name,
-                'password'       => Hash::make($request->password),
-                'office_id'      => $request->office_id,
-                'role_id'        => $request->role_id,
-                'remember_token' => Str::random(32),
-                'designation'    => $request->designation,
-                'username'       => $request->username,
-                'active'         => $request->active,
-            ]);
-
-            return response()->json([
-                'status'  => 'success',
-                'message' => 'User created successfully',
-                'user'    => [
-                    'id'         => $user->id,
-                    'control_no' => $user->control_no,
-                    'name'       => $user->name,
-                    'office_id'  => $user->office_id,
-                    'role_id'    => $user->role_id,
-                    'designation' => $user->designation,
-                    'username'   => $user->username,
-                    'active'     => $user->active,
-                ]
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => $e->getMessage()
-            ], 500);
-        }
+        return $userRegister;
     }
 
+    // logout
     public function logout(Request $request)
     {
-        try {
-            $user = $request->user();
+        $userLogout = $this->authService->logout($request);
 
-            if (!$user) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'User not authenticated'
-                ], 401);
-            }
-
-            // Revoke the token
-            $user->currentAccessToken()->delete();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Logout successful'
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Logout Error: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Logout failed. Please try again.'
-            ], 500);
-        }
+        return $userLogout;
     }
-
 
     // Add this method to your AuthController.php
     public function changePassword(ChangePasswordRequest $request)
     {
 
+        $userChangePassword = $this->authService->changePassword($request);
 
-        try {
-            $user = $request->user();
-
-            // Verify old password
-            if (!Hash::check($request->oldPassword, $user->password)) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'The provided old password is incorrect.'
-                ], 422);
-            }
-
-            // Update password if new password is provided
-            if ($request->newPassword) {
-                $user->password = Hash::make($request->newPassword);
-                $user->save();
-            }
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Password updated successfully'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to update password: ' . $e->getMessage()
-            ], 500);
-        }
+        return $userChangePassword;
     }
 
+    // temporary password
     public function getTempPassword(Request $request)
     {
-        try {
-            $user = $request->user();
+        $userGetTempPassword = $this->authService->getTempPassword($request);
 
-            // Verify user has permission
-            if (!$user) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Unauthorized'
-                ], 401);
-            }
-
-            // Generate a temporary password (valid for 10 seconds)
-            $tempPassword = Str::random(12); // Or use your actual decryption logic
-
-            // Log this access
-            Log::info('Password viewed by user', [
-                'user_id' => $user->id,
-                'ip' => $request->ip(),
-                'time' => now()
-            ]);
-
-            return response()->json([
-                'status' => 'success',
-                'tempPassword' => $tempPassword,
-                'expires_in' => 10 // seconds
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Password view error: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to retrieve password'
-            ], 500);
-        }
+        return $userGetTempPassword;
     }
 
-    // user edit
-    // user edit
+    //  use edit and pmt account where they assign
     public function edit(Request $request)
     {
-        try {
-            $validated = $request->validate([
-                'userId'             => 'required|exists:users,id',
-                'roleId'             => 'required|exists:roles,id',
-                'active'             => 'required|boolean',
-                'office_id_assign'   => 'nullable|array',
-                'office_id_assign.*' => 'nullable|exists:offices,id',
-            ]);
+        $validated = $request->validate([
+            'userId'             => 'required|exists:users,id',
+            'roleId'             => 'required|exists:roles,id',
+            'active'             => 'required|boolean',
+            'office_id_assign'   => 'nullable|array',
+            'office_id_assign.*' => 'nullable|exists:offices,id',
+        ]);
+        $userEdit = $this->authService->edit($validated);
 
-            $user = User::where('id', $validated['userId'])->first();
-
-            $user->role_id = $validated['roleId'];
-            $user->active  = $validated['active'];
-            $user->save();
-
-            // assign multiple offices (delete old ones first to avoid duplicates)
-            if (!empty($validated['office_id_assign'])) {
-                UserOfficeAssign::where('user_id', $user->id)->delete();
-
-                foreach ($validated['office_id_assign'] as $officeId) {
-                    UserOfficeAssign::create([
-                        'assigned_by' => $user->name,
-                        'user_id'     => $user->id,   // was $create_user_account->id (undefined variable)
-                        'office_id'   => $officeId,
-                    ]);
-                }
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'User updated successfully',
-                'data'    => $user
-            ], 200);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors'  => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Something went wrong',
-                'error'   => $e->getMessage()
-            ], 500);
-        }
+        return $userEdit;
     }
 
     //  excluded supervisor_admin
@@ -370,7 +104,7 @@ class AuthController extends Controller
     }
 
     // reset password for user
-    public function resetPassword($userId)
+    public function resetPassword(int $userId)
     {
 
         $user = User::find($userId);
@@ -382,7 +116,7 @@ class AuthController extends Controller
     }
 
     // user account details
-    public function viewDetailAccount($userId)
+    public function viewDetailAccount(int $userId)
     {
         $user = User::with('office', 'role')->find($userId);
 
@@ -399,37 +133,13 @@ class AuthController extends Controller
     }
 
     //create account supervisor admin
-    public function createAccountSupervisor(Request $request)
+    public function createAccountSupervisor(SupervisorCreateRequest $request)
     {
+        $validated = $request->validated();
 
-        $user = Auth::user();
+        $userCreateAccountSupervisor = $this->authService->createAccountSupervisor($validated);
 
-        $validated = $request->validate([
-            'name' => 'required|string',
-            'designation' => 'required|string',
-            'role_id'     => 'required|exists:roles,id',  // fixed: 'exist' → 'exists', 'role' → 'roles' (use actual table name)
-            'controlNo' => 'required|string',
-            'username'    => 'required|string|unique:users,username', // added unique check
-            'password' => 'required|string|min:3',
-            'active' => 'required|boolean'
-        ]);
-
-        // $validated['office_id'] = $user->office_id; // force office_id from authenticated user
-        $validated['office_id'] = $user->office_id; // force office_id from authenticated user
-
-        $validated['password']  = Hash::make($validated['password']); // fixed
-
-        // camelCase → snake_case to match DB column and $fillable
-        $validated['control_no'] = $validated['controlNo'];
-        unset($validated['controlNo']);
-
-        $createUser = User::create($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Account created successfully.',
-            'data'    => $createUser->makeHidden(['password']), // hide password from response
-        ], 201);
+        return $userCreateAccountSupervisor;
     }
 
     //  supervisory_admin
@@ -462,7 +172,7 @@ class AuthController extends Controller
     }
 
     // delete user account
-    public function userDelete($userId)
+    public function userDelete(int $userId)
     {
 
         $user = User::find($userId);
@@ -479,100 +189,28 @@ class AuthController extends Controller
     // update the account of head account
     public function updateHeadAccount(Request $request)
     {
-        try {
-            $validated = $request->validate([
-                'userId' => 'required|exists:users,id',
-                'active' => 'required|boolean'
+        $validated = $request->validate([
+            'userId' => 'required|exists:users,id',
+            'active' => 'required|boolean'
 
-            ]);
+        ]);
 
-            $user = User::where('id', $validated['userId'])->first();
+        $userUpdateHead = $this->authService->updateHeadAccount($validated);
 
-            $user->active = $validated['active'];
-            $user->save();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'User active updated successfully',
-                'data'    => $user
-            ], 200);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors'  => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Something went wrong',
-                'error'   => $e->getMessage()
-            ], 500);
-        }
+        return $userUpdateHead;
     }
 
     // create pmt account
     public function createPmtAccount(Request $request)
     {
-        $user = Auth::user();
 
-        $validated = $request->validate([
-            'controlNo'          => 'required|string',
-            'name'               => 'required|string',
-            'designation'        => 'required|string',
-            'role_id'            => 'required|exists:roles,id',
-            'office_id'          => 'required|exists:offices,id',
-            'password'           => 'required|string|min:6',
-            'username'           => 'required|string|min:3|unique:users,username',
-            'active'             => 'required|boolean',
-            'office_id_assign'   => 'required|array',
-            'office_id_assign.*' => 'required|exists:offices,id',
-            'pmt_type'           => 'nullable|string'
-        ]);
+        $validated = $request->validated();
 
         // hash password
         $validated['password'] = Hash::make($validated['password']);
 
-        try {
-            $create_user_account = DB::transaction(function () use ($validated, $user) {
+        $usercreatePmtAccount = $this->authService->createPmtAccount($validated);
 
-                // create user
-                $create_user_account = User::create([
-                    'control_no'   => $validated['controlNo'],
-                    'name'        => $validated['name'],
-                    'designation' => $validated['designation'],
-                    'role_id'     => $validated['role_id'],
-                    'office_id'   => $validated['office_id'],
-                    'password'    => $validated['password'],
-                    'username'    => $validated['username'],
-                    'active'      => $validated['active'],
-                    'pmt_type'      => $validated['pmt_type'] ?? null
-                ]);
-
-                // assign multiple offices
-                foreach ($validated['office_id_assign'] as $officeId) {
-                    UserOfficeAssign::create([
-                        'assigned_by' => $user->name,
-                        'user_id'     => $create_user_account->id,
-                        'office_id'   => $officeId,
-                    ]);
-                }
-
-                return $create_user_account;
-            });
-
-            return response()->json([
-                'success' => true,
-                'message' => 'PMT account created successfully.',
-                'data'    => $create_user_account,
-            ], 201);
-        } catch (\Exception $e) {
-            // If anything fails, DB::transaction auto rolls back everything
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create account. No data was saved.',
-                'error'   => $e->getMessage(),
-            ], 500);
-        }
+        return $usercreatePmtAccount;
     }
 }
