@@ -15,16 +15,16 @@ class EmployeeRatingController extends Controller
 {
 
     // service
-    protected $targetperiodService;
+    protected TargetPeriodService $targetperiodService;
+    
 
     public function __construct(TargetPeriodService $targetperiodService)
     {
         return $this->targetperiodService = $targetperiodService;
     }
 
-
     // target period of employee
-    public function targetPeriodEmployee($controlNo)
+    public function targetPeriodEmployee(string $controlNo)
     {
 
         $result = $this->targetperiodService->targetPeriod($controlNo);
@@ -32,66 +32,24 @@ class EmployeeRatingController extends Controller
         return $result;
     }
 
-
     //  get the target peroid details the performance standard and standard outcome
-    public function targetPeriodDetails($targetPeriodId)
+    public function targetPeriodDetails(int $targetPeriodId)
     {
-        $targetperiod = TargetPeriod::select('id')->where('id', $targetPeriodId)
-            ->with([
-                'performanceStandards' => function ($query) {
-                    $query->select(
-                        'id',
-                        'target_period_id',
-                        'category',
-                        'mfo',
-                        'output',
-                        'output_name',
-                        'performance_indicator',
-                        'success_indicator',
-                        'required_output'
-                    )
-                        ->with([
-                            'standardOutcomes' => function ($query) {
-                                $query->select(
-                                    'id',
-                                    'performance_standard_id',
-                                    'rating',
-                                    'quantity_target as quantity',
-                                    'effectiveness_criteria as effectiveness',
-                                    'timeliness_range as timeliness'
-                                );
-                            },
-                            'configurations' => function ($query) {
-                                $query->select(
-                                    'id',
-                                    'performance_standard_id',
-                                    'target_output as targetOutput',
-                                    'quantity_indicator as quantityIndicator',
-                                    'timeliness_indicator as timelinessIndicator',
-                                    'timeliness_range as range',
-                                    'timeliness_date as date',
-                                    'timeliness_description as description'
-                                );
-                            }
-                        ]);
-                }
-            ])->get();
-
-        // check if the his office
-
-        return response()->json($targetperiod);
+        
+        $result = $this->targetperiodService->targetPeriodDetails($targetPeriodId);
+    
+        return $result;
+    
     }
 
     //  get the target peroid details the performance standard and standard outcome
-    public function targetPeriod($targetPeriodId, $month = null, $year = null,$week= null)
+    public function targetPeriod(int $targetPeriodId, $month = null, $year = null,$week= null)
     {
 
         $data = $this->targetperiodService->getTargetPeriodWithStandardsAndRatings($targetPeriodId,$month,$year,$week);
 
         return $data;
     }
-
-
 
     // employee store his rate
     public function performanceRating(performanceRatingStoreRequest $request, PerformanceRatingService $performanceRatingService)
@@ -108,7 +66,7 @@ class EmployeeRatingController extends Controller
     }
 
     // get the list of the employee the rate of date
-    public function getListOfRatingEmployee($controlNo)
+    public function getListOfRatingEmployee(string $controlNo)
     {
 
         $list = PerformanceRating::select(
@@ -131,41 +89,12 @@ class EmployeeRatingController extends Controller
     }
 
     //performance rating record
-    public function performanceRatingRecord($targetPeriodId)
+    public function performanceRatingRecord(int $targetPeriodId)
     {
 
-        $employee_rating_record = TargetPeriod::select('id')->where('id', $targetPeriodId)
-            ->with([
-                'performanceStandards' => function ($query) {
-                    $query->select(
-                        'id',
-                        'target_period_id',
-                        'category',
-                        'mfo',
-                        // 'output',
-                        // 'output_name',
-                        // 'performance_indicator',
-                        // 'success_indicator',
-                        // 'required_output'
-                    )
-                        ->with([
-                            'performanceRating' => function ($query) {
-                                $query->select(
-                                    'id',
-                                    'performance_standard_id',
+        $record = $this->targetperiodService->performanceRatingRecord($targetPeriodId);
 
-                                    'date',
-                                    'quantity_actual',
-                                    'effectiveness_actual',
-                                    'timeliness_actual'
-                                );
-                            },
-
-                        ]);
-                }
-            ])->get();
-
-
-        return response()->json($employee_rating_record);
+        return $record;
+    
     }
 }
