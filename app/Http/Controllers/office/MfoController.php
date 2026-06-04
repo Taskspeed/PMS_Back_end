@@ -15,21 +15,28 @@ use App\Services\MfoService;
 class MfoController extends Controller
 {
 
+    protected MfoService $mfoService;
+
+    public function __construct(MfoService $mfoService)
+    {
+        $this->mfoService = $mfoService;
+    }
+
     // getting the mfo  of the user
-    public function Mfo(MfoService $mfoService)
+    public function Mfo()
     {
 
-        $user = $mfoService->getUserMfo();
+        $user = $this->mfoService->getUserMfo();
 
         return response()->json($user);
     }
 
     // addMfo
-    public function addMfo(MfoStoreRequest $request,MfoService $mfoService)  // store
+    public function addMfo(MfoStoreRequest $request)  // store
     {
         $validated = $request->validated();
 
-        $mfo = $mfoService->store($validated);
+        $mfo = $this->mfoService->store($validated);
 
         activity()
             ->performedOn($mfo)
@@ -40,12 +47,12 @@ class MfoController extends Controller
     }
 
     // update mfo
-    public function updateMfo(MfoUpdateRequest $request, int $id, MfoService $mfoService) // update
+    public function updateMfo(MfoUpdateRequest $request, int $id) // update
     {
         $validated = $request->validated();
         // find the MFO by id
 
-        $mfo = $mfoService->update($id, $validated);
+        $mfo = $this->mfoService->update($id, $validated);
 
         return response()->json([
             'message' => 'MFO updated successfully',
@@ -71,12 +78,9 @@ class MfoController extends Controller
 
 
     // fetch all mfo of office head
-    public function fetchMfo(Request $request, MfoService $mfoService, string $semester, int $year)
+    public function fetchMfo(string $semester, int $year)
     {
-        $mfo = $mfoService->getMfo($semester, $year);
-
-
-
+        $mfo = $this->mfoService->getMfo($semester, $year);
         return $mfo;
     }
 

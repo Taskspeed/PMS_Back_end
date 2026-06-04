@@ -18,22 +18,17 @@ use Illuminate\Routing\Controller as BaseController;
 
 class IpcrController extends BaseController
 {
-    // protected $user;
-    // protected $officeId;
 
-    // public function __construct()
-    // {
-    //     $this->middleware(function ($request, $next) {
-    //         $this->user     = Auth::user();
-    //         $this->officeId = $this->user->office_id;
+    protected IpcrService $ipcrService;
 
-    //         return $next($request);
-    //     });
-    // }
-
-    public function getIpcrEmployee(string $controlNo, int $year, string $semester, IpcrService $ipcrService)
+    public function __construct(IpcrService $ipcrService)
     {
-        $employee  = $ipcrService->getIpcrData($controlNo, $year, $semester);
+       $this->ipcrService = $ipcrService;
+    }
+
+    public function getIpcrEmployee(string $controlNo, int $year, string $semester)
+    {
+        $employee  = $this->ipcrService->getIpcrData($controlNo, $year, $semester);
 
         if (! $employee) {
             return response()->json([
@@ -41,7 +36,7 @@ class IpcrController extends BaseController
             ], 404);
         }
 
-        return new IpcrResource($employee); 
+        return new IpcrResource($employee);
     }
 
     // get the perfomance standard of employee
@@ -57,11 +52,11 @@ class IpcrController extends BaseController
     }
 
     // approving the ipcr of the employee
-    public function approveIpcrEmployee(string $controlNo, string $semester, int $year, Request $request, IpcrService $ipcrService)
+    public function approveIpcrEmployee(string $controlNo, string $semester, int $year, Request $request)
     {
         try {
 
-            $targetPeriod = $ipcrService->approveIpcr($controlNo, $semester, $year, $request);
+            $targetPeriod = $this->ipcrService->approveIpcr($controlNo, $semester, $year, $request);
 
             return response()->json([
                 'success' => true,
@@ -80,10 +75,10 @@ class IpcrController extends BaseController
     // month - week1, week2, week 3, it depend of the month how many weeks
     // then get the rate of the employee every day  then total
     // the format of the date is mm/dd/yy
-    public function getMonthlyEmployee(int $targetPeriodId, IpcrService $ipcrService)
+    public function getMonthlyEmployee(int $targetPeriodId)
     {
         // access the MonthlyPerformanceService to get the monthly performance data
-        $monthlyData = $ipcrService->getMonthly($targetPeriodId);
+        $monthlyData = $this->ipcrService->getMonthly($targetPeriodId);
 
         if (empty($monthlyData)) {
             return response()->json([
@@ -99,9 +94,9 @@ class IpcrController extends BaseController
     }
 
     // get the summary-monthly-rate
-    public function getSummaryMonthlyEmployee(int $targetPeriodId, IpcrService $ipcrService)
+    public function getSummaryMonthlyEmployee(int $targetPeriodId)
     {
-        $monthSummaryData = $ipcrService->getSummaryMonthly($targetPeriodId);
+        $monthSummaryData = $this->ipcrService->getSummaryMonthly($targetPeriodId);
 
         if (empty($monthSummaryData)) {
             return response()->json([
@@ -117,10 +112,10 @@ class IpcrController extends BaseController
     }
 
     // store attendance
-    public function attendance(AttendanceRequest $request, IpcrService $ipcrService)
+    public function attendance(AttendanceRequest $request)
     {
         try {
-            $attendance = $ipcrService->storeAttendance($request);
+            $attendance = $this->ipcrService->storeAttendance($request);
 
             return response()->json([
                 'success' => true,
@@ -136,19 +131,23 @@ class IpcrController extends BaseController
     }
 
     // updating - status ipcr of employee args approve,review,cancel and others
-    public function statusIpcr(Request $request, int $targetPeriodId, IpcrService $updatingIpcr){
+    public function statusIpcr(Request $request)
+    {
 
-    $validateData = $request->validate([
-            'status' =>  'required|string'
-    ]);
+        $supervisor = Auth::user();
 
-    //updating the targetperiod of employee
-    $ipcr = $updatingIpcr->updateStatusIpcr($validateData,$targetPeriodId);
+        $validated = $request->validate([
+            'ipcr_id'   => 'required|array',
+            'ipcr_id.*' => 'required|exists:target_periods,id',
+            'status'    => 'required|in:Reviewed,Approved',
+            'remarks'   => 'nullable|string',
+        ], [
+            'status.in' => "Status must be 'Reviewed' or 'Approved'.",
+        ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'IPCR status updated successfully.',
-            'data' => $ipcr
-        ], 200);
+        //updating the targetperiod of employee
+        $ipcr = $this->ipcrService->updateStatusIpcr($validated, $supervisor);
+
+        return $ipcr;
     }
 }

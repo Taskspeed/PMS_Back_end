@@ -20,8 +20,11 @@ class OpcrController extends BaseController
     protected ? Authenticatable $user = null;
     protected ? int $officeId = null; 
 
+    protected OpcrService $opcrService;
+    protected IpcrService $ipcr;
+
     
-    public function __construct()
+    public function __construct(IpcrService $ipcr, OpcrService $opcrService)
     {
         $this->middleware(function ($request, $next) {
             $this->user = Auth::user();
@@ -29,13 +32,16 @@ class OpcrController extends BaseController
 
             return $next($request);
         });
+
+        $this->opcrService = $opcrService;
+        $this->ipcr = $ipcr;
     }
 
     // get the opcr of the office head
-    public function opcr(string $controlNo, string $semester,int $year, IpcrService $ipcr)
+    public function opcr(string $controlNo, string $semester,int $year)
     {
 
-        $employeeOpcr = $ipcr->opcrOfficeHead($controlNo, $semester, $year);
+        $employeeOpcr = $this->ipcr->opcrOfficeHead($controlNo, $semester, $year);
 
         if (!$employeeOpcr) {
            return $this->infoMessage('No record found',200);
@@ -49,22 +55,22 @@ class OpcrController extends BaseController
     }
 
     // saving the opcr of the office head
-    public function opcrStore(opcrRequest $request, OpcrService $opcrService)
+    public function opcrStore(opcrRequest $request)
     {
         $validated = $request->validated();
 
-        $opcr = $opcrService->storeAllotedBudget($validated);
+        $opcr = $this->opcrService->storeAllotedBudget($validated);
 
         return response()->json($opcr);
     }
 
 
     // saving the opcr of the office head
-    public function opcrUpdate(opcrRequest $request, OpcrService $opcrService)
+    public function opcrUpdate(opcrRequest $request)
     {
         $validated = $request->validated();
 
-        $opcr = $opcrService->updateAllotedBudget($validated);
+        $opcr = $this->opcrService->updateAllotedBudget($validated);
 
         return response()->json([
             'message' => 'Opcr update successfully',

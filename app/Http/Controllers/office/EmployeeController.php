@@ -23,13 +23,20 @@ class EmployeeController extends Controller
 
     // arg  data,message
 
+     protected EmployeeService $employeeService;
+
+     public function __construct(EmployeeService $employeeService)
+     {
+        $this->employeeService = $employeeService;
+     }
+
 
     // add an employee on the plantilla structure
-    public function addEmployee(addEmployeeRequest $request, EmployeeService $employeeStore)
+    public function addEmployee(addEmployeeRequest $request,)
     {
         $validated = $request->validated();
 
-        $employee = $employeeStore->storeEmployees($validated);
+        $employee = $this->employeeService->storeEmployees($validated);
 
         return response()->json([
             'success' => true,
@@ -40,11 +47,11 @@ class EmployeeController extends Controller
     }
 
         // add an employee on the plantilla structure
-    public function v1addEmployee(addEmployeeRequest $request, EmployeeService $employeeStore)
+    public function v1addEmployee(addEmployeeRequest $request)
     {
         $validated = $request->validated();
 
-        $employee = $employeeStore->v1storeEmployees($validated);
+        $employee = $this->employeeService->v1storeEmployees($validated);
 
         return response()->json([
             'success' => true,
@@ -55,7 +62,7 @@ class EmployeeController extends Controller
     }
 
     //rank update of employee
-    public function updateRank(Request $request, $id) // need to check  this code for review
+    public function updateRank(Request $request, int $id) // need to check  this code for review
 
     {
         $validated = $request->validate([
@@ -121,20 +128,20 @@ class EmployeeController extends Controller
     }
 
     //Jobtitle update of employee
-    public function updateJobTitle(Request $request, $employeeId, EmployeeService $employeeService) // need to check  this code for review
+    public function updateJobTitle(Request $request, int $employeeId) // need to check  this code for review
 
     {
         $validated = $request->validate([
             'job_title' => 'required|string'
         ]);
 
-        $job = $employeeService->jobTitle($employeeId, $validated);
+        $job = $this->employeeService->jobTitle($employeeId, $validated);
 
         return $job;
     }
 
     //remove employee on the plantilla
-    public function deleteEmployee($employeeId)
+    public function deleteEmployee(int $employeeId)
     {
 
         $employee = Employee::findOrFail($employeeId);
@@ -150,7 +157,7 @@ class EmployeeController extends Controller
     }
 
     // fetch employee
-    public function getEmployee(Request $request)
+    public function getEmployee()
     {
         $user = Auth::user();
 
@@ -163,7 +170,7 @@ class EmployeeController extends Controller
 
 
     // fetch the employee base on the user office
-    public function listOfEmployee(Request $request, EmployeeService $employeeList)
+    public function listOfEmployee(Request $request)
     {
         $user = Auth::user();
 
@@ -176,7 +183,7 @@ class EmployeeController extends Controller
 
         try {
 
-            $result = $employeeList->employee($request, $user);
+            $result = $this->employeeService->employee($request, $user);
 
             return response()->json([
                 'success' => true,
@@ -193,10 +200,10 @@ class EmployeeController extends Controller
     }
 
     // search employee on the list of employee
-    public function searchEmployee(Request $request, EmployeeService $employeeService)
+    public function searchEmployee(Request $request)
     {
 
-        $employee = $employeeService->onSearchEmployee($request);
+        $employee = $this->employeeService->onSearchEmployee($request);
 
         return response()->json([
             'success' => true,

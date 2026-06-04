@@ -15,12 +15,19 @@ use Symfony\Component\Console\Output\Output;
 class FOutpotController extends Controller
 {
 
+    protected OutputService $outputService;
+
+    public function __construct( OutputService $outputService)
+    {
+        $this->outputService = $outputService;
+    }
+
     // storing output
-    public function addOutput(OutputRequest $request,OutputService $outputService)
+    public function addOutput(OutputRequest $request)
     {
         $validated = $request->validated();
 
-        $output = $outputService->store($validated);
+        $output = $this->outputService->store($validated);
 
         return response()->json([
             'message' => 'Output created successfully',
@@ -29,12 +36,12 @@ class FOutpotController extends Controller
     }
 
     // update output
-    public function updateOutput(OutputUpdateRequest $request, int $id, OutputService $outputService)
+    public function updateOutput(OutputUpdateRequest $request, int $id)
     {
 
         $validated = $request->validated();
 
-        $output = $outputService->update($validated, $id);
+        $output = $this->outputService->update($validated, $id);
 
         return response()->json([
             'message' => 'Output created successfully',

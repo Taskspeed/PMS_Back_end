@@ -48,11 +48,10 @@ class OfficeController extends Controller
     }
 
     // office structure
-    public function officeStructure(OfficeService $officeService)
+    public function officeStructure()
     {
 
-
-        $officeStructure = $officeService->structure();
+        $officeStructure = $this->officeService->structure();
 
         return response()->json([$officeStructure]);
     }
