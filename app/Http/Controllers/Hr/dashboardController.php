@@ -20,8 +20,10 @@ class dashboardController extends Controller
     }
 
     // get the data  dashboard
-    public function dashboardSummaryData(int $year, string $semester)
+    public function dashboardSummaryData(Request $request)
     {
+          $year     = $request->input('year');
+        $semester = $request->input('semester');   
         $employee = $this->dashboardService->dashboard($year, $semester);
 
         return $employee;
