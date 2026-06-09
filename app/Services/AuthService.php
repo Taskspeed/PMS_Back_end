@@ -25,7 +25,7 @@ class AuthService
     {
         // Fetch users with office data and format date using Carbon
         $data = User::with('office:id,name', 'role:id,name')
-            ->select('id', 'office_id', 'role_id', 'name', 'created_at', 'active')
+            ->select('id', 'office_id', 'role_id', 'name', 'created_at', 'active','username')
             ->whereNotin('role_id', [4])
             ->orderBy('created_at', 'desc') // Add this line to sort by newest first
             ->get()
@@ -33,6 +33,7 @@ class AuthService
                 return [
                     'user_id' => $user->id,
                     'name' => $user->name,
+                    'username' => $user->username,
                     'password' => $user->password,
                     'office_name' => $user->office->name ?? 'N/A',
                     'role_name' => $user->role->name ?? 'N/A',
