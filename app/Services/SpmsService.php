@@ -15,7 +15,7 @@ class SpmsService
 
 
     // structure of office plantilla
-    public function structure($request)
+    public function structure(Request $request)
     {
 
 
@@ -181,57 +181,137 @@ class SpmsService
 
 
     // fetch employee belong to the office
-    public function employees($request)
-    {
+    // public function employees($request)
+    // {
 
-        $user = Auth::user();
-        $officeId = $user->office_id;
+    //     $user = Auth::user();
+    //     $officeId = $user->office_id;
 
 
-        // Get semester & year from request
-        $semester = $request->input('semester');   // example: January-June / July-December
-        $year = $request->input('year');           // example: 2025
+    //     // Get semester & year from request
+    //     $semester = $request->input('semester');   // example: January-June / July-December
+    //     $year = $request->input('year');           // example: 2025
 
-        if (!$semester || !$year) {
-            return response()->json([
-                'message' => 'Please provide semester and year'
-            ], 422);
-        }
+    //     if (!$semester || !$year) {
+    //         return response()->json([
+    //             'message' => 'Please provide semester and year'
+    //         ], 422);
+    //     }
 
-        $employees = Employee::where('office_id', $officeId)
-            ->get()
-            ->map(function ($emp) use ($semester, $year) {
+    //     $employees = Employee::where('office_id', $officeId)
+    //         ->get()
+    //         ->map(function ($emp) use ($semester, $year) {
 
-                // Look for target period based on user request
-                $existing = $emp->targetPeriods()
-                    ->select('id', 'control_no', 'year', 'semester', 'supervisory_control_no')
-                    ->where('semester', $semester)
-                    ->where('year', $year)
-                    ->with('ipcrLastestRecord')
-                    ->first();
+    //             // Look for target period based on user request
+    //             $existing = $emp->targetPeriods()
+    //                 ->select('id', 'control_no', 'year', 'semester', 'supervisory_control_no')
+    //                 ->where('semester', $semester)
+    //                 ->where('year', $year)
+    //                 ->with('ipcrLastestRecord')
+    //                 ->first();
 
-                $emp->has_target_period = $existing ? true : false;
+    //             $emp->has_target_period = $existing ? true : false;
 
+    //             if ($existing) {
+    //                 $latestRecord = $existing->ipcrLastestRecord;
+
+    //                 // ✅ Flatten only the fields you need
+    //                 $existing->status           = $latestRecord?->status ?? null;
+    //                 $existing->processed_by_name = $latestRecord?->processed_by_name ?? null;
+    //                 $existing->date             = $latestRecord?->date ?? null;
+
+    //                // ✅ Use makeHidden() to remove the relation from serialization
+    //                   $existing->makeHidden('ipcrLastestRecord');
+    //             }
+
+    //             $emp->existing_target_period = $existing;
+    //             unset($emp->target_periods);
+
+    //             return $emp;
+    //         });
+
+    //      // if the 
+    //     if($employees != 'Office Head'){
+
+    //     } 
+
+    //     return $employees;
+    // }
+
+    public function employees(Request $request)
+{
+    $user = Auth::user();
+    $officeId = $user->office_id;
+
+    $semester = $request->input('semester');
+    $year = $request->input('year');
+
+    if (!$semester || !$year) {
+        return response()->json([
+            'message' => 'Please provide semester and year'
+        ], 422);
+    }
+
+    // Fetch OPCR once to avoid N+1
+    $officeOpcr = OfficeOpcr::where('office_id', $officeId)
+        ->where('semester', $semester)
+        ->where('year', $year)
+        ->with('officeOpcrRecordLastestRecord')
+        ->first();
+
+    $employees = Employee::where('office_id', $officeId)
+        ->get()
+        ->map(function ($emp) use ($semester, $year, $officeOpcr) {
+
+            $existing = $emp->targetPeriods()
+                ->select('id', 'control_no', 'year', 'semester', 'supervisory_control_no')
+                ->where('semester', $semester)
+                ->where('year', $year)
+                ->with('ipcrLastestRecord')
+                ->first();
+
+            $emp->has_target_period = $existing ? true : false;
+
+            // ✅ If Office Head, use OPCR data inside existing_target_period
+            if ($emp->job_title === 'Office Head') {
+                $latestOpcrRecord = $officeOpcr?->officeOpcrRecordLastestRecord;
+
+                $emp->existing_target_period = [
+                    'id'                 => $existing?->id ?? null,
+                    'control_no'         => $existing?->control_no ?? null,
+                    'year'               => $existing?->year ?? null,
+                    'semester'           => $existing?->semester ?? null,
+                    'supervisory_control_no' => $existing?->supervisory_control_no ?? null,
+                    'has_opcr'           => $officeOpcr ? true : false,
+                    'opcr_id'            => $officeOpcr?->id ?? null,
+                    'status'             => $latestOpcrRecord?->status ?? null,
+                    'processed_by_name'  => $latestOpcrRecord?->processed_by_name ?? null,
+                    'date'               => $latestOpcrRecord?->date ?? null,
+                    'remarks'            => $latestOpcrRecord?->remarks ?? null,
+                ];
+
+            } else {
+                // Regular employee — keep original IPCR logic
                 if ($existing) {
                     $latestRecord = $existing->ipcrLastestRecord;
 
-                    // ✅ Flatten only the fields you need
-                    $existing->status           = $latestRecord?->status ?? null;
+                    $existing->status            = $latestRecord?->status ?? null;
                     $existing->processed_by_name = $latestRecord?->processed_by_name ?? null;
-                    $existing->date             = $latestRecord?->date ?? null;
+                    $existing->date              = $latestRecord?->date ?? null;
 
-                   // ✅ Use makeHidden() to remove the relation from serialization
-                      $existing->makeHidden('ipcrLastestRecord');
+                    $existing->makeHidden('ipcrLastestRecord');
                 }
 
                 $emp->existing_target_period = $existing;
-                unset($emp->target_periods);
+            }
 
-                return $emp;
-            });
+            unset($emp->target_periods);
 
-        return $employees;
-    }
+            return $emp;
+        });
+
+    return $employees;
+}
 
     // // fetch employee request by the HR
     // public function employeesRequest($request)
@@ -284,7 +364,7 @@ class SpmsService
     //     return $employees;
     // }
 
-    public function employeesRequest($request)
+    public function employeesRequest(Request $request)
     {
         $semester = $request->input('semester');
         $year = $request->input('year');
@@ -296,39 +376,64 @@ class SpmsService
             ], 422);
         }
 
-        // Fetch OPCR with latest record status for this office ONCE (outside the loop)
-        $opcr = OfficeOpcr::where('office_id', $officeIdRequested)
-            ->where('semester', $semester)
-            ->where('year', $year)
-            ->with('officeOpcrRecordLastestRecord')
-            ->first();
+     // Fetch OPCR once to avoid N+1
+    $officeOpcr = OfficeOpcr::where('office_id', $officeIdRequested)
+        ->where('semester', $semester)
+        ->where('year', $year)
+        ->with('officeOpcrRecordLastestRecord')
+        ->first();
 
-        $opcrStatus = $opcr?->officeOpcrRecordLastestRecord?->status ?? null;
+    $employees = Employee::where('office_id', $officeIdRequested)
+        ->get()
+        ->map(function ($emp) use ($semester, $year, $officeOpcr) {
 
-        $employees = Employee::where('office_id', $officeIdRequested)
-            ->get()
-            ->map(function ($emp) use ($semester, $year, $opcrStatus) {
+            $existing = $emp->targetPeriods()
+                ->select('id', 'control_no', 'year', 'semester', 'supervisory_control_no')
+                ->where('semester', $semester)
+                ->where('year', $year)
+                ->with('ipcrLastestRecord')
+                ->first();
 
-                $existing = $emp->targetPeriods()
-                    ->where('semester', $semester)
-                    ->where('year', $year)
-                    ->first();
+            $emp->has_target_period = $existing ? true : false;
 
-                $emp->has_target_period = $existing ? true : false;
-                $emp->existing_target_period = $existing;
+            // ✅ If Office Head, use OPCR data inside existing_target_period
+            if ($emp->job_title === 'Office Head') {
+                $latestOpcrRecord = $officeOpcr?->officeOpcrRecordLastestRecord;
 
-                // ✅ Attach opcr_status only for Office Head
+                $emp->existing_target_period = [
+                    'id'                 => $existing?->id ?? null,
+                    'control_no'         => $existing?->control_no ?? null,
+                    'year'               => $existing?->year ?? null,
+                    'semester'           => $existing?->semester ?? null,
+                    'supervisory_control_no' => $existing?->supervisory_control_no ?? null,
+                    'has_opcr'           => $officeOpcr ? true : false,
+                    'opcr_id'            => $officeOpcr?->id ?? null,
+                    'status'             => $latestOpcrRecord?->status ?? null,
+                    'processed_by_name'  => $latestOpcrRecord?->processed_by_name ?? null,
+                    'date'               => $latestOpcrRecord?->date ?? null,
+                    'remarks'            => $latestOpcrRecord?->remarks ?? null,
+                ];
 
-                if ($emp->job_title === 'Office Head' && $existing) {
-                    $emp->existing_target_period->opcr_status = $opcrStatus ?: 'Draft';
-                    $emp->existing_target_period->makeHidden('status'); // ✅ hide status for Office Head only
+            } else {
+                // Regular employee — keep original IPCR logic
+                if ($existing) {
+                    $latestRecord = $existing->ipcrLastestRecord;
+
+                    $existing->status            = $latestRecord?->status ?? null;
+                    $existing->processed_by_name = $latestRecord?->processed_by_name ?? null;
+                    $existing->date              = $latestRecord?->date ?? null;
+
+                    $existing->makeHidden('ipcrLastestRecord');
                 }
 
-                unset($emp->target_periods);
+                $emp->existing_target_period = $existing;
+            }
 
-                return $emp;
-            });
+            unset($emp->target_periods);
 
-        return $employees;
+            return $emp;
+        });
+
+    return $employees;
     }
 }
