@@ -11,6 +11,7 @@ class IpcrResource extends JsonResource
 
     public function toArray(Request $request): array
     {
+
         return [
             // employee details
             'id' => $this->id,
@@ -36,20 +37,20 @@ class IpcrResource extends JsonResource
 
             // target periods with nested performance standards
             'target_periods' => $this->targetPeriods->map(function ($period) {
-
+                      $status = $period->ipcrLastestRecord?->status;
                 return [
                     'id' => $period->id,
                     'control_no' => $period->control_no,
                     'year'      => $period->year,
                     'semester'  => $period->semester,
-                    'office' => $period->office,
-                    'office2' => $period->office2,
-                    'division' => $period->division,
-                    'section' => $period->section,
-                    'unit' => $period->unit,
-                    'status' => $period->status,
-                    'created_at' => $period->created_at,
-                    'updated_at' => $period->updated_at,
+                    // 'office' => $period->office,
+                    // 'office2' => $period->office2,
+                    // 'division' => $period->division,
+                    // 'section' => $period->section,
+                    // 'unit' => $period->unit,
+                    'status' => $status,
+                    // 'created_at' => $period->created_at,
+                    // 'updated_at' => $period->updated_at,
 
 
                      // performance standards with nested standard outcomes and monthly ratings
