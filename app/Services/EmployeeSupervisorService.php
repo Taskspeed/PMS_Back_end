@@ -3,6 +3,9 @@
 namespace App\Services;
 
 use App\Models\Employee;
+use App\Models\OfficeOpcr;
+use App\Models\opcr;
+use App\Traits\ApiResponseTrait;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use stdClass;
@@ -12,10 +15,9 @@ class EmployeeSupervisorService
     /**
      * Create a new class instance.
      */
-    public function __construct()
-    {
-        //
-    }
+
+    use ApiResponseTrait;
+
     public function getListOfEmployeeBaseOnSupervisor(int $year, string $semester, string $controlNo)
     {
 
@@ -51,7 +53,7 @@ class EmployeeSupervisorService
         $hierarchy = $this->buildHierarchyFromEmployee($selfEmployee);
 
         // ── Resolve signatories ───────────────────────────────────────────────────
-        $signatories = $this->resolveSignatories($selfEmployee, $selfEmployee->office_id);
+        $signatories = $this->resolveSignatories($selfEmployee, $selfEmployee->office_id, $year, $semester);
 
         // ── Fetch existing target period for the logged-in supervisor ────────────
         $selfTargetPeriod = $selfEmployee->targetPeriods()
@@ -96,6 +98,7 @@ class EmployeeSupervisorService
             'division'               => $selfEmployee->division,
             'section'                => $selfEmployee->section,
             'unit'                   => $selfEmployee->unit,
+            'office_id'                   => $selfEmployee->office_id,
             'has_target_period'      => $hasTargetPeriod,
             'existing_target_period' => $existingTargetPeriod,
             'supervisorySignatory'   => $signatories['supervisorySignatory'],
@@ -196,7 +199,7 @@ class EmployeeSupervisorService
         return [
             'hierarchy'    => $hierarchy,
             'employee'     => $employeeData,
-            'subordinates' => $employeesWithIpcr,
+            // 'subordinates' => $employeesWithIpcr,
         ];
     }
     private function findEmployeesSameNode(array $structure, string $controlNo): array
@@ -404,8 +407,30 @@ class EmployeeSupervisorService
         ];
     }
 
-    private function resolveSignatories(Employee $employee, int $officeId): array
+
+    //managerial and supervisory
+    private function resolveSignatories(Employee $employee, int $officeId, int $year, string $semester): array
     {
+
+        // ── Check OPCR exists for this office/semester/year ───────────────────────
+        $opcr = OfficeOpcr::where('office_id', $officeId)
+            ->where('semester', $semester)
+            ->where('year', $year)
+            ->first();
+
+        if (!$opcr) {
+            throw new \Exception('No OPCR found for this office. Please create an OPCR first.');
+        }
+
+        // ── Check OPCR record is Approved ─────────────────────────────────────────
+        $opcrRecord = OfficeOpcr::where('id', $opcr->id)
+            ->where('status', 'Approved')
+            ->first();
+
+        if (!$opcrRecord) {
+            throw new \Exception('OPCR is not yet approved. Please have it approved before proceeding.');
+        }
+
         // ── Always get the Office Head first ──────────────────────────────────────
         $officeHead = Employee::select('id', 'name', 'rank', 'ControlNo', 'position', 'status', 'job_title')
             ->where('office_id', $officeId)
@@ -413,19 +438,40 @@ class EmployeeSupervisorService
             ->where('ControlNo', '!=', $employee->ControlNo)
             ->first();
 
-        $officeHeadData = $officeHead ? [
+        $officeHeadData = $officeHead ? array_merge([
             'controlNo' => $officeHead->ControlNo,
             'name'      => $officeHead->name,
             'position'  => $officeHead->position,
             'rank'      => $officeHead->rank,
             'jobTitle'  => $officeHead->job_title,
-        ] : null;
+        ], $this->getSignatoryTargetPeriod($officeHead->ControlNo, $year, $semester)) : null;
 
         // managerialSignatory is always the Office Head
         $managerialSignatory = $officeHeadData;
 
         // ── supervisorySignatory: Section Head → Division Head → Office2 Head → Office Head ──
         $supervisorySignatory = null;
+
+        // 1️⃣ If employee is in a unit, look for Section Head in that section
+        if ($employee->unit && $employee->job_title !== 'Unit Head') {
+            $unitHead = Employee::select('id', 'name', 'rank', 'ControlNo', 'position', 'status', 'job_title')
+                ->where('office_id', $officeId)
+                ->where('unit', $employee->unit)
+                ->where('job_title', 'Unit Head')
+                ->where('ControlNo', '!=', $employee->ControlNo)
+                ->first();
+
+            if ($unitHead) {
+                $supervisorySignatory = array_merge([
+                    'controlNo' => $unitHead->ControlNo,
+                    'name'      => $unitHead->name,
+                    'position'  => $unitHead->position,
+                    'rank'      => $unitHead->rank,
+                    'jobTitle'  => $unitHead->job_title,
+                ], $this->getSignatoryTargetPeriod($unitHead->ControlNo, $year, $semester));
+            }
+        }
+
 
         // 1️⃣ If employee is in a section, look for Section Head in that section
         if ($employee->section && $employee->job_title !== 'Section Head') {
@@ -437,13 +483,13 @@ class EmployeeSupervisorService
                 ->first();
 
             if ($sectionHead) {
-                $supervisorySignatory = [
+                $supervisorySignatory = array_merge([
                     'controlNo' => $sectionHead->ControlNo,
                     'name'      => $sectionHead->name,
                     'position'  => $sectionHead->position,
                     'rank'      => $sectionHead->rank,
                     'jobTitle'  => $sectionHead->job_title,
-                ];
+                ], $this->getSignatoryTargetPeriod($sectionHead->ControlNo, $year, $semester));
             }
         }
 
@@ -459,13 +505,13 @@ class EmployeeSupervisorService
                 ->first();
 
             if ($divisionHead) {
-                $supervisorySignatory = [
-                    'controlNo' => $divisionHead->ControlNo,
-                    'name'      => $divisionHead->name,
-                    'position'  => $divisionHead->position,
-                    'rank'      => $divisionHead->rank,
-                    'jobTitle'  => $divisionHead->job_title,
-                ];
+                $supervisorySignatory = array_merge([
+                    'controlNo' => $sectionHead->ControlNo,
+                    'name'      => $sectionHead->name,
+                    'position'  => $sectionHead->position,
+                    'rank'      => $sectionHead->rank,
+                    'jobTitle'  => $sectionHead->job_title,
+                ], $this->getSignatoryTargetPeriod($sectionHead->ControlNo, $year, $semester));
             }
         }
 
@@ -482,13 +528,13 @@ class EmployeeSupervisorService
                 ->first();
 
             if ($office2Head) {
-                $supervisorySignatory = [
-                    'controlNo' => $office2Head->ControlNo,
-                    'name'      => $office2Head->name,
-                    'position'  => $office2Head->position,
-                    'rank'      => $office2Head->rank,
-                    'jobTitle'  => $office2Head->job_title,
-                ];
+                $supervisorySignatory = array_merge([
+                    'controlNo' => $sectionHead->ControlNo,
+                    'name'      => $sectionHead->name,
+                    'position'  => $sectionHead->position,
+                    'rank'      => $sectionHead->rank,
+                    'jobTitle'  => $sectionHead->job_title,
+                ], $this->getSignatoryTargetPeriod($sectionHead->ControlNo, $year, $semester));
             }
         }
 
@@ -505,13 +551,13 @@ class EmployeeSupervisorService
                 ->first();
 
             if ($groupHead) {
-                $supervisorySignatory = [
-                    'controlNo' => $groupHead->ControlNo,
-                    'name'      => $groupHead->name,
-                    'position'  => $groupHead->position,
-                    'rank'      => $groupHead->rank,
-                    'jobTitle'  => $groupHead->job_title,
-                ];
+                $supervisorySignatory = array_merge([
+                    'controlNo' => $sectionHead->ControlNo,
+                    'name'      => $sectionHead->name,
+                    'position'  => $sectionHead->position,
+                    'rank'      => $sectionHead->rank,
+                    'jobTitle'  => $sectionHead->job_title,
+                ], $this->getSignatoryTargetPeriod($sectionHead->ControlNo, $year, $semester));
             }
         }
 
@@ -523,6 +569,48 @@ class EmployeeSupervisorService
         return [
             'supervisorySignatory' => $supervisorySignatory,
             'managerialSignatory'  => $managerialSignatory,
+        ];
+    }
+
+    private function getSignatoryTargetPeriod(string $controlNo, int $year, string $semester): array
+    {
+        $signatory = Employee::where('ControlNo', $controlNo)->first();
+
+        if (!$signatory) {
+            return [
+                'has_target_period'      => false,
+                'existing_target_period' => null,
+            ];
+        }
+
+        $targetPeriod = $signatory->targetPeriods()
+            ->select('id', 'control_no', 'semester', 'year', 'supervisory_control_no')
+            ->where('year', $year)
+            ->where('semester', $semester)
+            ->with('ipcrLastestRecord')
+            ->first();
+
+        if (!$targetPeriod) {
+            return [
+                'has_target_period'      => false,
+                'existing_target_period' => null,
+            ];
+        }
+
+        $latestRecord = $targetPeriod->ipcrLastestRecord;
+
+        return [
+            'has_target_period'      => true,
+            'existing_target_period' => [
+                'id'                     => $targetPeriod->id,
+                'control_no'             => $targetPeriod->control_no,
+                'year'                   => $targetPeriod->year,
+                'semester'               => $targetPeriod->semester,
+                'supervisory_control_no' => $targetPeriod->supervisory_control_no,
+                'status'                 => $latestRecord?->status ?? null,
+                'processed_by_name'      => $latestRecord?->processed_by_name ?? null,
+                'date'                   => $latestRecord?->date ?? null,
+            ],
         ];
     }
 
