@@ -14,26 +14,33 @@ class TargetPeriodController extends Controller
     //crud
 
     // fetch target periods
-    public function getTargetPeriods()
-    {
-        $targetPeriods = DB::table('target_period_lib as tp')
-            ->leftJoin('target_period_locks as tpl', function ($join) {
-                $join->on('tp.semester', '=', 'tpl.semester')
-                    ->on('tp.year', '=', 'tpl.year');
-            })
-            ->select(
-                'tp.id',
-                'tp.semester',
-                'tp.year',
-                'tp.created_at',
-                'tp.updated_at',
-                'tpl.status',
-                'tpl.date',
-                'tpl.lock_by'
-            )
-            ->get();
+    // public function getTargetPeriods()
+    // {
+    //     $targetPeriods = DB::table('target_period_lib as tp')
+    //         ->leftJoin('target_period_locks as tpl', function ($join) {
+    //             $join->on('tp.semester', '=', 'tpl.semester')
+    //                 ->on('tp.year', '=', 'tpl.year');
+    //         })
+    //         ->select(
+    //             'tp.id',
+    //             'tp.semester',
+    //             'tp.year',
+    //             'tp.created_at',
+    //             'tp.updated_at',
+    //             'tpl.status',
+    //             'tpl.date',
+    //             'tpl.lock_by'
+    //         )
+    //         ->get();
 
-        return response()->json($targetPeriods);
+    //     return response()->json($targetPeriods);
+    // }
+
+      public function getTargetPeriods()
+    {
+        $targetPeriod = TargetPeriodLib::select('id','year','semester')->get();
+
+        return response()->json($targetPeriod);
     }
 
     // store target period
