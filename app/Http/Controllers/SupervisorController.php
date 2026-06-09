@@ -98,13 +98,13 @@ class SupervisorController extends Controller
         $validated = $request->validate([
             'ipcr_id'   => 'required|array',
             'ipcr_id.*' => 'required|exists:target_periods,id',
-            'status'    => 'required|in:Reviewed,Approved',
+            'status'    => 'required|string',
             'remarks'   => 'nullable|string',
-        ], [
-            'status.in' => "Status must be 'Reviewed' or 'Approved'.",
-        ]);
+        ]
+            // 'status.in' => "Status must be 'Reviewed' or 'Approved'.",
+        );
 
-        // ✅ block non-Office Head from using Approved status
+        // block non-Office Head from using Approved status
         if ($validated['status'] === 'Approved' && ! $isOfficeHead) {
             return $this->errorMessage('Only the Office Head can Approve IPCR.', 403);
         }
