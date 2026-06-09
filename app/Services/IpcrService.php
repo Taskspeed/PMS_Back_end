@@ -9,7 +9,10 @@ use App\Models\OfficeOpcr;
 use App\Models\PerformanceRating;
 use App\Models\PerformanceStandard;
 use App\Models\TargetPeriod;
+use App\Models\TargetPeriodRecord;
+use App\Traits\ApiResponseTrait;
 use Carbon\Carbon;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -24,6 +27,8 @@ class IpcrService
     // {
     //     //
     // }
+
+     use ApiResponseTrait;
     public function opcrOfficeHead(string $controlNo, string $semester, int $year)
     {
         $officeHeadOpcr = Employee::select('id', 'ControlNo', 'name', 'office_id', 'office')
@@ -408,9 +413,16 @@ class IpcrService
         $employee = Employee::where('ControlNo', $controlNo)
             ->with([
                 'targetPeriods' => function ($q) use ($year, $semester) {
-                    $q->where('year', $year)
+                    $q->select('id','year','semester','control_no')->where('year', $year)
                         ->where('semester', $semester)
                         ->with([
+                               'ipcrLastestRecord' => function ($query) {  // ← fix here
+                                $query->select(
+                                    'targetperiod_records.id',
+                                    'targetperiod_records.target_period_id',
+                                    'targetperiod_records.status'
+                                );
+                            },
                             'performanceStandards.performanceRating' => function ($query) {
                                 $query->select(
                                     'id',
@@ -999,13 +1011,17 @@ class IpcrService
     }
 
     // status of ipcr of employee
-    public function updateStatusIpcr(?array $validateData, int $targetPeriodId)
+    public function updateStatusIpcr(?array $validated, Authenticatable $supervisor)
     {
+        $ipcr = TargetPeriodRecord::create([
+                'target_period_id'  => $validated['ipcr_id'],
+                'date'              => Carbon::now()->format('Y-m-d'),
+                'status'            => $validated['status'],
+                'remarks'           => $validated['remarks'] ?? null,
+                'processed_by'      => $supervisor->id,
+                'processed_by_name' => $supervisor->name,
+                ]);
 
-        $ipcr = TargetPeriod::findOrFail($targetPeriodId);
-
-        $ipcr->update($validateData); // updating
-
-        return  $ipcr;
+        return $this->successMessage($ipcr,'IPCR Successfully update',200);
     }
 }
