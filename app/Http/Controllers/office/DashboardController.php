@@ -9,6 +9,7 @@ use App\Models\OfficeOpcr;
 use App\Models\PerformanceRating;
 use App\Models\PerformanceStandard;
 use App\Models\TargetPeriod;
+use App\Models\TargetPeriodRecord;
 use App\Models\UnitWorkPlan;
 use App\Traits\ApiResponseTrait;
 use Carbon\Carbon;
@@ -40,19 +41,39 @@ class DashboardController extends Controller
         $totalEmployees = $totalEmployeesOnOffice->count();
 
         // ipcr status counts — filtered by office employees only ✅
-        $ipcr_status = \App\Models\TargetPeriod::whereIn('control_no', $employeeControlNos)
+     // Get TargetPeriod IDs filtered by office employees, year, semester
+        $targetPeriodIds = TargetPeriod::whereIn('control_no', $employeeControlNos)
             ->when($year,     fn($q) => $q->where('year', $year))
             ->when($semester, fn($q) => $q->where('semester', $semester))
+            ->pluck('id');
+
+        // Now get status counts from TargetPeriodRecord (latest per target_period_id)
+        $ipcr_status = TargetPeriodRecord::whereIn('target_period_id', $targetPeriodIds)
+            ->whereIn('id', function ($sub) {
+                $sub->selectRaw('MAX(id)')
+                    ->from('targetperiod_records')
+                    ->groupBy('target_period_id');
+            })
             ->selectRaw('LOWER(status) as status, COUNT(*) as count')
             ->groupBy(DB::raw('LOWER(status)'))
             ->pluck('count', 'status');
 
         $ipcr_data = [
             'ipcr' => [
-                'Pending'  => (int) $ipcr_status->get('pending', 0),
+                // target
+                'Validated_target'  => (int) $ipcr_status->get('Validated target', 0),
+                'Calibrated_target'  => (int) $ipcr_status->get('Calibrated target', 0),
                 'Approved' => (int) $ipcr_status->get('approved', 0),
-                'Draft'    => (int) $ipcr_status->get('draft', 0),
                 'Reviewed' => (int) $ipcr_status->get('reviewed', 0),
+                'Draft'    => (int) $ipcr_status->get('draft', 0),
+
+                // accomplishment
+                'Validated_accomplishment'  => (int) $ipcr_status->get('Validated accomplishment', 0),
+                'Calibrated_accomplishment' => (int) $ipcr_status->get('Calibrated accomplishment', 0),
+                'Pre_validation'    => (int) $ipcr_status->get('Pre validation', 0),
+                'In_Progress' => (int) $ipcr_status->get('In Progress', 0),
+
+
                 'total_ipcr' => (int) $ipcr_status->sum(),
             ]
         ];

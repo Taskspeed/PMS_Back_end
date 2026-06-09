@@ -9,6 +9,7 @@ use App\Models\OfficeOpcr;
 use App\Models\PerformanceRating;
 use App\Models\PerformanceStandard;
 use App\Models\TargetPeriod;
+use App\Models\TargetPeriodRecord;
 use App\Models\UnitWorkPlan;
 use App\Models\vwActive;
 use App\Models\vwplantillastructure;
@@ -182,6 +183,7 @@ class DashboardService
         $targetPeriod = TargetPeriod::where('semester', $semester)
             ->where('year', $year)
             ->first();
+
         $employee = Employee::count();
 
         // ─── OPCR ───────────────────────────────────────────────────────────────
@@ -193,22 +195,53 @@ class DashboardService
             ->get();
 
         $opcrCounts = [
-            'Pending'  => $opcrBase->filter(fn($o) => optional($o->officeOpcrRecordLastestRecord)->status === 'Pending')->count(),
+            'Validated_target'  => $opcrBase->filter(fn($o) => optional($o->officeOpcrRecordLastestRecord)->status === 'Calibrated target')->count(),
+            'Calibrated_target'  => $opcrBase->filter(fn($o) => optional($o->officeOpcrRecordLastestRecord)->status === 'Calibrated target')->count(),
             'Approved' => $opcrBase->filter(fn($o) => optional($o->officeOpcrRecordLastestRecord)->status === 'Approved')->count(),
+            'Receive_target'    => $opcrBase->filter(fn($o) => optional($o->officeOpcrRecordLastestRecord)->status === 'Received Target')->count(),
             'Draft'    => $opcrBase->filter(fn($o) => optional($o->officeOpcrRecordLastestRecord)->status === 'Draft')->count(),
             'total_opcr' => $opcrBase->count(),
 
         ];
 
+        $employeeControlNos = Employee::pluck('ControlNo'); // ← get actual control numbers
+
+            $targetPeriodIds = TargetPeriod::whereIn('control_no', $employeeControlNos)
+                ->when($year,     fn($q) => $q->where('year', $year))
+                ->when($semester, fn($q) => $q->where('semester', $semester))
+                ->pluck('id');
+
+
+                $ipcr_status = TargetPeriodRecord::whereIn('target_period_id', $targetPeriodIds)
+            ->whereIn('id', function ($sub) {
+                $sub->selectRaw('MAX(id)')
+                    ->from('targetperiod_records')
+                    ->groupBy('target_period_id');
+            })
+            ->selectRaw('LOWER(status) as status, COUNT(*) as count')
+            ->groupBy(DB::raw('LOWER(status)'))
+            ->pluck('count', 'status');
+
         // ─── IPCR ───────────────────────────────────────────────────────────────
         // TargetPeriod.status is the direct status field (no separate record table).
         $ipcrCounts = [
-            'Pending'  => TargetPeriod::where('semester', $semester)->where('year', $year)->where('status', 'Pending')->count(),
-            'Approved' => TargetPeriod::where('semester', $semester)->where('year', $year)->where('status', 'Approved')->count(),
-            'Draft'    => TargetPeriod::where('semester', $semester)->where('year', $year)->where('status', 'Draft')->count(),
-            'Reviewed'    => TargetPeriod::where('semester', $semester)->where('year', $year)->where('status', 'Reviewed')->count(),
+          // target
+                'Validated_target'  => (int) $ipcr_status->get('validated target', 0),
+                'Calibrated_target'  => (int) $ipcr_status->get('calibrated target', 0),
+                'Approved' => (int) $ipcr_status->get('approved', 0),
+                'Receive_target' => (int) $ipcr_status->get('reviewed target', 0),
+                'Reviewed' => (int) $ipcr_status->get('reviewed', 0),
+                'Draft'    => (int) $ipcr_status->get('draft', 0),
 
-            'total_ipcr' => TargetPeriod::where('semester', $semester)->where('year', $year)->count(),
+                // accomplishment
+                'Validated_accomplishment'  => (int) $ipcr_status->get('Validated accomplishment', 0),
+                'Calibrated_accomplishment' => (int) $ipcr_status->get('Calibrated accomplishment', 0),
+                'Pre_validation'    => (int) $ipcr_status->get('Pre validation', 0),
+                'In_Progress' => (int) $ipcr_status->get('In Progress', 0),
+
+
+                'total_ipcr' => (int) $ipcr_status->sum(),
+  
         ];
 
         // ─── Unit Work Plan ─────────────────────────────────────────────────────
@@ -219,9 +252,17 @@ class DashboardService
             ->get();
 
         $uwpCounts = [
-            'Pending'  => $uwpBase->filter(fn($u) => optional($u->unitworkplanLastestRecord)->status === 'Pending')->count(),
+
+            // target
+            // 'Pending'  => $uwpBase->filter(fn($u) => optional($u->unitworkplanLastestRecord)->status === 'Pending')->count(),
             'Approved' => $uwpBase->filter(fn($u) => optional($u->unitworkplanLastestRecord)->status === 'Approved')->count(),
+            'Reviewed_target' => $uwpBase->filter(fn($u) => optional($u->unitworkplanLastestRecord)->status === 'Reviewed target')->count(),
             'Draft'    => $uwpBase->filter(fn($u) => optional($u->unitworkplanLastestRecord)->status === 'Draft')->count(),
+
+            // accomplishment
+            'Pending'  => $uwpBase->filter(fn($u) => optional($u->unitworkplanLastestRecord)->status === 'Pending')->count(),
+
+
             'total_unitworkplan' => $uwpBase->count(),
         ];
 
