@@ -4,8 +4,11 @@ namespace App\Services;
 
 use App\Models\Employee;
 use App\Models\mfo;
+use App\Models\office;
 use App\Models\TargetPeriod;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class MfoService
 {
@@ -21,8 +24,12 @@ class MfoService
     public function getUserMfo()
     {
         $user = Auth::user();
-        $office = $user->office;
-
+        $office = office::find($user->office_id); // explicit, not relying on relationship
+        Log::info('MFO Debug', [
+                'auth_user_id'    => $user->id,
+                'auth_office_id'  => $user->office_id,
+                'office_relation' => $user->office?->id,
+            ]);
         // Get all categories having either MFOs or outputs for this office
         $categoryIds = $office->mfos()->pluck('f_category_id')
             ->merge($office->f_outpots()->pluck('f_category_id'))
@@ -123,4 +130,5 @@ class MfoService
             'target_period' => $target_period
         ]);
     }
+
 }
