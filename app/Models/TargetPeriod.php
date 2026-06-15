@@ -25,7 +25,6 @@ class TargetPeriod extends Model
         // 'division',
         // 'section',
         // 'unit',
-        'status',
         'office_id',
         'supervisory_control_no'
 
