@@ -19,9 +19,11 @@ class TargetPeriodService
             'control_no',
             'semester',
             'year',
-            'status',
             'office_id'
-        )->where('control_no', $controlNo)->get();
+        )->where('control_no', $controlNo)
+        ->with('ipcrLastestRecord')
+        
+        ->get();
 
 
         if ($employeeTargetPeriods->isEmpty()) {
@@ -31,9 +33,19 @@ class TargetPeriodService
             ], 200);
         }
 
+    $data = $employeeTargetPeriods->map(function ($targetPeriod) {
+        return [
+            'id'         => $targetPeriod->id,
+            'control_no' => $targetPeriod->control_no,
+            'semester'   => $targetPeriod->semester,
+            'year'       => $targetPeriod->year,
+            'office_id'  => $targetPeriod->office_id,
+            'status'     => $targetPeriod->ipcrLastestRecord?->status ?? 'N/A',
+        ];
+    });
         return response()->json([
             'message'      => 'Target period retrieved successfully.',
-            'targetPeriod' => $employeeTargetPeriods
+            'targetPeriod' => $data
         ], 200);
     }
 
