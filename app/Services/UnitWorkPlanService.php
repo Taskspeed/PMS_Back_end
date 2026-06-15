@@ -350,10 +350,10 @@ class UnitWorkPlanService
                     ],
                     [
                         'performance_standard_id' => $performanceStandard->id,
-                        'rating'                  => $rating['rating'],
-                        'quantity_target'         => $rating['quantity'],
-                        'effectiveness_criteria'  => $rating['effectiveness'],
-                        'timeliness_range'        => $rating['timeliness'],
+                        'rating'                  => $rating['rating']?? null,
+                        'quantity_target'         => $rating['quantity']?? null,
+                        'effectiveness_criteria'  => $rating['effectiveness']?? null,
+                        'timeliness_range'        => $rating['timeliness']?? null,
                     ]
                 );
             }
@@ -367,12 +367,12 @@ class UnitWorkPlanService
                 ],
                 [
                     'performance_standard_id' => $performanceStandard->id,
-                    'target_output'           => $config['targetOutput'],
-                    'quantity_indicator'      => $config['quantityIndicator'],
-                    'timeliness_indicator'    => $config['timelinessIndicator'],
-                    'timeliness_range'        => $config['timelinessType']['range'],
-                    'timeliness_date'         => $config['timelinessType']['date'],
-                    'timeliness_description'  => $config['timelinessType']['description'],
+                    'target_output'           => $config['targetOutput']?? null,
+                    'quantity_indicator'      => $config['quantityIndicator']?? null,
+                    'timeliness_indicator'    => $config['timelinessIndicator']?? null,
+                    'timeliness_range'        => $config['timelinessType']['range']?? null,
+                    'timeliness_date'         => $config['timelinessType']['date']?? null,
+                    'timeliness_description'  => $config['timelinessType']['description']?? null,
                 ]
             );
         }
