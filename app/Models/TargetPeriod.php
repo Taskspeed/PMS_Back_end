@@ -46,7 +46,7 @@ class TargetPeriod extends Model
     {
         return $this->hasMany(PerformanceStandard::class, 'target_period_id');
     }
-    
+
     public function standardOutcomes()
     {
         return $this->hasMany(StandardOutcome::class, 'target_period_id');
@@ -57,11 +57,17 @@ class TargetPeriod extends Model
         return $this->hasMany(Month::class, 'target_period_id');
     }
 
-    
-        public function ipcrLastestRecord()
+
+    public function ipcrLastestRecord()
     {
         return $this->hasOne(TargetPeriodRecord::class, 'target_period_id')->latestOfMany();
     }
+
+    public function ipcrRecord()
+    {
+        return $this->hasOne(TargetPeriodRecord::class, 'target_period_id');
+    }
+
 
     // public function configurations()
     // {
