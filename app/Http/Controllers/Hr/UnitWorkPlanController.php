@@ -16,21 +16,7 @@ use function Symfony\Component\Clock\now;
 class UnitWorkPlanController extends Controller
 {
 
-    // monitoring the unitworkplan by hr
-    //  status if unitworkplan of office
-    public function updateUnitworkplan(TrackerRequest $request,TrackerService $trackerService) {
-
-        $validated = $request->validated();
-
-        $unitworkplan = $trackerService->unitworkplanStatus($validated);
-
-        return response()->json([
-            'message' => 'Unit workplan status created successfully.',
-            'data' => $unitworkplan
-        ], 201);
-    }
-
-
+    
     // lock the target period
     public function lockTargetPeriod(Request $request)
     {
