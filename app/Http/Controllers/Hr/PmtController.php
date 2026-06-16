@@ -54,7 +54,7 @@ class PmtController extends BaseController
         $office   = $request->input('office');
        
         try{
-            $data = $this->EmployeeIpcr($this->user,$year,$semester,$office);
+            $data = $this->pmtService->EmployeeIpcr($this->user,$year,$semester,$office);
         return $this->successMessage($data, 'Successfully fetch');
 
         } catch (\Exception $e){
@@ -65,11 +65,11 @@ class PmtController extends BaseController
     // list of the employee for pmt
     public function getOfficeEmployeePmt(Request $request)
     {
-        $office_name = $request->query('office_name');
+        $office = $request->query('office');
        try {
-            $data = $this->OfficeEmployeePmt($office_name);
+            $data = $this->pmtService->OfficeEmployeePmt($office);
             return $this->successMessage($data, 'Successfully fetched');
-       } catch (Exception $e) {
+       } catch (\Exception $e) {
             return $this->errorMessage($e->getMessage());
        }
     }

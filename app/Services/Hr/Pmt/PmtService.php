@@ -30,33 +30,34 @@ class PmtService
 
 
     // fetch the list of employee ipcr
-    public function EmployeeIpcr(Authenticatable $pmt_user, int $year, string $semester, string $office)
+    public function EmployeeIpcr(Authenticatable $pmt_user, int $year, string $semester, ?string $office)
     {
         $assignedOfficeIds = $pmt_user->pmt_assign->pluck('office_id');
 
         if ($assignedOfficeIds->isEmpty()) {
-            return  new Exception('No assigned offices found for this user.');
+            return  new \Exception('No assigned offices found for this user.');
         }
 
         $employee = Employee::select('ControlNo', 'name', 'rank', 'office', 'status', 'job_title', 'position')
             ->whereNotIn('status', ['CONTRACTUAL', 'JOB ORDER'])
             ->when($office, fn($q) => $q->where('office', $office))
 
-            // ✅ Only return employees WHO HAVE an approved target period
+          // ✅ Filter: only employees who have an Approved target period for this semester/year
             ->whereHas('targetPeriods', function ($query) use ($year, $semester) {
-                $query->where('status', 'Receive')
-                    ->where('year', $year)
-                    ->where('semester', $semester);
+                $query->where('year', $year)
+                    ->where('semester', $semester)
+                    ->whereHas('ipcrLastestRecord', function ($q) {
+                        $q->where('status','Reviewed'); // ✅ fix typo: was 'Aprroved'
+                    });
             })
 
-            // Eager load the matching target period for display
+            // ✅ Eager load the matching target period with its latest record
             ->with(['targetPeriods' => function ($query) use ($year, $semester) {
-                $query->select('control_no', 'year', 'semester', 'status')
-                    ->where('status', 'Receive')
+                $query->select('id', 'control_no', 'year', 'semester')
                     ->where('year', $year)
-                    ->where('semester', $semester);
+                    ->where('semester', $semester)
+                    ->with('ipcrLastestRecord'); // ✅ load latest record on the period
             }])
-            ->whereIn('office_id', $assignedOfficeIds)
             ->get();
 
         if ($employee->isEmpty()) {
@@ -65,6 +66,7 @@ class PmtService
 
         return  $employee->map(function ($item) {
             $ipcr = $item->targetPeriods->first();
+             $latestRecord  = $ipcr?->ipcrLastestRecord;
 
             return [
                 'ControlNo'   => $item->ControlNo,
@@ -74,7 +76,7 @@ class PmtService
                 'job_title'   => $item->job_title,
                 'position'    => $item->position,
                 'emp_status'  => $item->status,
-                'ipcr_status' => $ipcr?->status,
+                'ipcr_status' => $latestRecord?->status, 
                 'year'        => $ipcr?->year,
                 'semester'    => $ipcr?->semester,
                 'has_ipcr'    => $ipcr !== null,
@@ -84,10 +86,10 @@ class PmtService
 
 
     // list of the employee for pmt
-    public function officeEmployeePmt(string $office_name)
+    public function officeEmployeePmt(string $office)
     {
-        if (!$office_name) {
-            throw new \Exception('office_name is required');
+        if (!$office) {
+            throw new \Exception('office is required');
         }
 
         $existingUsers = User::where('role_id', 5)
@@ -96,7 +98,7 @@ class PmtService
             ->toArray();
 
         $data = vwActive::select('ControlNo', 'BirthDate', 'Office', 'name4', 'Designation', 'status')
-            ->where('Office', $office_name)
+            ->where('Office', $office)
             ->whereNotIn('ControlNo', $existingUsers)
             ->get();
 
