@@ -39,7 +39,7 @@ class IpcrService
             ->with([
                 'targetPeriods' => function ($queryTargetPeriod) use ($year, $semester) {
                     $queryTargetPeriod
-                        ->select('id', 'control_no', 'semester', 'year', 'status')
+                        ->select('id', 'control_no', 'semester', 'year')
                         ->where('year', $year)
                         ->where('semester', $semester)
                         ->with([
@@ -416,12 +416,24 @@ class IpcrService
                     $q->select('id','year','semester','control_no')->where('year', $year)
                         ->where('semester', $semester)
                         ->with([
-                               'ipcrLastestRecord' => function ($query) {  // ← fix here
+                               'ipcrLastestRecord' => function ($query) {  // get the lastest record of the ipcr
                                 $query->select(
                                     'targetperiod_records.id',
                                     'targetperiod_records.target_period_id',
-                                    'targetperiod_records.status'
+                                    'targetperiod_records.status',
+                                    'targetperiod_records.remarks'
                                 );
+                            },
+                            'ipcrRecord' => function ($query) {  // ipcr record find the person and date who received the ipcr
+                                $query->select(
+                                    'targetperiod_records.id',
+                                    'targetperiod_records.target_period_id',
+                                    'targetperiod_records.status',
+                                    'targetperiod_records.remarks',
+                                    'targetperiod_records.processed_by',
+                                    'targetperiod_records.processed_by_name',
+                                            'targetperiod_records.date',  // ✅ add date if you need it
+                                )->where('status','Received');
                             },
                             'performanceStandards.performanceRating' => function ($query) {
                                 $query->select(
@@ -1010,18 +1022,5 @@ class IpcrService
         return $createdMonths;
     }
 
-    // status of ipcr of employee
-    public function updateStatusIpcr(?array $validated, Authenticatable $supervisor)
-    {
-        $ipcr = TargetPeriodRecord::create([
-                'target_period_id'  => $validated['ipcr_id'],
-                'date'              => Carbon::now()->format('Y-m-d'),
-                'status'            => $validated['status'],
-                'remarks'           => $validated['remarks'] ?? null,
-                'processed_by'      => $supervisor->id,
-                'processed_by_name' => $supervisor->name,
-                ]);
-
-        return $this->successMessage($ipcr,'IPCR Successfully update',200);
-    }
+ 
 }

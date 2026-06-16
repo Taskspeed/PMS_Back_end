@@ -37,23 +37,30 @@ class IpcrResource extends JsonResource
 
             // target periods with nested performance standards
             'target_periods' => $this->targetPeriods->map(function ($period) {
-                      $status = $period->ipcrLastestRecord?->status;
+                $latestRecord = $period->ipcrLastestRecord;
+        
+                // Received hr target
+                $targetRecord = $period->ipcrRecord
+                    ->firstWhere('status', 'Received_target');
+                // Received hr accomplishment
+                $accomplishmentRecord = $period->ipcrRecord
+                    ->firstWhere('status', 'Received_accomplishment');
+
+                // calibrated
+                $calibratedRecord = $period->ipcrRecord
+                    ->firstWhere('status', 'Calibrated_target');
+
+
                 return [
                     'id' => $period->id,
                     'control_no' => $period->control_no,
                     'year'      => $period->year,
                     'semester'  => $period->semester,
-                    // 'office' => $period->office,
-                    // 'office2' => $period->office2,
-                    // 'division' => $period->division,
-                    // 'section' => $period->section,
-                    // 'unit' => $period->unit,
-                    'status' => $status,
-                    // 'created_at' => $period->created_at,
-                    // 'updated_at' => $period->updated_at,
+                    'status'     => $latestRecord?->status,   // ✅ fixed swap
+                    'remarks'    => $latestRecord?->remarks,  // ✅ fixed swap
 
 
-                     // performance standards with nested standard outcomes and monthly ratings
+                    // performance standards with nested standard outcomes and monthly ratings
                     'performance_standards' => $period->performanceStandards->map(function ($standard) {
                         return [
                             'id' => $standard->id,
@@ -83,11 +90,33 @@ class IpcrResource extends JsonResource
                         ];
                     }),
 
+                    //  target 
+                    'ipcr_target_record' => $targetRecord ? [
+                        'id'                => $targetRecord->id,
+                        'status'            => $targetRecord->status,
+                        'remarks'           => $targetRecord->remarks,
+                        'processed_by'      => $targetRecord->processed_by,
+                        'processed_by_name' => $targetRecord->processed_by_name,
+                        'date'              => $targetRecord->date ?? null,
+                    ] : null,
 
+                     'ipcr_accomplishment_record' => $accomplishmentRecord ? [
+                        'id'                => $accomplishmentRecord->id,
+                        'status'            => $accomplishmentRecord->status,
+                        'remarks'           => $accomplishmentRecord->remarks,
+                        'processed_by'      => $accomplishmentRecord->processed_by,
+                        'processed_by_name' => $accomplishmentRecord->processed_by_name,
+                        'date'              => $accomplishmentRecord->date ?? null,
+                    ] : null,
 
-
-
-
+                     'ipcr_calibrated_record' => $calibratedRecord ? [
+                        'id'                => $calibratedRecord->id,
+                        'status'            => $calibratedRecord->status,
+                        'remarks'           => $calibratedRecord->remarks,
+                        'processed_by'      => $calibratedRecord->processed_by,
+                        'processed_by_name' => $calibratedRecord->processed_by_name,
+                        'date'              => $calibratedRecord->date ?? null,
+                    ] : null,
                 ];
             })
         ];
