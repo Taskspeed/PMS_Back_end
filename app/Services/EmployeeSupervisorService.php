@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Employee;
 use App\Models\OfficeOpcr;
+use App\Models\OfficeOpcrRecord;
 use App\Models\opcr;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Support\Facades\Auth;
@@ -423,9 +424,8 @@ class EmployeeSupervisorService
         }
 
         // ── Check OPCR record is Approved ─────────────────────────────────────────
-        $opcrRecord = OfficeOpcr::where('id', $opcr->id)
-            ->where('status', 'Approved')
-            ->first();
+        $opcrRecord = OfficeOpcrRecord::where('id', $opcr->id)
+            ->where('status', 'Approved');
 
         if (!$opcrRecord) {
             throw new \Exception('OPCR is not yet approved. Please have it approved before proceeding.');
