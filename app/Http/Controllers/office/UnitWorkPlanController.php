@@ -28,7 +28,7 @@ class UnitWorkPlanController extends BaseController
     {
         $this->middleware(function ($request, $next) {
             $this->user = Auth::user();
-            $this->officeId = $this->user->office_id;
+            $this->officeId = $this->user?->office_id;
 
             return $next($request);
         });
@@ -70,7 +70,12 @@ class UnitWorkPlanController extends BaseController
 
         $unitworkplan = $this->unitWorkPlanService->update($validated);
 
-        return response()->json([
+        // return response()->json([
+        //     'success' => true,
+        //     'message' => 'Unit Work Plan updated successfully.',
+        //     'data' => $unitworkplan
+        // ]);
+          return response()->json([
             'success' => true,
             'message' => 'Unit Work Plan updated successfully.',
             'data' => $unitworkplan
@@ -103,10 +108,9 @@ class UnitWorkPlanController extends BaseController
     public function getUnitworkplan(string $controlNo, string $semester, int $year)
     {
         $employee = Employee::where('ControlNo', $controlNo)
-            ->where('office_id', $this->officeId)
             ->with([
                 'targetPeriods' => function ($q) use ($year, $semester) {
-                    $q->select('id', 'control_no', 'year', 'semester', 'status')
+                    $q->select('id', 'control_no', 'year', 'semester',)
                         ->where('year', $year)
                         ->where('semester', $semester)
                         ->with([
