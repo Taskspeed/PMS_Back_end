@@ -16,12 +16,13 @@ class RoleSeeder extends Seeder
 
         $roles = [
 
-            ['name' => 'office_admin', 'label' => 'Office Admin'], // 1
-            ['name' => 'planning_admin', 'label' => 'Planning Admin'], // 2
-            ['name' => 'hr_admin', 'label' => 'HR Admin'], // 3
-            ['name' => 'supervisor_admin', 'label' => 'Supervisor Admin'], // 4
-            ['name' => 'pmt_admin', 'label' => 'PMT Admin'], // 5
-            ['name' => 'receiving_officer', 'label' => 'Receiving Officer'], // 5
+            ['name' => 'office_admin', 'label' => 'Can manage office-specific settings and users'], // 1
+            ['name' => 'planning_admin', 'label' => 'Can manage planning-related functions and users'], // 2
+            ['name' => 'hr_admin', 'label' => 'Creates accounts and manages the system'], // 3
+            ['name' => 'supervisor_admin', 'label' => 'Can rate Qpef'], // 4
+            ['name' => 'pmt_admin', 'label' => 'Performance Management Team — evaluations and monitoring'], // 5
+            ['name' => 'receiving_officer', 'label' => 'Handles receiving and processing of documents and items'], // 6
+            ['name' => 'receiving_staff_planning', 'label' => 'Handles receiving and processing of documents and items'], // 7
 
         ];
 
