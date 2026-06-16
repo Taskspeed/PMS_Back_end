@@ -46,7 +46,11 @@ class DashboardController extends Controller
             return  $this->infoMessage('No records found', 200);
         }
 
-        return OfficeOpcrPendingResource::collection($result);
+         return $this->successMessage(
+            OfficeOpcrPendingResource::collection($result),
+            'Successfully fetched',
+            200
+        );
     }
 
         //list of the opcr draft
