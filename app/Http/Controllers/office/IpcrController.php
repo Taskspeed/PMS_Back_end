@@ -130,24 +130,5 @@ class IpcrController extends BaseController
         }
     }
 
-    // updating - status ipcr of employee args approve,review,cancel and others
-    public function statusIpcr(Request $request)
-    {
-
-        $supervisor = Auth::user();
-
-        $validated = $request->validate([
-            'ipcr_id'   => 'required|array',
-            'ipcr_id.*' => 'required|exists:target_periods,id',
-            'status'    => 'required|in:Reviewed,Approved',
-            'remarks'   => 'nullable|string',
-        ], [
-            'status.in' => "Status must be 'Reviewed' or 'Approved'.",
-        ]);
-
-        //updating the targetperiod of employee
-        $ipcr = $this->ipcrService->updateStatusIpcr($validated, $supervisor);
-
-        return $ipcr;
-    }
+   
 }
