@@ -21,6 +21,7 @@ class OpcrResource extends JsonResource
             'name'       => $employee->name,
             'office_id'  => $employee->office_id,
             'office'     => $employee->office,
+            'opcr_status'     => $opcr_status->officeOpcrRecordLastestRecord->status,
 
             'target_periods' => $employee->relationLoaded('targetPeriods')
                 ? $employee->targetPeriods->map(function ($target) {
