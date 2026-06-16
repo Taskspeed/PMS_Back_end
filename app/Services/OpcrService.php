@@ -96,22 +96,6 @@ class OpcrService
         }
     }
 
-    // storing status of opcr
-    public function opcrStoreStatus(?array $validated)
-    {
-        $user =  Auth::user();
-
-        $opcr = OfficeOpcrRecord::create([
-            'office_opcr_id' => $validated['office_opcr_id'],
-            'date' => now()->format('m-d-Y'),
-            'status' => $validated['status'],
-            'remarks' => $validated['remarks'],
-            'processed_by' => $user->id,
-            'processed_by_name' => $user->name,
-        ]);
-
-        return response()->json($opcr);
-    }
 
     // list of  opcr Received
     public function opcrReceived(string $semester, int $year)
