@@ -84,6 +84,7 @@ class AuthController extends Controller
     public function edit(Request $request)
     {
         $current_user = Auth::user();
+        
         $validated = $request->validate([
             'userId'             => 'required|exists:users,id',
             'roleId'             => 'required|exists:roles,id',
@@ -128,7 +129,7 @@ class AuthController extends Controller
             'pmt_assign' => function ($query) {
                 $query->select('id', 'user_id', 'office_id')
                     ->with(['office' => function ($q) {
-                        $q->select('id', 'name as office_name');
+                        $q->select('id', 'name');
                     }]);
             }
         ])->find($userId);
