@@ -57,7 +57,7 @@ class ReceivingController extends Controller
                 $query->where('year', $year)
                     ->where('semester', $semester)
                     ->whereHas('ipcrLastestRecord', function ($q) {
-                        $q->where('status','Approved'); // ✅ fix typo: was 'Aprroved'
+                  $q->whereIn('status',['Approved','Received Target']); // ✅ fix typo: was 'Aprroved'
                     });
             })
 
@@ -125,7 +125,7 @@ class ReceivingController extends Controller
             ->where('year', $year)
             ->when($office, fn($q) => $q->where('office_name', $office))
             ->whereHas('unitworkplanLastestRecord', function ($query) {
-                $query->where('status', 'Draft');
+                 $query->whereIn('status', ['Draft','Received Target']);
             })
             ->with('unitworkplanLastestRecord')
             ->get()
