@@ -40,15 +40,21 @@ class IpcrResource extends JsonResource
                 $latestRecord = $period->ipcrLastestRecord;
         
                 // Received hr target
-                $targetRecord = $period->ipcrRecord
-                    ->firstWhere('status', 'Received_target');
+             $targetRecord = $period->ipcrRecord
+                    ->where('status', 'Received_target')
+                    ->sortByDesc('created_at')
+                    ->first();
                 // Received hr accomplishment
                 $accomplishmentRecord = $period->ipcrRecord
-                    ->firstWhere('status', 'Received_accomplishment');
+                    ->firstWhere('status', 'Received_accomplishment')
+                    ->sortByDesc('created_at')
+                    ->first();
 
                 // calibrated
                 $calibratedRecord = $period->ipcrRecord
-                    ->firstWhere('status', 'Calibrated_target');
+                    ->firstWhere('status', 'Calibrated_target')
+                    ->sortByDesc('created_at')
+                    ->first();
 
 
                 return [
