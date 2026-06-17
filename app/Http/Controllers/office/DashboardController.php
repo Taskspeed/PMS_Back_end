@@ -194,7 +194,7 @@ class DashboardController extends Controller
             ->with([
                 'targetPeriods' => function ($queryTargetPeriod) use ($year, $semester) {
                     $queryTargetPeriod
-                        ->select('id', 'control_no', 'semester', 'year', 'status')
+                        ->select('id', 'control_no', 'semester', 'year')
                         ->where('year', $year)
                         ->where('semester', $semester)
                         ->with([
