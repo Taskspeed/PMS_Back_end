@@ -28,7 +28,9 @@ class SupervisorCreateRequest extends FormRequest
             'controlNo' => 'required|string',
             'username'    => 'required|string|unique:users,username', // added unique check
             'password' => 'required|string|min:3',
-            'active' => 'required|boolean'
+            'active' => 'required|boolean',
+            'prefix' =>'nullable|string',
+            'suffix' =>'nullable|string'
         ];
     }
 }

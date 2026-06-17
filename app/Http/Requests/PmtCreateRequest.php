@@ -32,7 +32,9 @@ class PmtCreateRequest extends FormRequest
             'active'             => 'required|boolean',
             'office_id_assign'   => 'required|array',
             'office_id_assign.*' => 'required|exists:offices,id',
-            'pmt_type'           => 'nullable|string'
+            'pmt_type'           => 'nullable|string',
+            'prefix'           => 'nullable|string',
+            'suffix'           => 'nullable|string',
         ];
     }
 }

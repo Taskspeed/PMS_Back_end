@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\PmtCreateRequest;
 use App\Http\Requests\SupervisorCreateRequest;
 use App\Models\Role;
 use App\Models\User;
@@ -82,14 +83,17 @@ class AuthController extends Controller
     //  use edit and pmt account where they assign
     public function edit(Request $request)
     {
+        $current_user = Auth::user();
         $validated = $request->validate([
             'userId'             => 'required|exists:users,id',
             'roleId'             => 'required|exists:roles,id',
             'active'             => 'required|boolean',
             'office_id_assign'   => 'nullable|array',
             'office_id_assign.*' => 'nullable|exists:offices,id',
+            'prefix'             =>  'nullable|string',
+            'suffix'             =>  'nullable|string',
         ]);
-        $userEdit = $this->authService->edit($validated);
+        $userEdit = $this->authService->edit($validated, $current_user);
 
         return $userEdit;
     }
@@ -118,7 +122,16 @@ class AuthController extends Controller
     // user account details
     public function viewDetailAccount(int $userId)
     {
-        $user = User::with('office', 'role','pmt_assign')->find($userId);
+        $user = User::with([
+            'office',
+            'role',
+            'pmt_assign' => function ($query) {
+                $query->select('id', 'user_id', 'office_id')
+                    ->with(['office' => function ($q) {
+                        $q->select('id', 'name as office_name');
+                    }]);
+            }
+        ])->find($userId);
 
         if (empty($user)) {
             return response()->json([
@@ -201,7 +214,7 @@ class AuthController extends Controller
     }
 
     // create pmt account
-    public function createPmtAccount(Request $request)
+    public function createPmtAccount(PmtCreateRequest $request)
     {
 
         $validated = $request->validated();

@@ -29,7 +29,9 @@ class RegisterRequest extends FormRequest
             'role_id' => 'required|exists:Roles,id',
             'designation' => 'required|string',
             'username' => 'required|string|min:3|unique:users,username',
-            'active' => 'required|boolean'
+            'active' => 'required|boolean',
+            'prefix' => 'nullable|string',
+            'suffix' => 'nullable|string'
         ];
     }
 }

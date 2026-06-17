@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\UserOfficeAssign;
 
 use Carbon\Carbon;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -40,6 +41,8 @@ class AuthService
                     'role_id' => $user->role_id, // <-- Add this line
                     'datecreated' => Carbon::parse($user->created_at)->format('F d, Y'),
                     'active' => $user->active,
+                    'prefix' => $user->prefix,
+                    'suffix' => $user->suffix,
                 ];
             });
 
@@ -138,6 +141,8 @@ class AuthService
                 'designation'    => $request->designation,
                 'username'       => $request->username,
                 'active'         => $request->active,
+                'prefix'         => $request->prefix,
+                'suffix'         => $request->suffix,
             ]);
 
             return response()->json([
@@ -152,6 +157,8 @@ class AuthService
                     'designation' => $user->designation,
                     'username'   => $user->username,
                     'active'     => $user->active,
+                    'prefix'     => $user->prefix,
+                    'suffix'     => $user->suffix,
                 ]
             ], 201);
         } catch (\Exception $e) {
@@ -260,7 +267,7 @@ class AuthService
     }
 
     // user edit
-    public function edit(?array $validated)
+    public function edit(?array $validated,Authenticatable $current_user)
     {
         try {
 
@@ -268,6 +275,8 @@ class AuthService
 
             $user->role_id = $validated['roleId'];
             $user->active  = $validated['active'];
+            $user->prefix  = $validated['prefix'] ?? null;
+            $user->suffix  = $validated['suffix'] ?? null;
             $user->save();
 
             // assign multiple offices (delete old ones first to avoid duplicates)
@@ -276,8 +285,8 @@ class AuthService
 
                 foreach ($validated['office_id_assign'] as $officeId) {
                     UserOfficeAssign::create([
-                        'assigned_by' => $user->name,
-                        'user_id'     => $user->id,   // was $create_user_account->id (undefined variable)
+                      'assigned_by' => $current_user->name,  // or auth()->id()
+                        'user_id'     => $current_user->id,   // was $create_user_account->id (undefined variable)
                         'office_id'   => $officeId,
                     ]);
                 }
@@ -304,7 +313,7 @@ class AuthService
     }
 
     //create account supervisor admin
-    public function createAccountSupervisor(array $validated)
+    public function createAccountSupervisor(?array $validated)
     {
 
         $user = Auth::user();
@@ -374,7 +383,10 @@ class AuthService
                     'password'    => $validated['password'],
                     'username'    => $validated['username'],
                     'active'      => $validated['active'],
-                    'pmt_type'      => $validated['pmt_type'] ?? null
+                    'pmt_type'      => $validated['pmt_type'] ?? null,
+                    'suffix'      => $validated['suffix'] ?? null,
+                    'prefix'      => $validated['prefix'] ?? null
+
                 ]);
 
                 // assign multiple offices

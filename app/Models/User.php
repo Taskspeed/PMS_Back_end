@@ -46,6 +46,8 @@ class User extends Authenticatable
         'username',
         'active',
         'pmt_type',
+        'suffix',
+        'prefix'
 
     ];
     // Ensure office_id and role_id are returned as integers
