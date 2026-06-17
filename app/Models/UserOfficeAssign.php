@@ -8,19 +8,24 @@ class UserOfficeAssign extends Model
 {
     //
 
-    protected $table = 'user_office_assigns'; 
+    protected $table = 'user_office_assigns';
 
-    
+
 
     protected $fillable = [
         'user_id',
         'office_id',
         'assigned_by',
         'office_id_assign'
-    ];  
+    ];
 
 
-    public function user(){
-          return $this->belongsTo(User::class);
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+    public function office()
+    {
+        return $this->belongsTo(Office::class, 'office_id');
     }
 }
