@@ -118,7 +118,7 @@ class AuthController extends Controller
     // user account details
     public function viewDetailAccount(int $userId)
     {
-        $user = User::with('office', 'role')->find($userId);
+        $user = User::with('office', 'role','pmt_assign')->find($userId);
 
         if (empty($user)) {
             return response()->json([
