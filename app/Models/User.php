@@ -66,10 +66,11 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
-        public function pmt_assign()
-    {
-        return $this->hasMany(UserOfficeAssign::class);
-    }
+// User model
+public function pmt_assign()
+{
+    return $this->hasMany(UserOfficeAssign::class, 'user_id', 'id');
+}
 
     /**
      * The attributes that should be hidden for serialization.

@@ -18,7 +18,11 @@ class UserOfficeAssign extends Model
         'assigned_by',
         'office_id_assign'
     ];
-
+// UserOfficeAssign model
+protected $casts = [
+    'user_id'  => 'integer',
+    'office_id' => 'integer',
+];
 
     public function user()
     {
