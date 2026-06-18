@@ -181,63 +181,6 @@ class SpmsService
 
 
     // fetch employee belong to the office
-    // public function employees($request)
-    // {
-
-    //     $user = Auth::user();
-    //     $officeId = $user->office_id;
-
-
-    //     // Get semester & year from request
-    //     $semester = $request->input('semester');   // example: January-June / July-December
-    //     $year = $request->input('year');           // example: 2025
-
-    //     if (!$semester || !$year) {
-    //         return response()->json([
-    //             'message' => 'Please provide semester and year'
-    //         ], 422);
-    //     }
-
-    //     $employees = Employee::where('office_id', $officeId)
-    //         ->get()
-    //         ->map(function ($emp) use ($semester, $year) {
-
-    //             // Look for target period based on user request
-    //             $existing = $emp->targetPeriods()
-    //                 ->select('id', 'control_no', 'year', 'semester', 'supervisory_control_no')
-    //                 ->where('semester', $semester)
-    //                 ->where('year', $year)
-    //                 ->with('ipcrLastestRecord')
-    //                 ->first();
-
-    //             $emp->has_target_period = $existing ? true : false;
-
-    //             if ($existing) {
-    //                 $latestRecord = $existing->ipcrLastestRecord;
-
-    //                 // ✅ Flatten only the fields you need
-    //                 $existing->status           = $latestRecord?->status ?? null;
-    //                 $existing->processed_by_name = $latestRecord?->processed_by_name ?? null;
-    //                 $existing->date             = $latestRecord?->date ?? null;
-
-    //                // ✅ Use makeHidden() to remove the relation from serialization
-    //                   $existing->makeHidden('ipcrLastestRecord');
-    //             }
-
-    //             $emp->existing_target_period = $existing;
-    //             unset($emp->target_periods);
-
-    //             return $emp;
-    //         });
-
-    //      // if the 
-    //     if($employees != 'Office Head'){
-
-    //     } 
-
-    //     return $employees;
-    // }
-
     public function employees(Request $request)
 {
     $user = Auth::user();
@@ -313,57 +256,7 @@ class SpmsService
     return $employees;
 }
 
-    // // fetch employee request by the HR
-    // public function employeesRequest($request)
-    // {
-
-    //     // Get semester & year from request
-    //     $semester = $request->input('semester');   // example: January-June / July-December
-    //     $year = $request->input('year');           // example: 2025
-    //     $officeIdRequested = $request->input('office_id');
-
-    //     if (!$semester || !$year) {
-    //         return response()->json([
-    //             'message' => 'Please provide semester and year'
-    //         ], 422);
-    //     }
-
-    //     $employees = Employee::where('office_id', $officeIdRequested)
-    //         ->get()
-    //         ->map(function ($emp) use ($semester, $year) {
-
-    //             // Look for target period based on user request
-    //             $existing = $emp->targetPeriods()
-    //                 ->where('semester', $semester)
-    //                 ->where('year', $year)
-    //                 ->first();
-
-    //             $emp->has_target_period = $existing ? true : false;
-    //             $emp->existing_target_period = $existing;
-
-    //             // Remove auto-loaded relation if exists
-    //             unset($emp->target_periods);
-
-    //             return $emp;
-    //         });
-
-
-
-    //     // this is for office head only
-
-    //         $opcr = OfficeOpcr::where('office_id', $officeIdRequested)
-    //             ->where('semester', $semester)
-    //             ->where('year', $year)
-    //             ->whereHas('officeOpcrRecordLastestRecord', function ($q) {
-    //                 $q->where('status', 'reviewed');
-    //             })
-    //             ->first();
-
-
-
-    //     return $employees;
-    // }
-
+    // fetch employee request by the HR
     public function employeesRequest(Request $request)
     {
         $semester = $request->input('semester');
