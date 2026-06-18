@@ -62,12 +62,12 @@ class TargetPeriod extends Model
     {
         return $this->hasOne(TargetPeriodRecord::class, 'target_period_id')->latestOfMany();
     }
-
+    
     public function ipcrRecord()
     {
-        return $this->hasOne(TargetPeriodRecord::class, 'target_period_id');
+        return $this->hasMany(TargetPeriodRecord::class, 'target_period_id')
+            ->orderByDesc('id');
     }
-
 
     // public function configurations()
     // {

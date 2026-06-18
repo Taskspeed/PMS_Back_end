@@ -431,10 +431,11 @@ class IpcrService
                                     'targetperiod_records.status',
                                     'targetperiod_records.remarks',
                                     'targetperiod_records.processed_by',
-                                    'targetperiod_records.processed_by_name',
-                                    'targetperiod_records.date',  // ✅ add date if you need it
+                                    'targetperiod_records.date',  
                                     'targetperiod_records.created_at', 
-                                )->where('status','Received');
+                                    )->where('status','Received')  ->with(['processedBy' => function ($q) {
+                                $q->select('id', 'name', 'prefix', 'suffix','designation');  // only what you need
+                            }]);;
                             },
                             'performanceStandards.performanceRating' => function ($query) {
                                 $query->select(

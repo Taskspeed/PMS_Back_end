@@ -24,5 +24,8 @@ class TargetPeriodRecord extends Model
     {
         return $this->belongsTo(TargetPeriodRecord::class, 'target_period_id');
     }
-
+    public function processedBy()
+    {
+        return $this->belongsTo(User::class, 'processed_by');
+    }
 }

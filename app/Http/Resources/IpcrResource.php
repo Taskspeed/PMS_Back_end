@@ -38,23 +38,24 @@ class IpcrResource extends JsonResource
             // target periods with nested performance standards
             'target_periods' => $this->targetPeriods->map(function ($period) {
                 $latestRecord = $period->ipcrLastestRecord;
-        
-                // Received hr target
-             $targetRecord = $period->ipcrRecord
-                    ->where('status', 'Received_target')
-                    ->sortByDesc('created_at')
-                    ->first();
-                // Received hr accomplishment
-                $accomplishmentRecord = $period->ipcrRecord
-                    ->firstWhere('status', 'Received_accomplishment')
-                    ->sortByDesc('created_at')
+
+            // Received hr target
+             $targetRecord = collect($period->ipcrRecord)
+                    ->where('status', 'received')
+                    ->sortByDesc('id')
                     ->first();
 
+            // Received hr accomplishment
+            $accomplishmentRecord = collect($period->ipcrRecord)
+                ->where('status', 'Received_accomplishment')
+                ->sortByDesc('id')
+                ->first();
+
                 // calibrated
-                $calibratedRecord = $period->ipcrRecord
-                    ->firstWhere('status', 'Calibrated_target')
-                    ->sortByDesc('created_at')
-                    ->first();
+             $calibratedRecord = collect($period->ipcrRecord)
+            ->where('status', 'Calibrated_target')
+            ->sortByDesc('id')
+            ->first();
 
 
                 return [
@@ -98,30 +99,44 @@ class IpcrResource extends JsonResource
 
                     //  target 
                     'ipcr_target_record' => $targetRecord ? [
-                        'id'                => $targetRecord->id,
-                        'status'            => $targetRecord->status,
-                        'remarks'           => $targetRecord->remarks,
-                        'processed_by'      => $targetRecord->processed_by,
-                        'processed_by_name' => $targetRecord->processed_by_name,
-                        'date'              => $targetRecord->date ?? null,
+                        'id'           => $targetRecord->id,
+                        'status'       => $targetRecord->status,
+                        'remarks'      => $targetRecord->remarks,
+                        'processed_by' => $targetRecord->processed_by,
+                        'processed_by_info' => $targetRecord->processedBy ? [
+                            'name'        => $targetRecord->processedBy->name,
+                            'prefix'      => $targetRecord->processedBy->prefix,
+                            'suffix'      => $targetRecord->processedBy->suffix,
+                            'designation' => $targetRecord->processedBy->designation,
+                        ] : null,
+                        'date' => $targetRecord->date ?? null,
                     ] : null,
 
-                     'ipcr_accomplishment_record' => $accomplishmentRecord ? [
+                    'ipcr_accomplishment_record' => $accomplishmentRecord ? [
                         'id'                => $accomplishmentRecord->id,
                         'status'            => $accomplishmentRecord->status,
                         'remarks'           => $accomplishmentRecord->remarks,
                         'processed_by'      => $accomplishmentRecord->processed_by,
-                        'processed_by_name' => $accomplishmentRecord->processed_by_name,
-                        'date'              => $accomplishmentRecord->date ?? null,
+                        'processed_by_info' => $targetRecord->processedBy ? [
+                            'name'        => $targetRecord->processedBy->name,
+                            'prefix'      => $targetRecord->processedBy->prefix,
+                            'suffix'      => $targetRecord->processedBy->suffix,
+                            'designation' => $targetRecord->processedBy->designation,
+                        ] : null,
+                        'date' => $targetRecord->date ?? null,
                     ] : null,
 
-                     'ipcr_calibrated_record' => $calibratedRecord ? [
+                    'ipcr_calibrated_record' => $calibratedRecord ? [
                         'id'                => $calibratedRecord->id,
                         'status'            => $calibratedRecord->status,
                         'remarks'           => $calibratedRecord->remarks,
-                        'processed_by'      => $calibratedRecord->processed_by,
-                        'processed_by_name' => $calibratedRecord->processed_by_name,
-                        'date'              => $calibratedRecord->date ?? null,
+                        'processed_by_info' => $targetRecord->processedBy ? [
+                            'name'        => $targetRecord->processedBy->name,
+                            'prefix'      => $targetRecord->processedBy->prefix,
+                            'suffix'      => $targetRecord->processedBy->suffix,
+                            'designation' => $targetRecord->processedBy->designation,
+                        ] : null,
+                        'date' => $targetRecord->date ?? null,
                     ] : null,
                 ];
             })
