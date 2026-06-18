@@ -27,7 +27,9 @@ class OfficeOpcrPendingResource extends JsonResource
             'office_name' => $this->office_name,
             'semester'    => $this->semester,
             'year'        => $this->year,
-            'date'        => $latestRecord?->date,
+            'date' => $latestRecord?->date 
+            ? \Carbon\Carbon::parse($latestRecord->date)->format('F d, Y') 
+            : null,
             'status'      => $latestRecord?->status,
             'office_head_name' => $officeHead->name,
             'control_no' => $officeHead->ControlNo,
