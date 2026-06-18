@@ -286,7 +286,7 @@ class AuthService
                 foreach ($validated['office_id_assign'] as $officeId) {
                     UserOfficeAssign::create([
                       'assigned_by' => $current_user->name,  // or auth()->id()
-                        'user_id'     => $current_user->id,   // was $create_user_account->id (undefined variable)
+                        'user_id'     => $user->id,   // was $create_user_account->id (undefined variable)
                         'office_id'   => $officeId,
                     ]);
                 }
@@ -385,7 +385,7 @@ class AuthService
                     'active'      => $validated['active'],
                     'pmt_type'      => $validated['pmt_type'] ?? null,
                     'suffix'      => $validated['suffix'] ?? null,
-                    'prefix'      => $validated['prefix'] ?? null
+                     'prefix'      => $validated['prefix'] ?? null
 
                 ]);
 
