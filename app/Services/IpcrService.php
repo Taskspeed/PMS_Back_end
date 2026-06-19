@@ -28,7 +28,7 @@ class IpcrService
     //     //
     // }
 
-     use ApiResponseTrait;
+    use ApiResponseTrait;
     public function opcrOfficeHead(string $controlNo, string $semester, int $year)
     {
         $officeHeadOpcr = Employee::select('id', 'ControlNo', 'name', 'office_id', 'office')
@@ -370,19 +370,16 @@ class IpcrService
             $strategicWeighted = round($strategicAvg * 0.2, 2);
             $coreWeighted      = round($coreAvg      * 0.6, 2);
             $supportWeighted   = round($supportAvg   * 0.2, 2);
-
         } elseif ($hasStrategic && !$hasSupport) {
             // No Support: Strategic 20% + Core 80% + Support 0%
             $strategicWeighted = round($strategicAvg * 0.2, 2);
             $coreWeighted      = round($coreAvg      * 0.8, 2);
             $supportWeighted   = 0;
-
         } elseif (!$hasStrategic && $hasSupport) {
             // No Strategic: Strategic 0% + Core 80% + Support 20%
             $strategicWeighted = 0;
             $coreWeighted      = round($coreAvg   * 0.8, 2);
             $supportWeighted   = round($supportAvg * 0.2, 2);
-
         } else {
             // Core only: Strategic 0% + Core 100% + Support 0%
             $strategicWeighted = 0;
@@ -413,10 +410,10 @@ class IpcrService
         $employee = Employee::where('ControlNo', $controlNo)
             ->with([
                 'targetPeriods' => function ($q) use ($year, $semester) {
-                    $q->select('id','year','semester','control_no')->where('year', $year)
+                    $q->select('id', 'year', 'semester', 'control_no')->where('year', $year)
                         ->where('semester', $semester)
                         ->with([
-                               'ipcrLastestRecord' => function ($query) {  // get the lastest record of the ipcr
+                            'ipcrLastestRecord' => function ($query) {  // get the lastest record of the ipcr
                                 $query->select(
                                     'targetperiod_records.id',
                                     'targetperiod_records.target_period_id',
@@ -431,11 +428,11 @@ class IpcrService
                                     'targetperiod_records.status',
                                     'targetperiod_records.remarks',
                                     'targetperiod_records.processed_by',
-                                    'targetperiod_records.date',  
-                                    'targetperiod_records.created_at', 
-                                    )->where('status','Received')  ->with(['processedBy' => function ($q) {
-                                $q->select('id', 'name', 'prefix', 'suffix','designation');  // only what you need
-                            }]);;
+                                    'targetperiod_records.date',
+                                    'targetperiod_records.created_at',
+                                )->where('status', 'Received')->with(['processedBy' => function ($q) {
+                                    $q->select('id', 'name', 'prefix', 'suffix', 'designation');  // only what you need
+                                }]);;
                             },
                             'performanceStandards.performanceRating' => function ($query) {
                                 $query->select(
@@ -1024,5 +1021,54 @@ class IpcrService
         return $createdMonths;
     }
 
- 
+
+    // --------------------------------------------------------Office admin------------------------------------------------------------ //
+
+    // list of ipcr of employee need to approve by office head
+    public function ipcr(?string $semester = null, ?int $year = null, Authenticatable $authUser)
+    {
+        $employee = Employee::select('id', 'ControlNo', 'name', 'office', 'job_title', 'office_id')
+            ->where('office_id', $authUser->office_id)
+               ->where('job_title', '!=', 'Office Head') // <-- exclude Office Head
+            ->where(function ($query) use ($semester, $year) {
+                // if job_title is NOT Employee, fetch only if ipcrLastestRecord status is 'Draft'
+                $query->where(function ($query) use ($semester, $year) {
+                    $query->where('job_title', '!=', 'Employee')
+                        ->whereHas('targetPeriods', function ($query) use ($semester, $year) {
+                            $query->where('semester', $semester)
+                                ->where('year', $year)
+                                ->whereHas('ipcrLastestRecord', function ($query) {
+                                    $query->where('status', 'Draft');
+                                });
+                        });
+                })
+                    // if job_title IS Employee, only fetch if ipcrLastestRecord status is 'Discussed'
+                    ->orWhere(function ($query) use ($semester, $year) {
+                        $query->where('job_title', 'Employee')
+                            ->whereHas('targetPeriods', function ($query) use ($semester, $year) {
+                                $query->where('semester', $semester)
+                                    ->where('year', $year)
+                                    ->whereHas('ipcrLastestRecord', function ($query) {
+                                        $query->where('status', 'Discussed'); // need to change  status
+                                    });
+                            });
+                    });
+            })
+            ->with(['targetPeriods' => function ($query) use ($semester, $year) {
+                $query->select('id', 'control_no', 'semester', 'year')
+                    ->where('semester', $semester)
+                    ->where('year', $year)
+                    ->with(['ipcrLastestRecord' => function ($query) {
+                        $query->select(
+                            'targetperiod_records.id',
+                            'targetperiod_records.target_period_id',
+                            'targetperiod_records.status',
+                            'targetperiod_records.remarks'
+                        );
+                    }]);
+            }])
+            ->get();
+
+        return $employee;
+    }
 }

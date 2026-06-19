@@ -28,6 +28,7 @@ use App\Http\Controllers\Planning\DashboardController as PlanningDashboardContro
 use App\Http\Controllers\Planning\OpcrController as PlanningOpcrController;
 use App\Http\Controllers\ReceivingController;
 use App\Http\Controllers\SpmsController;
+use App\Http\Controllers\SpmsProcessController;
 use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\TargetPeriodController;
 use App\Http\Controllers\UserController;
@@ -149,6 +150,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // todo: need to fix what is the flow
         Route::get('/employee-draft-rating/{semester}/{year}', [OfficeController::class, 'listOfEmployeeRatingDraft']); // fetch all
         Route::get('/pmt/available', [OfficeController::class, 'pmtOfficeAvailable']); // fetch the office available
+        Route::get('/ipcr', [IpcrController::class, 'listIpcr']); // fetch the office available
 
 
         Route::prefix('dashboard')->group(function () {
@@ -330,13 +332,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/employee/{ControlNo}/{semester}/{year}', [UnitWorkPlanController::class, 'getUnitworkplan'])->withoutMiddleware(['auth:sanctum']);
 
         //get the unitworkplan to update
-        Route::post('/update/unitworkplan', [SpmsController::class, 'updateUnitworkplan']); 
+        Route::post('/update/unitworkplan', [SpmsProcessController::class, 'updateUnitworkplan']); 
 
         // updating opcr
-        Route::post('/update/opcr', [SpmsController::class, 'updateOpcr']);
+        Route::post('/update/opcr', [SpmsProcessController::class, 'updateOpcr']);
 
         // updating ipcr
-        Route::post('/update/ipcr', [SpmsController::class, 'updateIpcr']);
+        Route::post('/update/ipcr', [SpmsProcessController::class, 'updateIpcr']);
 
 
     });

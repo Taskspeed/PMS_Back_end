@@ -4,20 +4,22 @@ namespace App\Http\Controllers\office;
 
 use App\Http\Requests\AttendanceRequest;
 
-use App\Models\Employee;
-
-use Illuminate\Http\Request;
-use App\Services\IpcrService;
-use App\Models\PerformanceStandard;
 use App\Http\Resources\IpcrResource;
+
 use App\Http\Resources\MonthlyPerformanceResource;
 use App\Http\Resources\MonthlyPerformanceSummaryResource;
-
-use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\Office\IpcrEmployeeResource;
+use App\Models\Employee;
+use App\Models\PerformanceStandard;
+use App\Services\IpcrService;
+use App\Traits\ApiResponseTrait;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Auth;
 
 class IpcrController extends BaseController
 {
+    use ApiResponseTrait;
 
     protected IpcrService $ipcrService;
 
@@ -130,5 +132,18 @@ class IpcrController extends BaseController
         }
     }
 
+    // list of ipcr need to approve  of the office head
+    public function listIpcr(Request $request){
+
+        $authUser = Auth::user();
+
+        $semester = $request->input('semester');
+        $year = $request->input('year');
+
+        $data = $this->ipcrService->ipcr($semester, $year, $authUser);
+
+       return $this->successMessage(IpcrEmployeeResource::collection($data),'Successfully fetched',);
+    }
+    
    
 }
