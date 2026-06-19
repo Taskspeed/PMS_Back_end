@@ -52,7 +52,7 @@ class TargetPeriodController extends Controller
 
         $targetPeriod = TargetPeriodLib::create($validated);
 
-        TargetPeriodLockEvent::dispatch($targetPeriod, $user);
+        // TargetPeriodLockEvent::dispatch($targetPeriod, $user);
 
         return response()->json([
             'success' => true,

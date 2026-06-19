@@ -653,7 +653,7 @@ class DashboardService
             ->where('semester', $semester)
             ->where('year', $year)
             ->whereHas('officeOpcrRecordLastestRecord', function ($query) {
-                $query->whereIn('status', ['Draft','Received Target','Returned Target']);
+                $query->whereIn('status', ['Draft','Received Target','Returned Target','Received']);
             })->get();
 
         return $data;

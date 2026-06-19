@@ -25,6 +25,7 @@ class TargetPeriodUpdateRequest extends FormRequest
             //
             'semester' => 'required|string',
             'year' => 'required|integer|digits:4',
+            // 'status' => 'nullable|integer|digits:4',
         ];
     }
 }

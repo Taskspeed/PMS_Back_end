@@ -25,6 +25,7 @@ class TargetPeriodStoreRequest extends FormRequest
             //
             'semester' => 'required|string',
             'year' => 'required|integer|digits:4',
+            
         ];
     }
 }
