@@ -199,7 +199,7 @@ class UnitWorkPlanService
 
         $controlNos = $employees->pluck('ControlNo');
 
-        $organizationTargetPeriods = TargetPeriod::select('id', 'control_no', 'semester', 'year', 'status')->with([
+        $organizationTargetPeriods = TargetPeriod::select('id', 'control_no', 'semester', 'year')->with([
             'employee:ControlNo,name,rank,position,sg,level',
             'performanceStandards.standardOutcomes' => function ($query) {
                 $query->select(
@@ -236,7 +236,7 @@ class UnitWorkPlanService
          * 4️⃣ FETCH OFFICE HEAD TARGET PERIOD WITH FILTERED MFOs
          * ===============================
          */
-        $officeTargetPeriod = TargetPeriod::select('id', 'control_no', 'semester', 'year', 'status')->with([
+        $officeTargetPeriod = TargetPeriod::select('id', 'control_no', 'semester', 'year',)->with([
             'employee:ControlNo,name,rank,position', // this maps via control_no
             'performanceStandards'                  => function ($query) use ($organizationMFOs) {
                 $query->select('id', 'target_period_id', 'mfo', 'output', 'core as core_competencies', 'technical as technical_competencies', 'leadership as leadership_competencies', 'required_output', 'success_indicator')->whereIn('mfo', $organizationMFOs);
