@@ -51,7 +51,7 @@ class UpdateSpmsService
     {
         $records = [];
 
-        foreach ($validatedData['target_period_id'] as $id) {
+        foreach ($validatedData['ipcr_id'] as $id) {
             $records[] = TargetPeriodRecord::create([
                 'target_period_id'   => $id,
                 'date'              => now()->toDateString(),
