@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\Employee;
+use App\Models\PerformanceRating;
 use App\Models\TargetPeriod;
 use App\Models\TargetPeriodRecord;
 use App\Services\SupervisorService;
 use App\Traits\ApiResponseTrait;
 use Carbon\Carbon;
+use function PHPUnit\Framework\returnCallback;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
-use function PHPUnit\Framework\returnCallback;
 
 class SupervisorController extends Controller
 {
@@ -20,12 +22,12 @@ class SupervisorController extends Controller
 
     use ApiResponseTrait;
 
-     protected SupervisorService $supervisorService;
+    protected SupervisorService $supervisorService;
 
-     public function __construct(SupervisorService $supervisorService)
-     {
+    public function __construct(SupervisorService $supervisorService)
+    {
         $this->supervisorService = $supervisorService;
-     }
+    }
 
     // get the list of ipcr of my advisory
     public function getAdvisoryEmployeeIpcr(Request $request)
@@ -95,12 +97,13 @@ class SupervisorController extends Controller
             ->where('job_title', 'Office Head')
             ->exists();
 
-        $validated = $request->validate([
-            'ipcr_id'   => 'required|array',
-            'ipcr_id.*' => 'required|exists:target_periods,id',
-            'status'    => 'required|string',
-            'remarks'   => 'nullable|string',
-        ]
+        $validated = $request->validate(
+            [
+                'ipcr_id'   => 'required|array',
+                'ipcr_id.*' => 'required|exists:target_periods,id',
+                'status'    => 'required|string',
+                'remarks'   => 'nullable|string',
+            ]
             // 'status.in' => "Status must be 'Reviewed' or 'Approved'.",
         );
 
@@ -126,27 +129,37 @@ class SupervisorController extends Controller
     }
 
     // get my supervisor and managerial
-    public function getSupervisor(Request $request){
+    public function getSupervisor(Request $request)
+    {
 
-     $user = Auth::user();
+        $user = Auth::user();
 
         if ($user->role_id != 4) {
             return response()->json([
                 'message' => 'Unauthorized. Access restricted to authorized person only.'
             ], 403);
         }
-         $year      = $request->input('year');
+        $year      = $request->input('year');
         $semester  = $request->input('semester');
         $controlNo = $user->control_no;
 
-       $data =  $this->supervisorService->getListOfEmployeeBaseOnSupervisor($year,$semester,$controlNo,$user);
+        $data =  $this->supervisorService->getListOfEmployeeBaseOnSupervisor($year, $semester, $controlNo, $user);
 
-     return $this->successMessage($data,'Successfully',200);
+        return $this->successMessage($data, 'Successfully', 200);
     }
 
+    // updating performance rating of employee
+    public function updatePerformanceRatingEmployee(Request $request)
+    {
+        $validatedData = $request->validate([
+            'performance_rating_id'   => 'required|array',
+            'performance_rating_id.*' => 'exists:performance_ratings,id',
+            'status'                  => 'required|string',
+        ]);
 
+        PerformanceRating::whereIn('id', $validatedData['performance_rating_id'])
+            ->update(['status' => $validatedData['status']]);
 
-
-        
-  
+        return $this->successMessage('Performance rating status updated successfully.');
+    }
 }
