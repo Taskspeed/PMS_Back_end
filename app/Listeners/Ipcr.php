@@ -21,8 +21,8 @@ class Ipcr
             'date'             => Carbon::now()->format('Y-m-d'), // ✅ standard DB date format
             'status'           => 'Draft',
             'remarks'          => 'Create',
-            'processed_by'     => $user->id,
-            'processed_by_name'=> $user->name,
+            'processed_by'     => $user?->id,
+            'processed_by_name'=> $user?->name,
         ]);
     }
 }

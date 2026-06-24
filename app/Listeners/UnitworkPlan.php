@@ -43,8 +43,8 @@ class UnitWorkPlan
             'date' => Carbon::now()->format('Y-m-d'), // ✅ standard DB date format
             'status'    =>  'Draft',
             'remarks'    => 'Created',
-            'processed_by'    => $user->id,
-           'processed_by_name'    => $user->name,
+            'processed_by'    => $user?->id,
+           'processed_by_name'    => $user?->name,
         ]);
 
 
