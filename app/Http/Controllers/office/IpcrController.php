@@ -53,25 +53,25 @@ class IpcrController extends BaseController
         return response()->json($employee);
     }
 
-    // approving the ipcr of the employee
-    public function approveIpcrEmployee(string $controlNo, string $semester, int $year, Request $request)
-    {
-        try {
+    // // approving the ipcr of the employee
+    // public function approveIpcrEmployee(string $controlNo, string $semester, int $year, Request $request)
+    // {
+    //     try {
 
-            $targetPeriod = $this->ipcrService->approveIpcr($controlNo, $semester, $year, $request);
+    //         $targetPeriod = $this->ipcrService->approveIpcr($controlNo, $semester, $year, $request);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'IPCR status updated successfully.',
-                'data'    => $targetPeriod,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], $e->getCode() ?: 400);
-        }
-    }
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'IPCR status updated successfully.',
+    //             'data'    => $targetPeriod,
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => $e->getMessage(),
+    //         ], $e->getCode() ?: 400);
+    //     }
+    // }
 
     // get the monthly rate of employee
     // month - week1, week2, week 3, it depend of the month how many weeks
