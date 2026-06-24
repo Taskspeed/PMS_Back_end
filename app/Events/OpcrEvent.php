@@ -20,7 +20,7 @@ class OpcrEvent
     public $opcr;
     public $year;
     public $semester;
-      public $user;
+    public $user;
 
     public function __construct($opcr, $year, $semester,$user)
     {

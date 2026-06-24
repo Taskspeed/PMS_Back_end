@@ -36,7 +36,7 @@ class UpdateSpmsService
             $records[] = OfficeOpcrRecord::create([
                 'office_opcr_id'   => $id,
                 'date'              => now()->toDateString(),
-                'status'            => $validatedData['status'],
+            'status'            => $validatedData['status'],
                 'remarks'           => $validatedData['remarks'] ?? null,
                 'processed_by_name' => $authUser->name,
                 'processed_by'      => $authUser->id,
@@ -55,7 +55,7 @@ class UpdateSpmsService
             $records[] = TargetPeriodRecord::create([
                 'target_period_id'   => $id,
                 'date'              => now()->toDateString(),
-                'status'            => $validatedData['status'],
+                     'status'            => $validatedData['status'],
                 'remarks'           => $validatedData['remarks'] ?? null,
                 'processed_by_name' => $authUser->name,
                 'processed_by'      => $authUser->id,
