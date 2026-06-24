@@ -340,6 +340,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // updating ipcr
         Route::post('/update/ipcr', [SpmsProcessController::class, 'updateIpcr']);
 
+        // updating unitwork calibrated / validated target - with ipcr and opcr
+        Route::post('/unit-workplan/sync-ipcr-opcr', [SpmsProcessController::class, 'syncUnitWorkPlanIpcrOpcr']); 
+
 
     });
 
