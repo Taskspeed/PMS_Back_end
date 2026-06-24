@@ -6,6 +6,7 @@ use App\Models\OfficeOpcrRecord;
 use App\Models\TargetPeriodRecord;
 use App\Models\UnitWorkPlanRecord;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Facades\DB;
 
 class UpdateSpmsService
 {
@@ -30,13 +31,13 @@ class UpdateSpmsService
     // update opcr
     public function opcr(?array $validatedData, Authenticatable $authUser)
     {
-       $records = [];
+        $records = [];
 
         foreach ($validatedData['office_opcr_id'] as $id) {
             $records[] = OfficeOpcrRecord::create([
                 'office_opcr_id'   => $id,
                 'date'              => now()->toDateString(),
-            'status'            => $validatedData['status'],
+                'status'            => $validatedData['status'],
                 'remarks'           => $validatedData['remarks'] ?? null,
                 'processed_by_name' => $authUser->name,
                 'processed_by'      => $authUser->id,
@@ -55,7 +56,7 @@ class UpdateSpmsService
             $records[] = TargetPeriodRecord::create([
                 'target_period_id'   => $id,
                 'date'              => now()->toDateString(),
-                     'status'            => $validatedData['status'],
+                'status'            => $validatedData['status'],
                 'remarks'           => $validatedData['remarks'] ?? null,
                 'processed_by_name' => $authUser->name,
                 'processed_by'      => $authUser->id,
@@ -63,5 +64,53 @@ class UpdateSpmsService
         }
 
         return $records;
+    }
+
+    // update syncUnitWorkPlanIpcrOpcr
+    public function updateUnitWorkPlanAndRelatedTargets(?array $validatedData, Authenticatable $authUser)
+    {
+        DB::beginTransaction();
+        try {
+            $records = [];
+
+            foreach ($validatedData['unitworkplan_id'] as $id) {
+                $records[] = UnitWorkPlanRecord::create([
+                    'unitworkplan_id'   => $id,
+                    'date'              => now()->toDateString(),
+                    'status'            => $validatedData['status'],
+                    'remarks'           => $validatedData['remarks'] ?? null,
+                    'processed_by_name' => $authUser->name,
+                    'processed_by'      => $authUser->id,
+                ]);
+            }
+
+            foreach ($validatedData['employee_target_period_id'] as $id) {
+                $records[] = TargetPeriodRecord::create([
+                    'target_period_id'  => $id,
+                    'date'              => now()->toDateString(),
+                    'status'            => $validatedData['status'],
+                    'remarks'           => $validatedData['remarks'] ?? null,
+                    'processed_by_name' => $authUser->name,
+                    'processed_by'      => $authUser->id,
+                ]);
+            }
+
+            foreach ($validatedData['office_opcr_id'] ?? [] as $id) {
+                $records[] = OfficeOpcrRecord::create([
+                    'office_opcr_id'    => $id,
+                    'date'              => now()->toDateString(),
+                    'status'            => $validatedData['status'],
+                    'remarks'           => $validatedData['remarks'] ?? null,
+                    'processed_by_name' => $authUser->name,
+                    'processed_by'      => $authUser->id,
+                ]);
+            }
+
+            DB::commit();
+            return $records;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 }

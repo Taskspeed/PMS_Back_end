@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Spms\UpdateIpcrRequest;
 use App\Http\Requests\Spms\UpdateOpcrRequest;
 use App\Http\Requests\Spms\UpdateUnitWorkPlanRequest;
+use App\Http\Requests\syncUnitWorkPlanIpcrOpcrRequest;
 use App\Services\UpdateSpmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -51,6 +52,18 @@ class SpmsProcessController extends Controller
 
         $validatedData = $request->validated();
         $data = $this->updateService->ipcr($validatedData, $authUser);
+
+        return $data;
+
+    }
+
+    // update unit work plan calibrated / validated  also the ipcr and opcr
+    public function syncUnitWorkPlanIpcrOpcr(syncUnitWorkPlanIpcrOpcrRequest $request){
+
+        $authUser = Auth::user();
+
+        $validatedData = $request->validated();
+        $data = $this->updateService->updateUnitWorkPlanAndRelatedTargets($validatedData, $authUser);
 
         return $data;
 
