@@ -227,7 +227,7 @@ class SpmsService
                     'supervisory_control_no' => $existing?->supervisory_control_no ?? null,
                     'has_opcr'           => $officeOpcr ? true : false,
                     'opcr_id'            => $officeOpcr?->id ?? null,
-                    'status'             => $latestOpcrRecord?->status ?? null,
+                    'status'             => $latestOpcrRecord?->status ?? 'Not Started',
                     'processed_by_name'  => $latestOpcrRecord?->processed_by_name ?? null,
                     'date'               => $latestOpcrRecord?->date ?? null,
                     'remarks'            => $latestOpcrRecord?->remarks ?? null,
@@ -238,7 +238,7 @@ class SpmsService
                 if ($existing) {
                     $latestRecord = $existing->ipcrLastestRecord;
 
-                    $existing->status            = $latestRecord?->status ?? null;
+                    $existing->status            = $latestRecord?->status ?? 'Not Started';
                     $existing->processed_by_name = $latestRecord?->processed_by_name ?? null;
                     $existing->date              = $latestRecord?->date ?? null;
 
