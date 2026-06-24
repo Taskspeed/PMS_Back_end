@@ -4,15 +4,16 @@ namespace App\Http\Controllers\Erms;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\performanceRatingStoreRequest;
+use App\Http\Resources\TargetPeriodRatingResource;
 use App\Models\PerformanceRating;
 use App\Models\TargetPeriod;
 use App\Services\PerformanceRatingService;
 use App\Services\TargetPeriodService;
-
-
+use App\Traits\ApiResponseTrait;
 
 class EmployeeRatingController extends Controller
 {
+    use ApiResponseTrait;
 
     // service
     protected TargetPeriodService $targetperiodService;
@@ -72,7 +73,7 @@ class EmployeeRatingController extends Controller
         $list = PerformanceRating::select(
             'id',
             'performance_standard_id',
-            // 'control_no',
+            'control_no',
             'date'
         )
             ->where('control_no', $controlNo)
@@ -96,5 +97,17 @@ class EmployeeRatingController extends Controller
 
         return $record;
     
+    }
+
+    //  get the target peroid rating
+    public function targetPeriodRating(int $targetPeriodId, $month = null, $year = null)
+    {
+        $data = $this->targetperiodService->getTargetPeriodRatings($targetPeriodId, $month, $year);
+
+        if (!$data) {
+            return $this->errorMessage('Target period not found.', 404);
+        }
+
+        return new TargetPeriodRatingResource($data);
     }
 }

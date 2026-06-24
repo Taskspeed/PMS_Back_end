@@ -138,7 +138,8 @@ class TargetPeriodService
                                     'date',
                                     'quantity_actual',
                                     'effectiveness_actual',
-                                    'timeliness_actual'
+                                    'timeliness_actual',
+                                    'status'
                                 )->with(['dropdownRating']);
                             },
                             'configurations' => function ($query) {
@@ -265,5 +266,130 @@ class TargetPeriodService
 
         return response()->json($employee_rating_record);
     }
+
+     // get the target period with standard and rating
+    public function getTargetPeriodRatings(int $targetPeriodId, $month = null, $year = null,)
+    {
+        $targetPeriod = TargetPeriod::select('id')
+            ->where('id', $targetPeriodId)
+            ->with([
+                'performanceStandards' => function ($query) {
+                    $query->select(
+                        'id',
+                        'target_period_id',
+                        'category',
+                        'mfo',
+                        'output',
+                        'output_name',
+                        'performance_indicator',
+                        'success_indicator',
+                        'required_output',
+
+                    )
+                        ->with([
+                            // 'standardOutcomes' => function ($query) {
+                            //     $query->select(
+                            //         'id',
+                            //         'performance_standard_id',
+                            //         // 'rating',
+                            //         // 'quantity_target as quantity',
+                            //         // 'effectiveness_criteria as effectiveness',
+                            //         // 'timeliness_range as timeliness'
+                            //     );
+                            // },
+                            // fetch ALL ratings — filter in PHP below
+                            'performanceRating' => function ($query) {
+                                $query->select(
+                                    'id',
+                                    'performance_standard_id',
+                                    'control_no',
+                                    'date',
+                                    'quantity_actual',
+                                    'effectiveness_actual',
+                                    'timeliness_actual',
+                                    'status'
+                                )->with(['dropdownRating']);
+                            },
+                            'configurations' => function ($query) {
+                                $query->select(
+                                    'id',
+                                    'performance_standard_id',
+                                    'target_output as targetOutput',
+                                    'quantity_indicator as quantityIndicator',
+                                    'timeliness_indicator as timelinessIndicator',
+                                    'timeliness_range as range',
+                                    'timeliness_date as date',
+                                    'timeliness_description as description'
+                                );
+                            }
+                        ]);
+                }
+            ])
+            ->first();
+
+    if (!$targetPeriod) {
+        return response()->json(['message' => 'Target period not found.'], 404);
+    }
+
+    if ($month && $year) {
+        $monthNumber = Carbon::createFromFormat('F', $month)->month;
+        $weeks       = $this->getWeeksInMonth($month, $year); // returns [1 => [1,7], 2 => [8,14], ...]
+
+        $targetPeriod->performanceStandards->each(function ($standard) use ($monthNumber, $year, $weeks) {
+            $grouped = [];
+
+            foreach ($weeks as $weekNumber => $range) {
+                [$dayStart, $dayEnd] = $range;
+
+                $filtered = $standard->performanceRating->filter(function ($rating) use ($monthNumber, $year, $dayStart, $dayEnd) {
+                    try {
+                        $date = Carbon::createFromFormat('m/d/Y', $rating->date);
+                        return $date->month == $monthNumber
+                            && $date->year  == $year
+                            && $date->day   >= $dayStart
+                            && $date->day   <= $dayEnd;
+                    } catch (\Exception $e) {
+                        return false;
+                    }
+                })->values();
+
+                $grouped["week{$weekNumber}"] = $filtered;
+            }
+
+            $standard->setRelation('performanceRating', collect($grouped));
+        });
+    }
+
+  return $targetPeriod;
+}
+
+// helper: returns week number => [dayStart, dayEnd] for the month
+private function getWeeksInMonth($month, $year): array
+{
+    $monthNumber  = Carbon::createFromFormat('F', $month)->month;
+    $startOfMonth = Carbon::createFromDate($year, $monthNumber, 1);
+    $endOfMonth   = $startOfMonth->copy()->endOfMonth();
+
+    $weeks      = [];
+    $weekNumber = 1;
+    $current    = $startOfMonth->copy();
+
+    while ($current->lte($endOfMonth)) {
+        $weekStart = $current->day;
+        $weekEnd   = min($current->copy()->endOfWeek(Carbon::SATURDAY)->day, $endOfMonth->day);
+
+        // handle month boundary — endOfWeek may spill into next month
+        if ($current->copy()->endOfWeek(Carbon::SATURDAY)->month > $monthNumber) {
+            $weekEnd = $endOfMonth->day;
+        }
+
+        $weeks[$weekNumber] = [$weekStart, $weekEnd];
+
+        $current->addDays($weekEnd - $weekStart + 1);
+        $weekNumber++;
+    }
+
+    return $weeks;
+}
     //============================================================== ERMS =============================================================//
 }
