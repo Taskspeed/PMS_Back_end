@@ -20,6 +20,7 @@ class PerformanceRating extends Model
         'quantity_actual',
         'effectiveness_actual',
         'timeliness_actual',
+        'status'
 
 
     ];

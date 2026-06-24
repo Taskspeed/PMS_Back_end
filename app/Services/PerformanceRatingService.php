@@ -26,7 +26,10 @@ class PerformanceRatingService
                 unset($rateData['performance_standards']);
 
                 // Save parent
-                $performanceRating = PerformanceRating::create($rateData);
+                // $performanceRating = PerformanceRating::create($rateData);
+                $performanceRating = PerformanceRating::create(array_merge($rateData, [
+                    'status' => 'Pending',
+                ]));
 
                 // Save children
                 foreach ($dropdownData as $dropdown) {
