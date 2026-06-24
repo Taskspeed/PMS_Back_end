@@ -950,30 +950,30 @@ class IpcrService
 
     //-----------------------approve the ipcr of the employee----------------------------------------------//
 
-    public function approveIpcr(string $controlNo, string $semester, int $year, Request $request)
-    {
-        $validated = $request->validate([
-            'status' => 'required|in:approve,reject,review,re-submit',
-        ]);
+    // public function approveIpcr(string $controlNo, string $semester, int $year, Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'status' => 'required|in:approve,reject,review,re-submit',
+    //     ]);
 
-        // Get employee with office restriction
-        $employee = Employee::where('ControlNo', $controlNo)
-            // ->where('office_id', $this->officeId)
-            ->firstOrFail(); // Throws exception if not found
+    //     // Get employee with office restriction
+    //     $employee = Employee::where('ControlNo', $controlNo)
+    //         // ->where('office_id', $this->officeId)
+    //         ->firstOrFail(); // Throws exception if not found
 
-        // Get the target period
-        $targetPeriod = $employee->targetPeriods()
-            ->where('year', $year)
-            ->where('semester', $semester)
-            ->firstOrFail(); // Throws exception if not found
+    //     // Get the target period
+    //     $targetPeriod = $employee->targetPeriods()
+    //         ->where('year', $year)
+    //         ->where('semester', $semester)
+    //         ->firstOrFail(); // Throws exception if not found
 
-        // Update only the target period
-        $targetPeriod->update([
-            'status' => $validated['status'],
-        ]);
+    //     // Update only the target period
+    //     $targetPeriod->update([
+    //         'status' => $validated['status'],
+    //     ]);
 
-        return $targetPeriod->fresh(); // Return updated model
-    }
+    //     return $targetPeriod->fresh(); // Return updated model
+    // }
 
 
     //---------------------------------------------------------------------------- late and absent -----------------------------------------------------------------------------//
