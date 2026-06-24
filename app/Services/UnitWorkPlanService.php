@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Events\IpcrEvent;
 use App\Events\UnitWorkPlanEvent;
 use App\Models\Employee;
+use App\Models\OfficeOpcr;
 use App\Models\PerformanceConfigurations;
 use App\Models\PerformanceStandard;
 use App\Models\StandardOutcome;
@@ -24,11 +25,12 @@ class UnitWorkPlanService
     // }
     public function store(?array $validated) //  old working store function
     {
-        $user = Auth::user();
+        // $user = Auth::user();
 
         DB::beginTransaction(); // Start transaction
 
         try {
+            
             foreach ($validated['employees'] as $employeeData) {
                 // Check if already exists
                 $existing = TargetPeriod::where('control_no', $employeeData['control_no'])
@@ -39,6 +41,7 @@ class UnitWorkPlanService
                 if ($existing) {
                     throw new \Exception("Employee ({$employeeData['control_no']}) already has a Unit Work Plan for {$employeeData['semester']} {$employeeData['year']}.");
                 }
+              $employee = Employee::where('ControlNo', $employeeData['control_no'])->first();
 
                 // Create Target Period
                 $targetPeriod = TargetPeriod::create([
@@ -51,25 +54,17 @@ class UnitWorkPlanService
                     'division'   => $employeeData['division'] ?? null,
                     'section'    => $employeeData['section'] ?? null,
                     'unit'       => $employeeData['unit'] ?? null,
-                    // 'supervisory_control_no'  => $employeeData['supervisory_control_no'] ?? null,
-                    'office_id'  => $user->office_id,
+                    'supervisory_control_no'  => $employeeData['supervisory_control_no'] ?? null,
+                    'office_id'  => $employee->office_id ?? null,
                     // 'status'     => 'Draft',
                 ]);
 
-              IpcrEvent::dispatch($targetPeriod,$user); //closed properly
-
-
-                $employee = Employee::where('ControlNo', $employeeData['control_no'])->first();
-
-                // \Illuminate\Support\Facades\Log::info('Employee check:', [
-                //     'control_no' => $employeeData['control_no'],
-                //     'found'      => $employee ? 'yes' : 'no',
-                //     'job_title'  => $employee->job_title ?? 'N/A',
-                // ]);
+                 IpcrEvent::dispatch($targetPeriod,$employee); //closed properly
 
                 if ($employee && $employee->job_title == 'Office Head') {
                     // \Illuminate\Support\Facades\Log::info('Dispatching UnitWorkPlanRecord event...');
-                    UnitWorkPlanEvent::dispatch($targetPeriod,$user);
+                    UnitWorkPlanEvent::dispatch($targetPeriod,$employee);
+        
                 }
 
                 // Create Performance Standards
@@ -292,10 +287,23 @@ class UnitWorkPlanService
             }
         ])->select('id', 'office_name','semester','year')
 
-        ->where('office_name', $request->office_name)
+         ->where('office_name', $request->office_name)
             ->where('year', $request->year)
             ->where('semester', $request->semester)
             ->first();
+
+
+        // opcr status 
+         $officeOpcr_status = OfficeOpcr::select('id','semester','year','office_name')->where('office_name', $request->office_name)
+        ->where('semester', $request->semester)
+        ->where('year',  $request->year)
+        ->with(['officeOpcrRecordLastestRecord'=> function($query){
+            $query->select( 'office_opcrs_records.id',
+                'office_opcrs_records.office_opcr_id',
+                'office_opcrs_records.date',
+                'office_opcrs_records.status');
+        }])
+        ->first();
 
         return (object) [
             'office_name'               => $request->office_name,
@@ -303,7 +311,8 @@ class UnitWorkPlanService
             'officeEmployee'            => $officeEmployee,
             'officeTargetPeriod'        => $officeTargetPeriod,
             'organizationTargetPeriods' => $organizationTargetPeriods,
-            'unitworkplan'       => $unitworkplan_status, // ✅ ADD THIS
+            'unitworkplan'       => $unitworkplan_status, 
+            'opcr'       => $officeOpcr_status, 
         ];
     }
 

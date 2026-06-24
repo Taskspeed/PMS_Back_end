@@ -13,7 +13,7 @@ class UnitWorkPlanOrganizationResource extends JsonResource
      * @return array<string, mixed>
      */
 
-     public static $wrap = null; // ✅ removes the "data" wrapper
+    public static $wrap = null; // ✅ removes the "data" wrapper
 
     public function toArray(Request $request): array
     {
@@ -21,13 +21,40 @@ class UnitWorkPlanOrganizationResource extends JsonResource
         $officeEmployee             = $data->officeEmployee;
         $officeTargetPeriod         = $data->officeTargetPeriod;
         $organizationTargetPeriods  = $data->organizationTargetPeriods;
-        // $unitworkplan_status = $data->unitworkplan_status;
+        $opcr = $data->opcr;
+        $unitworkplan = $data->unitworkplan;
 
         return [
+            // for the office head
             'office' => [
                 'name' => $data->office_name,  // ✅ from resource, not $request
 
-                'unitworkplan' => $data->unitworkplan, // ✅ HERE
+                // unit work plan
+                'unitworkplan' => $unitworkplan ? [
+                    'unitworkplan_id'       => $unitworkplan->id,
+                    'semester' => $unitworkplan->semester,
+                    'year'     => $unitworkplan->year,
+                    'office_name' => $unitworkplan->office_name,
+                    'unitworkplan_lastest_record' => $unitworkplan->unitworkplanLastestRecord ? [
+                        'id'            => $unitworkplan->unitworkplanLastestRecord->id,
+                        'date'          => $unitworkplan->unitworkplanLastestRecord->date,
+                        'status'        => $unitworkplan->unitworkplanLastestRecord->status,
+                        'remarks'        => $unitworkplan->unitworkplanLastestRecord->remarks,
+                    ] : null,
+                ] : null,
+
+                // opcr
+                'opcr' => $opcr ? [
+                    'office_opcr_id'       => $opcr->id,
+                    'semester' => $opcr->semester,
+                    'year'     => $opcr->year,
+                    'office_name' => $opcr->office_name,
+                    'office_opcr_record_lastest_record' => $opcr->officeOpcrRecordLastestRecord ? [
+                        'id'            => $opcr->officeOpcrRecordLastestRecord->id,
+                        'date'          => $opcr->officeOpcrRecordLastestRecord->date,
+                        'status'        => $opcr->officeOpcrRecordLastestRecord->status,
+                    ] : null,
+                ] : null,
 
                 'employee' => [
                     'ControlNo' => $officeEmployee->ControlNo,
@@ -47,10 +74,9 @@ class UnitWorkPlanOrganizationResource extends JsonResource
                         'performance_standards' => $tp->performanceStandards,
                     ])
                     : [],
-
-
             ],
 
+            // for the employee
             'organization' => [
                 'name'      => $data->organization, // ✅ from resource, not $request
                 'employees' => $organizationTargetPeriods
@@ -67,7 +93,7 @@ class UnitWorkPlanOrganizationResource extends JsonResource
                                 'level'     => $employee->level,
                             ],
                             'target_periods' => $periods->map(fn($tp) => [
-                                'id'                    => $tp->id,
+                                'employee_target_period_id'      => (int)$tp->id,
                                 'control_no'            => $tp->control_no,
                                 'semester'              => $tp->semester,
                                 'year'                  => $tp->year,
@@ -83,4 +109,4 @@ class UnitWorkPlanOrganizationResource extends JsonResource
             // ]
         ];
     }
-    }
+}
