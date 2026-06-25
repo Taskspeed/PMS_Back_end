@@ -3,14 +3,16 @@
 namespace App\Services;
 
 use App\Models\OfficeOpcr;
+use App\Models\PerformanceRatingAttachment;
 use App\Models\TargetPeriod;
 use App\Models\UnitWorkPlan;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class TargetPeriodService
 {
 
-//============================================================== ERMS =============================================================//
+    //============================================================== ERMS =============================================================//
     // fetch the targetperiod of employee
     public function targetPeriod(string $controlNo)
     {
@@ -21,9 +23,9 @@ class TargetPeriodService
             'year',
             'office_id'
         )->where('control_no', $controlNo)
-        ->with('ipcrLastestRecord')
-        
-        ->get();
+            ->with('ipcrLastestRecord')
+
+            ->get();
 
 
         if ($employeeTargetPeriods->isEmpty()) {
@@ -33,23 +35,23 @@ class TargetPeriodService
             ], 200);
         }
 
-    $data = $employeeTargetPeriods->map(function ($targetPeriod) {
-        return [
-            'id'         => $targetPeriod->id,
-            'control_no' => $targetPeriod->control_no,
-            'semester'   => $targetPeriod->semester,
-            'year'       => $targetPeriod->year,
-            'office_id'  => $targetPeriod->office_id,
-            'status'     => $targetPeriod->ipcrLastestRecord?->status ?? 'N/A',
-        ];
-    });
+        $data = $employeeTargetPeriods->map(function ($targetPeriod) {
+            return [
+                'id'         => $targetPeriod->id,
+                'control_no' => $targetPeriod->control_no,
+                'semester'   => $targetPeriod->semester,
+                'year'       => $targetPeriod->year,
+                'office_id'  => $targetPeriod->office_id,
+                'status'     => $targetPeriod->ipcrLastestRecord?->status ?? 'N/A',
+            ];
+        });
         return response()->json([
             'message'      => 'Target period retrieved successfully.',
             'targetPeriod' => $data
         ], 200);
     }
 
-    
+
     //  get the target peroid details the performance standard and standard outcome
     public function targetPeriodDetails(int $targetPeriodId)
     {
@@ -228,7 +230,7 @@ class TargetPeriodService
         return $weeks[$week] ?? null;
     }
 
-     //performance rating record
+    //performance rating record
     public function performanceRatingRecord(int $targetPeriodId)
     {
 
@@ -267,7 +269,7 @@ class TargetPeriodService
         return response()->json($employee_rating_record);
     }
 
-     // get the target period with standard and rating
+    // get the target period with standard and rating
     public function getTargetPeriodRatings(int $targetPeriodId, $month = null, $year = null,)
     {
         $targetPeriod = TargetPeriod::select('id')
@@ -327,69 +329,99 @@ class TargetPeriodService
             ])
             ->first();
 
-    if (!$targetPeriod) {
-        return response()->json(['message' => 'Target period not found.'], 404);
-    }
-
-    if ($month && $year) {
-        $monthNumber = Carbon::createFromFormat('F', $month)->month;
-        $weeks       = $this->getWeeksInMonth($month, $year); // returns [1 => [1,7], 2 => [8,14], ...]
-
-        $targetPeriod->performanceStandards->each(function ($standard) use ($monthNumber, $year, $weeks) {
-            $grouped = [];
-
-            foreach ($weeks as $weekNumber => $range) {
-                [$dayStart, $dayEnd] = $range;
-
-                $filtered = $standard->performanceRating->filter(function ($rating) use ($monthNumber, $year, $dayStart, $dayEnd) {
-                    try {
-                        $date = Carbon::createFromFormat('m/d/Y', $rating->date);
-                        return $date->month == $monthNumber
-                            && $date->year  == $year
-                            && $date->day   >= $dayStart
-                            && $date->day   <= $dayEnd;
-                    } catch (\Exception $e) {
-                        return false;
-                    }
-                })->values();
-
-                $grouped["week{$weekNumber}"] = $filtered;
-            }
-
-            $standard->setRelation('performanceRating', collect($grouped));
-        });
-    }
-
-  return $targetPeriod;
-}
-
-// helper: returns week number => [dayStart, dayEnd] for the month
-private function getWeeksInMonth($month, $year): array
-{
-    $monthNumber  = Carbon::createFromFormat('F', $month)->month;
-    $startOfMonth = Carbon::createFromDate($year, $monthNumber, 1);
-    $endOfMonth   = $startOfMonth->copy()->endOfMonth();
-
-    $weeks      = [];
-    $weekNumber = 1;
-    $current    = $startOfMonth->copy();
-
-    while ($current->lte($endOfMonth)) {
-        $weekStart = $current->day;
-        $weekEnd   = min($current->copy()->endOfWeek(Carbon::SATURDAY)->day, $endOfMonth->day);
-
-        // handle month boundary — endOfWeek may spill into next month
-        if ($current->copy()->endOfWeek(Carbon::SATURDAY)->month > $monthNumber) {
-            $weekEnd = $endOfMonth->day;
+        if (!$targetPeriod) {
+            return response()->json(['message' => 'Target period not found.'], 404);
         }
 
-        $weeks[$weekNumber] = [$weekStart, $weekEnd];
+        if ($month && $year) {
+            $monthNumber = Carbon::createFromFormat('F', $month)->month;
+            $weeks       = $this->getWeeksInMonth($month, $year); // returns [1 => [1,7], 2 => [8,14], ...]
 
-        $current->addDays($weekEnd - $weekStart + 1);
-        $weekNumber++;
+            $targetPeriod->performanceStandards->each(function ($standard) use ($monthNumber, $year, $weeks) {
+                $grouped = [];
+
+                foreach ($weeks as $weekNumber => $range) {
+                    [$dayStart, $dayEnd] = $range;
+
+                    $filtered = $standard->performanceRating->filter(function ($rating) use ($monthNumber, $year, $dayStart, $dayEnd) {
+                        try {
+                            $date = Carbon::createFromFormat('m/d/Y', $rating->date);
+                            return $date->month == $monthNumber
+                                && $date->year  == $year
+                                && $date->day   >= $dayStart
+                                && $date->day   <= $dayEnd;
+                        } catch (\Exception $e) {
+                            return false;
+                        }
+                    })->values();
+
+                    $grouped["week{$weekNumber}"] = $filtered;
+                }
+
+                $standard->setRelation('performanceRating', collect($grouped));
+            });
+        }
+
+        return $targetPeriod;
     }
 
-    return $weeks;
-}
+    // helper: returns week number => [dayStart, dayEnd] for the month
+    private function getWeeksInMonth($month, $year): array
+    {
+        $monthNumber  = Carbon::createFromFormat('F', $month)->month;
+        $startOfMonth = Carbon::createFromDate($year, $monthNumber, 1);
+        $endOfMonth   = $startOfMonth->copy()->endOfMonth();
+
+        $weeks      = [];
+        $weekNumber = 1;
+        $current    = $startOfMonth->copy();
+
+        while ($current->lte($endOfMonth)) {
+            $weekStart = $current->day;
+            $weekEnd   = min($current->copy()->endOfWeek(Carbon::SATURDAY)->day, $endOfMonth->day);
+
+            // handle month boundary — endOfWeek may spill into next month
+            if ($current->copy()->endOfWeek(Carbon::SATURDAY)->month > $monthNumber) {
+                $weekEnd = $endOfMonth->day;
+            }
+
+            $weeks[$weekNumber] = [$weekStart, $weekEnd];
+
+            $current->addDays($weekEnd - $weekStart + 1);
+            $weekNumber++;
+        }
+
+        return $weeks;
+    }
+
+        // uploading attachment file
+        public function uploadAttachmentPerformanceRating(array $validatedData)
+        {
+            $file = $validatedData['file']; // UploadedFile instance from validated()
+
+            $path = $file->store(
+                "spms/attachments/{$validatedData['year']}/{$validatedData['month']}/week{$validatedData['week_number']}",
+                'public'
+            );
+
+            $attachment = PerformanceRatingAttachment::updateOrCreate(
+                [
+                    'performance_standard_id' => $validatedData['performance_standard_id'],
+                    'week_number'             => $validatedData['week_number'],
+                    'month'                   => $validatedData['month'],
+                    'year'                    => $validatedData['year'],
+                ],
+                [
+                    'file_path'     => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                ]
+            );
+
+            $attachment->url = Storage::disk('public')->url($attachment->file_path);
+
+            return $attachment;
+        }
+
+
     //============================================================== ERMS =============================================================//
 }

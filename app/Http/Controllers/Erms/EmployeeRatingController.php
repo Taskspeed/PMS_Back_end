@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Erms;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\performanceRatingStoreRequest;
+use App\Http\Requests\UploadAttachmentRatingRequest;
 use App\Http\Resources\TargetPeriodRatingResource;
 use App\Models\PerformanceRating;
 use App\Models\TargetPeriod;
@@ -108,6 +109,20 @@ class EmployeeRatingController extends Controller
             return $this->errorMessage('Target period not found.', 404);
         }
 
-        return new TargetPeriodRatingResource($data);
+        return new TargetPeriodRatingResource($data,$month,$year);
     }
+
+    // uploading attachment for performance rating 
+    public function uploadWeekAttachment(UploadAttachmentRatingRequest $request){
+
+        $validatedData = $request->validated();
+
+
+        $attachment = $this->targetperiodService->uploadAttachmentPerformanceRating($validatedData);
+
+        return $this->successMessage( $attachment,'Attachment uploaded.',200);
+
+
+    }
+    
 }

@@ -77,6 +77,8 @@ Route::prefix('erms')->group(function () {
     Route::get('/mfo/{officeId}',                                                   [ErmsMfoController::class,           'getMfoErms']);
     Route::get('/head-mfo/{semester}/{year}/{officeId}',                            [ErmsMfoController::class,           'officeMfo']);
     Route::get('/managerial/{year}/{semester}/{mfo}/{officeId}',                    [ErmsUnitWorkPlanController::class,  'findManagerial']);
+    Route::post('upload/attachment/performance-rating',                    [EmployeeRatingController::class,  'uploadWeekAttachment']);
+
 });
 
 /*
@@ -328,6 +330,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/ipcr',                 [SupervisorController::class, 'getAdvisoryEmployeeIpcr']);
         Route::post('/update/ipcr',         [SupervisorController::class, 'updateIpcr']);
         Route::get('/list/employee/ipcr',   [SupervisorController::class, 'getSupervisor']);
-        Route::get('/update/performance-rating',   [SupervisorController::class, 'updatePerformanceRatingEmployee']); // approve the performance rating of employee
+        Route::put('/update/performance-rating',   [SupervisorController::class, 'updatePerformanceRatingEmployee']); // approve the performance rating of employee
     });
 });
