@@ -57,7 +57,7 @@ class ReceivingController extends Controller
                 $query->where('year', $year)
                     ->where('semester', $semester)
                     ->whereHas('ipcrLastestRecord', function ($q) {
-                  $q->whereIn('status',['Approved','Received Target']); // ✅ fix typo: was 'Aprroved'
+                  $q->whereIn('status',['Approved Target','Received Target','Discussed Target']); // ✅ fix typo: was 'Aprroved'
                     });
             })
 

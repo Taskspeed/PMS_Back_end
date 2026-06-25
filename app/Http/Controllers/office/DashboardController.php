@@ -331,7 +331,7 @@ class DashboardController extends Controller
                                 'effectiveness_actual as effectiveness',
                                 'timeliness_actual as timeliness'
                             );
-                            // ->where('status', 'Approved');
+                            // ->where('status', 'Pending'); // need to change 
                         },
                         'performanceStandards.standardOutcomes' => function ($query) {
                             $query->select(

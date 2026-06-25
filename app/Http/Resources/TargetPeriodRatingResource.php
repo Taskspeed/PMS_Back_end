@@ -35,11 +35,11 @@ class TargetPeriodRatingResource extends JsonResource
                 'success_indicator'    => $standard->success_indicator,
                 'required_output'      => $standard->required_output,
                 'performance_rating'      => $this->mapPerformanceRating(
-                        $standard->performanceRating,
-                        $standard->id,
-                        $this->month,   // <-- from property, not request
-                        $this->year     // <-- from property, not request
-                    ),
+                    $standard->performanceRating,
+                    $standard->id,
+                    $this->month,   // <-- from property, not request
+                    $this->year     // <-- from property, not request
+                ),
                 'configurations'       => $standard->configurations->map(fn($config) => [
                     'id'                   => $config->id,
                     'performance_standard_id' => $config->performance_standard_id,
@@ -54,87 +54,35 @@ class TargetPeriodRatingResource extends JsonResource
         ];
     }
 
-    // private function mapPerformanceRating($performanceRating): array|object
-    // {
-    //     // when grouped by week (Collection of week => ratings)
-    //     if ($performanceRating instanceof \Illuminate\Support\Collection && $performanceRating->keys()->first() && str_starts_with((string)$performanceRating->keys()->first(), 'week')) {
-    //         $grouped = [];
-    //         foreach ($performanceRating as $week => $ratings) {
-    //             $grouped[$week] = $ratings->map(fn($rating) => $this->mapRating($rating))->values();
-    //         }
-    //         return $grouped;
-    //     }
+    private function mapPerformanceRating($performanceRating, int $standardId, $month, $year): array|object
+    {
+        if ($performanceRating instanceof \Illuminate\Support\Collection && $performanceRating->keys()->first() && str_starts_with((string)$performanceRating->keys()->first(), 'week')) {
+            $grouped = [];
 
-    //     // fallback: flat array (no month/year filter)
-    //     return $performanceRating->map(fn($rating) => $this->mapRating($rating))->values()->toArray();
-    // }
-//     private function mapPerformanceRating($performanceRating): array|object
-// {
-//     // when grouped by week (Collection of week => ratings)
-//     if ($performanceRating instanceof \Illuminate\Support\Collection && $performanceRating->keys()->first() && str_starts_with((string)$performanceRating->keys()->first(), 'week')) {
-//         $grouped = [];
-//         // foreach ($performanceRating as $week => $ratings) {
-//         //     $total    = $ratings->count();
-//         //     $approved = $ratings->where('status', 'Approved')->count();
+            foreach ($performanceRating as $week => $ratings) {
+                $weekNumber = (int) str_replace('week', '', $week);
 
-//         //     $grouped[$week] = [
-//         //         'total'    => $total,
-//         //         'approved' => $approved,
-//         //         'ratings'  => $ratings->map(fn($rating) => $this->mapRating($rating))->values(),
-//         //     ];
-//         // }
-//         foreach ($performanceRating as $week => $ratings) {
-//     $weekNumber = (int) str_replace('week', '', $week);
+                $attachment = PerformanceRatingAttachment::where([
+                    'performance_standard_id' => $standardId,   // fixed
+                    'week_number'             => $weekNumber,
+                    'month'                   => $month,         // fixed
+                    'year'                    => $year,          // fixed
+                ])->first();
 
-//     $attachment = PerformanceRatingAttachment::where([
-//         'performance_standard_id' => $standard->id,
-//         'week_number'             => $weekNumber,
-//         'month'                   => $month,
-//         'year'                    => $year,
-//     ])->first();
+                $grouped[$week] = [
+                    'total'      => $ratings->count(),
+                    'approved'   => $ratings->where('status', 'Approved')->count(),
+                    'attachment' => $attachment ? asset('storage/' . $attachment->file_path) : null,
+                    'ratings'    => $ratings->map(fn($rating) => $this->mapRating($rating))->values(),
+                ];
+            }
 
-//     $grouped[$week] = [
-//         'total'      => $ratings->count(),
-//         'approved'   => $ratings->where('status', 'Approved')->count(),
-//         'attachment' => $attachment ? asset('storage/' . $attachment->file_path) : null,
-//         'ratings'    => $ratings->map(fn($rating) => $this->mapRating($rating))->values(),
-//     ];
-// }
-//         return $grouped;
-//     }
-
-//     // fallback: flat array (no month/year filter)
-//     return $performanceRating->map(fn($rating) => $this->mapRating($rating))->values()->toArray();
-// }
-private function mapPerformanceRating($performanceRating, int $standardId, $month, $year): array|object
-{
-    if ($performanceRating instanceof \Illuminate\Support\Collection && $performanceRating->keys()->first() && str_starts_with((string)$performanceRating->keys()->first(), 'week')) {
-        $grouped = [];
-
-        foreach ($performanceRating as $week => $ratings) {
-            $weekNumber = (int) str_replace('week', '', $week);
-
-            $attachment = PerformanceRatingAttachment::where([
-                'performance_standard_id' => $standardId,   // fixed
-                'week_number'             => $weekNumber,
-                'month'                   => $month,         // fixed
-                'year'                    => $year,          // fixed
-            ])->first();
-
-            $grouped[$week] = [
-                'total'      => $ratings->count(),
-                'approved'   => $ratings->where('status', 'Approved')->count(),
-                'attachment' => $attachment ? asset('storage/' . $attachment->file_path) : null,
-                'ratings'    => $ratings->map(fn($rating) => $this->mapRating($rating))->values(),
-            ];
+            return $grouped;
         }
 
-        return $grouped;
+        // fallback: flat array (no month/year filter)
+        return $performanceRating->map(fn($rating) => $this->mapRating($rating))->values()->toArray();
     }
-
-    // fallback: flat array (no month/year filter)
-    return $performanceRating->map(fn($rating) => $this->mapRating($rating))->values()->toArray();
-}
 
     private function mapRating($rating): array
     {

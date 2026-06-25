@@ -38,7 +38,7 @@ class TargetPeriodLock
             'year'     => $target_period_lock->year,     //
             'status'     => 'Open',    // ✅ correct
             'date' => Carbon::now()->format('Y-m-d'), // ✅ standard DB date format
-            'lock_by'    => $user->id,
+            'lock_by'    => $user?->id,
 
 
             // 'status'      => 'Pending',
