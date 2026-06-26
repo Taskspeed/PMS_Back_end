@@ -23,7 +23,7 @@ class RegisterRequest extends FormRequest
     {
         return [
             'control_no' => 'required|string',
-            'name' => 'required|string|unique:users,name',
+            'name' => 'required|string',
             'password' => 'required|string|min:3',
             'office_id' => 'required|exists:offices,id',
             'role_id' => 'required|exists:Roles,id',
