@@ -312,12 +312,7 @@ class IpcrService
                     'average_rating'       => $avgA,
                 ],
 
-                // 'average_rating'        => [
-                //     'stragetic_functions'      =>
-                //     'core_functions' =>
-                //     'support_functions'    =>
-                //     'final_rating'       =>  //  final_rating = stragetic_functions + core_functions+ support_functions
-                // ],
+
                 'employee_count' => $count,
             ];
         }
@@ -333,33 +328,6 @@ class IpcrService
         $supportAvg = $categoryRatings['support']['count'] > 0
             ? round($categoryRatings['support']['sum'] / $categoryRatings['support']['count'], 2)
             : 0;
-
-
-        // ✅ Step 4: Apply weights and compute final rating
-
-        // $strategicWeighted = round($strategicAvg * 0.2, 2);
-        // $coreWeighted      = round($coreAvg      * 0.6, 2);
-        // $supportWeighted   = round($supportAvg   * 0.2, 2);
-        // $finalRating       = round($strategicWeighted + $coreWeighted + $supportWeighted, 2);
-
-        // ✅ Step 4: Apply weights and compute final rating
-
-
-        // $hasStrategic = $categoryRatings['strategic']['count'] > 0;
-
-        // if ($hasStrategic) {
-        //     // Standard weights: Strategic 20%, Core 60%, Support 20%
-        //     $strategicWeighted = round($strategicAvg * 0.2, 2);
-        //     $coreWeighted      = round($coreAvg      * 0.6, 2);
-        //     $supportWeighted   = round($supportAvg   * 0.2, 2);
-        // } else {
-        //     // No Strategic Function: redistribute Strategic 20% → Core becomes 80%, Support stays 20%
-        //     $strategicWeighted = 0;
-        //     $coreWeighted      = round($coreAvg   * 0.8, 2);
-        //     $supportWeighted   = round($supportAvg * 0.2, 2);
-        // }
-
-        // $finalRating = round($strategicWeighted + $coreWeighted + $supportWeighted, 2);
 
 
         $hasStrategic = $categoryRatings['strategic']['count'] > 0;
@@ -389,11 +357,21 @@ class IpcrService
 
         $finalRating = round($strategicWeighted + $coreWeighted + $supportWeighted, 2);
 
+        // Adjectival rating based on final rating
+        $adjectivalRating = match(true) {
+            $finalRating >= 5 => 'Outstanding',
+            $finalRating >= 4 => 'Very Satisfactory',
+            $finalRating >= 3 => 'Satisfactory',
+            $finalRating >= 2 => 'Unsatisfactory',
+            $finalRating >= 1         => 'Poor',
+        };
+
         $averageRating = [
             'strategic_functions' => $strategicWeighted,
             'core_functions'      => $coreWeighted,
             'support_functions'   => $supportWeighted,
             'final_rating'        => $finalRating,
+            'adjectival_rating'   => $adjectivalRating,  // ← add this
         ];
 
 
@@ -472,7 +450,7 @@ class IpcrService
         $employee->targetPeriods->each(function ($period) {
             $period->performanceStandards->each(function ($standard) {
 
-
+            
                 $monthly = $this->groupRatingsByMonthlySummary(
                     $standard->performanceRating
                 );
@@ -515,6 +493,62 @@ class IpcrService
                 $standard->makeHidden('performanceRating');
             });
         });
+                    // ─── Add final rating computation ───────────────────────────────────────
+            $categoryRatings = [
+                'core'    => ['sum' => 0, 'count' => 0],
+                'support' => ['sum' => 0, 'count' => 0],
+            ];
+
+             foreach ($employee->targetPeriods as $period) {
+        foreach ($period->performanceStandards as $standard) {
+            if (is_null($standard->ratings)) continue;
+
+            $category = strtoupper($standard->category ?? '');
+            $avgRating = $standard->ratings['average_rating'] ?? 0;
+
+            if (str_contains($category, 'CORE')) {
+                $categoryRatings['core']['sum']   += $avgRating;
+                $categoryRatings['core']['count'] += 1;
+            } elseif (str_contains($category, 'SUPPORT')) {
+                $categoryRatings['support']['sum']   += $avgRating;
+                $categoryRatings['support']['count'] += 1;
+            }
+        }
+    }
+
+    $coreAvg = $categoryRatings['core']['count'] > 0
+        ? round($categoryRatings['core']['sum'] / $categoryRatings['core']['count'], 2)
+        : 0;
+
+    $supportAvg = $categoryRatings['support']['count'] > 0
+        ? round($categoryRatings['support']['sum'] / $categoryRatings['support']['count'], 2)
+        : 0;
+
+    $coreWeighted    = $categoryRatings['core']['count'] > 0;
+    $supportWeighted = $categoryRatings['support']['count'] > 0;
+
+  
+    $coreWeighted    = round($coreAvg    * 0.8, 2);
+    $supportWeighted = round($supportAvg * 0.2, 2);
+
+
+    $finalRating = round($coreWeighted + $supportWeighted, 2);
+
+    $adjectivalRating = match(true) {
+        $finalRating >= 4.5 => 'Outstanding',
+        $finalRating >= 3.5 => 'Very Satisfactory',
+        $finalRating >= 2.5 => 'Satisfactory',
+        $finalRating >= 1.5 => 'Unsatisfactory',
+        default             => 'Poor',
+    };
+
+    $employee->final_rating = [
+        'core_functions'    => $coreWeighted,
+        'support_functions' => $supportWeighted,
+        'final_rating'      => $finalRating,
+        'adjectival_rating' => $adjectivalRating,
+    ];
+        // ────────────────────────────────────────────────────────────────────────
 
         return $employee;
     }
@@ -820,13 +854,6 @@ class IpcrService
 
         return [
             'totals' => $totals,
-            // 'ratings' => [
-            //     'quantity_rating' => $quantityRating,'effectiveness_rating' => round( $quantityTotal / $totals['effectiveness_total'], 2),
-            //     'timeliness_rating' => round($quantityTotal / $totals['timeliness_total'], 2),
-            // ],
-
-            // Timeliness and Effectiveness Rating Calculation
-            // Rating = Total Actual / Total Quantity
             'ratings' => [
                 'quantity_rating'      => (int) $quantityRating,
                 'effectiveness_rating' => (int) $effectivenessRating,

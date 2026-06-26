@@ -96,7 +96,7 @@ class IpcrResource extends JsonResource
 
                         ];
                     }),
-
+   'final_rating' => $this->final_rating ?? null,
                     //  target 
                     'ipcr_target_record' => $targetRecord ? [
                         'id'           => $targetRecord->id,
@@ -138,6 +138,8 @@ class IpcrResource extends JsonResource
                         ] : null,
                         'date' => $targetRecord->date ?? null,
                     ] : null,
+                        // ← add this
+              
                 ];
             })
         ];
