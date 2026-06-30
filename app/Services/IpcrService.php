@@ -364,6 +364,7 @@ class IpcrService
             $finalRating >= 3 => 'Satisfactory',
             $finalRating >= 2 => 'Unsatisfactory',
             $finalRating >= 1         => 'Poor',
+               default => 'Pending rating',
         };
 
         $averageRating = [
