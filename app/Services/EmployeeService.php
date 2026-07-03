@@ -236,12 +236,17 @@ class EmployeeService
                         ->orWhere('vwActive.Designation', 'LIKE', "%{$searchTerm}%");
                 });
 
+            // if ($unassignedOnly) {
+            //     $query->whereNotExists(function ($q) {
+            //         $q->select(DB::raw(1))
+            //             ->from('employees')
+            //             ->whereRaw('vwActive.ControlNo = employees.ControlNo');
+            //     });
+            // }
             if ($unassignedOnly) {
-                $query->whereNotExists(function ($q) {
-                    $q->select(DB::raw(1))
-                        ->from('employees')
-                        ->whereRaw('vwActive.ControlNo = employees.ControlNo');
-                });
+                $assignedControlNos = Employee::whereNotNull('ControlNo')->pluck('ControlNo');
+
+                $query->whereNotIn('vwActive.ControlNo', $assignedControlNos);
             }
 
             $employees = $query->get();
