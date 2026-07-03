@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\OfficeOpcr;
 use App\Models\OfficeOpcrRecord;
+use App\Models\Qpef;
 use App\Models\TargetPeriod;
 use App\Models\TargetPeriodRecord;
 use App\Models\UnitWorkPlan;
@@ -189,6 +190,14 @@ class ReceivingController extends Controller
         }
 
         return $this->successMessage($data, 'Successfully fetched.');
+    }
+
+    // fetch Qpef
+    public function getAllQpef(){
+
+        $data = Qpef::select('id','control_no','quarterly','year','status','created_at')->where('status','Pending')->get();
+
+        return $this->successMessage($data,'success',200);
     }
 
 }
