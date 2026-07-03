@@ -3,12 +3,15 @@
 namespace App\Services;
 
 use App\Models\Qpef;
+use App\Traits\ApiResponseTrait;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class QpefService
 {
+
+    use ApiResponseTrait;
 
     // Weight percentages
     const JOB_PERFORMANCE_WEIGHT = 0.40; // 40%
@@ -28,6 +31,7 @@ class QpefService
                 'quarterly' => $validated['quarterly'],
                 'year' => $validated['year'],
                 'rated_by' => $user->name,
+                'status'     => 'Pending',
             ]);
 
             // Create Job Performance records
@@ -93,24 +97,11 @@ class QpefService
                 'recommendationDevelopment'
             ])->findOrFail($qpefId);
 
-            // Update main QPEF
-            // $qpef->update([
-            //     'control_no' => $validated['control_no'],
-            //     'quarterly'  => $validated['quarterly'],
-            //     'year'       => $validated['year'],
-            // ]);
+            if ($qpef->status == 'Received') {
+                return $this->errorMessage('Cannot update — already received by HR', 404);
+            }
 
-            /*
-        |--------------------------------------------------------------------------
-        | JOB PERFORMANCE UPDATE OR CREATE
-        |--------------------------------------------------------------------------
-        */
-            /*
-        |--------------------------------------------------------------------------
-        | JOB PERFORMANCE UPDATE OR CREATE
-        |--------------------------------------------------------------------------
-        */
-            /*
+         /*
         |--------------------------------------------------------------------------
         | JOB PERFORMANCE UPDATE OR CREATE
         |--------------------------------------------------------------------------
@@ -137,10 +128,10 @@ class QpefService
             }
 
             /*
-|--------------------------------------------------------------------------
-| COMPETENCIES UPDATE OR CREATE
-|--------------------------------------------------------------------------
-*/
+            |--------------------------------------------------------------------------
+            | COMPETENCIES UPDATE OR CREATE
+            |--------------------------------------------------------------------------
+            */
 
             foreach ($validated['competencies_attitude'] as $competency) {
                 if (!empty($competency['id'])) {
@@ -161,10 +152,10 @@ class QpefService
             }
 
             /*
-|--------------------------------------------------------------------------
-| PHYSICAL MENTAL UPDATE OR CREATE
-|--------------------------------------------------------------------------
-*/
+            |--------------------------------------------------------------------------
+            | PHYSICAL MENTAL UPDATE OR CREATE
+            |--------------------------------------------------------------------------
+            */
 
             foreach ($validated['physical_mental'] as $physical) {
                 if (!empty($physical['id'])) {
@@ -184,10 +175,10 @@ class QpefService
                 }
             }
             /*
-        |--------------------------------------------------------------------------
-        | RECOMMENDATION UPDATE OR CREATE
-        |--------------------------------------------------------------------------
-        */
+            |--------------------------------------------------------------------------
+            | RECOMMENDATION UPDATE OR CREATE
+            |--------------------------------------------------------------------------
+            */
 
             if (isset($validated['recommendation_development'])) {
 
