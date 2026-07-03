@@ -5,12 +5,15 @@ namespace App\Http\Controllers\office;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\qpefRequest;
 use App\Http\Resources\QpefResource;
+use App\Models\Qpef;
 use App\Services\QpefService;
+use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 
 class QpefController extends Controller
 {
 
+    use ApiResponseTrait;
     protected QpefService $qpefService;
 
     public function __construct(QpefService $qpefService)
@@ -125,5 +128,24 @@ class QpefController extends Controller
         }
 
         return QpefResource::collection($qpef);
+    }
+
+
+    // update Qpef status
+    public function updateQpef(int $qpefId, Request $request)
+    {
+        $validatedData = $request->validate([
+            'status' => 'required|string|in:Returned,Received',
+        ]);
+
+        $qpef = Qpef::find($qpefId);
+
+        if (!$qpef) {
+            return $this->errorMessage('Qpef not found', 404);
+        }
+
+        $qpef->update($validatedData);
+
+        return $this->successMessage($qpef, 'success update', 200);
     }
 }
