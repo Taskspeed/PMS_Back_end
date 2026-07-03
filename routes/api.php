@@ -11,6 +11,7 @@ use App\Http\Controllers\Erms\TargetperiodController as ErmsTargetperiodControll
 use App\Http\Controllers\Hr\dashboardController;
 use App\Http\Controllers\Hr\IndicatorController;
 use App\Http\Controllers\Hr\PmtController;
+use App\Http\Controllers\Hr\PositionRankController;
 use App\Http\Controllers\Hr\RankController;
 use App\Http\Controllers\Hr\UnitWorkPlanController as HrUnitWorkPlanController;
 use App\Http\Controllers\office\DashboardController as OfficeDashboardController;
@@ -31,6 +32,7 @@ use App\Http\Controllers\TargetPeriodController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\vwActiveController;
 use App\Http\Controllers\VwplantillastructureController;
+use App\Models\PositionRank;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -180,6 +182,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('receiving')->group(function () {
             Route::get('/ipcr',         [ReceivingController::class, 'getApproveIpcr']);
             Route::get('/unitworkplan', [ReceivingController::class, 'getUnitworkplan']);
+            Route::get('/qpef', [ReceivingController::class, 'getAllQpef']);
+
         });
 
         Route::get('/indicator',                        [IndicatorController::class, 'getIndicator'])->withoutMiddleware(['auth:sanctum']);
@@ -187,10 +191,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/indicator/update/{indicatorId}',   [IndicatorController::class, 'updateIndicator']);
         Route::delete('/indicator/delete/{indicatorId}',[IndicatorController::class, 'deleteIndicator']);
 
-        Route::get('/rank',                     [RankController::class, 'getRank']);
-        Route::post('/rank/store',              [RankController::class, 'storeRank']);
-        Route::put('/rank/update/{rankId}',     [RankController::class, 'updateRank']);
-        Route::delete('/rank/delete/{rankId}',  [RankController::class, 'deleteRank']);
+        Route::prefix('rank')->group( function(){
+        Route::get('/',                     [RankController::class, 'getRank']);
+        Route::post('/store',              [RankController::class, 'storeRank']);
+        Route::put('/update/{rankId}',     [RankController::class, 'updateRank']);
+        Route::delete('/delete/{rankId}',  [RankController::class, 'deleteRank']);
+
+        });
+        Route::prefix('position')->group( function(){
+        Route::get('/',                     [PositionRankController::class, 'getPositionRank']);
+        Route::post('/store',              [PositionRankController::class, 'storePositionRank']);
+        Route::put('/update/{positionRankId}',     [PositionRankController::class, 'updatePositionRank']);
+        Route::delete('/delete/{positionRankId}',  [PositionRankController::class, 'deletePositionRank']);
+
+        });
 
         Route::get('/category', [CategoryController::class, 'fetchCategory']);
     });
@@ -294,6 +308,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/employee/quarter',                [QpefController::class, 'getAllEmployeeQpefQuater']);
         Route::post('/store',                           [QpefController::class, 'qpefStore']);
         Route::put('/update/{qpefId}',                  [QpefController::class, 'qpefUpdate']);
+        Route::put('/update/status/{qpefId}',                  [QpefController::class, 'qpefUpdate']); 
     });
 
     /*
