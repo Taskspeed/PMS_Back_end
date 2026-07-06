@@ -3,189 +3,52 @@
 namespace App\Http\Controllers\Hr;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\vwplantillastructure;
+use App\Services\Hr\SpmsService;
 
 class SpmsController extends Controller
 {
 
-    // // this structure
-    // public function getOfficePlantilla(Request $request)
-    // {
+    protected SpmsService $spmsService;
 
-    //     $request->validate([
-    //         'officeId' => 'required|integer|exists:offices,id',
-    //         // 'office_name' => 'required',
-    //         // 'organization' => 'required',
-    //         'year' => 'required',
-    //         'semester' => 'required'
-    //     ]);
+    public function __construct(SpmsService $spmsService)
+    {
+        $this->spmsService = $spmsService;
+    }
 
-    //     $officeName = DB::table('offices')->where('id', $request->officeId)->value('name');
-    //     if (!$officeName) return response()->json([]);
+      // get the list of IPCR target period of spms
+    public function listOfIpcr(Request $request)
+    {
+        $year  = $request->input('year');
+        $semester = $request->input('semester');       
+        $office = $request->input('office');   
+        $employee = $this->spmsService->listOfIpcr($year, $semester,$office);
 
-    //     // BASE RESULT STRUCTURE
-    //     $officeData = [
-    //         'officeId' => $request->officeId,
-    //         'office' => $officeName,
-    //         'office2' => []
-    //     ];
+        return $employee;
+    }
 
-    //     // GET ALL RECORDS FOR THE OFFICE
-    //     $allunits = vwplantillastructure::where('office', $officeName)
-    //         ->orderBy('office2')
-    //         ->orderBy('group')
-    //         ->orderBy('division')
-    //         ->orderBy('section')
-    //         ->orderBy('unit')
-    //         ->get();
+    // get the list of unit work plans
+    public function listOfUnitWorkPlan(Request $request)
+    {
+        $year  = $request->input('year');
+        $semester = $request->input('semester');       
+        $office = $request->input('office');    
 
-    //     /* ============================================================
-    //    1. PROCESS OFFICE2
-    // ============================================================ */
+        $employee = $this->spmsService->listOfUnitWorkPlan($year, $semester,$office);
 
-    //     $office2List = $allunits->unique('office2');
+        return $employee;
+    }
 
-    //     foreach ($office2List as $office2Row) {
 
-    //         $office2Name = $office2Row->office2 ?? null;
+    // get the list of IPCR target period of spms
+    public function listOfOpcr(Request $request)
+    {
+        $year  = $request->input('year');
+        $semester = $request->input('semester');       
+        // $office = $request->input('office');    
+        $employee = $this->spmsService->listOfOpcr($year, $semester);
 
-    //         $office2Data = [
-    //             'office2' => $office2Name,
-    //             'group' => []
-    //         ];
+        return $employee;
+    }
 
-    //         // FILTER ALL RECORDS UNDER THIS office2
-    //         $office2units = $allunits->where('office2', $office2Name);
-
-    //         /* ============================================================
-    //        2. PROCESS group UNDER THIS office2
-    //     ============================================================ */
-
-    //         $group = $office2units->unique('group');
-
-    //         foreach ($group as $groupRow) {
-
-    //             $groupName = $groupRow->group ?? null;
-
-    //             $groupData = [
-    //                 'group' => $groupName,
-    //                 'divisions' => [],
-    //                 'sections_without_division' => [],
-    //                 'units_without_division' => []
-    //             ];
-
-    //             // FILTER RECORDS FOR THIS GROUP
-    //             $groupunits = $office2units->where('group', $groupName);
-
-    //             /* ============================================================
-    //            3. PROCESS divisionS UNDER THIS GROUP
-    //         ============================================================ */
-    //             $divisions = $groupunits->whereNotNull('division')->unique('division');
-
-    //             foreach ($divisions as $division) {
-
-    //                 $divisionData = [
-    //                     'division' => $division->division,
-    //                     'sections' => [],
-    //                     'units_without_section' => []
-    //                 ];
-
-    //                 // sectionS UNDER THIS division
-    //                 $sections = $groupunits
-    //                     ->where('division', $division->division)
-    //                     ->whereNotNull('section')
-    //                     ->unique('section');
-
-    //                 foreach ($sections as $section) {
-
-    //                     $sectionData = [
-    //                         'section' => $section->section,
-    //                         'units' => $groupunits
-    //                             ->where('division', $division->division)
-    //                             ->where('section', $section->section)
-    //                             ->whereNotNull('unit')
-    //                             ->pluck('unit')
-    //                             ->unique()
-    //                             ->values()
-    //                             ->toArray()
-    //                     ];
-
-    //                     $divisionData['sections'][] = $sectionData;
-    //                 }
-
-    //                 // unitS WITHOUT section
-    //                 $divisionunits = $groupunits
-    //                     ->where('division', $division->division)
-    //                     ->whereNull('section')
-    //                     ->whereNotNull('unit')
-    //                     ->pluck('unit')
-    //                     ->unique()
-    //                     ->values()
-    //                     ->toArray();
-
-    //                 $divisionData['units_without_section'] = $divisionunits;
-
-    //                 $groupData['divisions'][] = $divisionData;
-    //             }
-
-    //             /* ============================================================
-    //            4. sectionS WITHOUT division UNDER THIS GROUP
-    //         ============================================================ */
-
-    //             $sectionsWithoutdivision = $groupunits
-    //                 ->whereNull('division')
-    //                 ->whereNotNull('section')
-    //                 ->unique('section');
-
-    //             foreach ($sectionsWithoutdivision as $section) {
-
-    //                 $sectionData = [
-    //                     'section' => $section->section,
-    //                     'units' => $groupunits
-    //                         ->whereNull('division')
-    //                         ->where('section', $section->section)
-    //                         ->whereNotNull('unit')
-    //                         ->pluck('unit')
-    //                         ->unique()
-    //                         ->values()
-    //                         ->toArray()
-    //                 ];
-
-    //                 $groupData['sections_without_division'][] = $sectionData;
-    //             }
-
-    //             // unitS WITHOUT division AND section
-    //             $unitsWithoutdivision = $groupunits
-    //                 ->whereNull('division')
-    //                 ->whereNull('section')
-    //                 ->whereNotNull('unit')
-    //                 ->pluck('unit')
-    //                 ->unique()
-    //                 ->values()
-    //                 ->toArray();
-
-    //             $groupData['units_without_division'] = $unitsWithoutdivision;
-
-    //             $office2Data['group'][] = $groupData;
-    //         }
-
-    //         $officeData['office2'][] = $office2Data;
-    //     }
-
-    //     return response()->json([$officeData]);
-    // }
-
-    // private function mapEmployee(vwplantillastructure $row)
-    // {
-    //     return [
-    //         'controlNo'   => $row->controlNo, // ✅ FIX
-    //         'lastname'    => $row->lastname,
-    //         'firstname'   => $row->firstname,
-    //         'middlename'  => $row->middlename,
-    //         'rank'   => $row->rank, // ✅ FIX
-
-    //     ];
-    // }
 }
