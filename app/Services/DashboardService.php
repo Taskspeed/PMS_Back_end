@@ -206,13 +206,13 @@ class DashboardService
 
         $employeeControlNos = Employee::pluck('ControlNo'); // ← get actual control numbers
 
-            $targetPeriodIds = TargetPeriod::whereIn('control_no', $employeeControlNos)
-                ->when($year,     fn($q) => $q->where('year', $year))
-                ->when($semester, fn($q) => $q->where('semester', $semester))
-                ->pluck('id');
+        $targetPeriodIds = TargetPeriod::whereIn('control_no', $employeeControlNos)
+            ->when($year,     fn($q) => $q->where('year', $year))
+            ->when($semester, fn($q) => $q->where('semester', $semester))
+            ->pluck('id');
 
 
-                $ipcr_status = TargetPeriodRecord::whereIn('target_period_id', $targetPeriodIds)
+        $ipcr_status = TargetPeriodRecord::whereIn('target_period_id', $targetPeriodIds)
             ->whereIn('id', function ($sub) {
                 $sub->selectRaw('MAX(id)')
                     ->from('targetperiod_records')
@@ -225,23 +225,23 @@ class DashboardService
         // ─── IPCR ───────────────────────────────────────────────────────────────
         // TargetPeriod.status is the direct status field (no separate record table).
         $ipcrCounts = [
-          // target
-                'Validated_target'  => (int) $ipcr_status->get('validated target', 0),
-                'Calibrated_target'  => (int) $ipcr_status->get('calibrated target', 0),
-                'Approved' => (int) $ipcr_status->get('approved', 0),
-                'Receive_target' => (int) $ipcr_status->get('reviewed target', 0),
-                'Reviewed' => (int) $ipcr_status->get('reviewed', 0),
-                'Draft'    => (int) $ipcr_status->get('draft', 0),
+            // target
+            'Validated_target'  => (int) $ipcr_status->get('validated target', 0),
+            'Calibrated_target'  => (int) $ipcr_status->get('calibrated target', 0),
+            'Approved' => (int) $ipcr_status->get('approved', 0),
+            'Receive_target' => (int) $ipcr_status->get('reviewed target', 0),
+            'Reviewed' => (int) $ipcr_status->get('reviewed', 0),
+            'Draft'    => (int) $ipcr_status->get('draft', 0),
 
-                // accomplishment
-                'Validated_accomplishment'  => (int) $ipcr_status->get('Validated accomplishment', 0),
-                'Calibrated_accomplishment' => (int) $ipcr_status->get('Calibrated accomplishment', 0),
-                'Pre_validation'    => (int) $ipcr_status->get('Pre validation', 0),
-                'In_Progress' => (int) $ipcr_status->get('In Progress', 0),
+            // accomplishment
+            'Validated_accomplishment'  => (int) $ipcr_status->get('Validated accomplishment', 0),
+            'Calibrated_accomplishment' => (int) $ipcr_status->get('Calibrated accomplishment', 0),
+            'Pre_validation'    => (int) $ipcr_status->get('Pre validation', 0),
+            'In_Progress' => (int) $ipcr_status->get('In Progress', 0),
 
 
-                'total_ipcr' => (int) $ipcr_status->sum(),
-  
+            'total_ipcr' => (int) $ipcr_status->sum(),
+
         ];
 
         // ─── Unit Work Plan ─────────────────────────────────────────────────────
@@ -282,115 +282,7 @@ class DashboardService
         ];
     }
 
-    //list of IPCR target period of spms
-    public function listOfIpcr(int $year, string $semester)
-    {
 
-        // ipcr
-        $ipcrList = TargetPeriod::select('id', 'control_no', 'semester', 'year', 'status')->where('semester', $semester)
-            ->where('year', $year)->with('xPersonal:ControlNo,Surname,Firstname') //eager load only needed fields
-            ->get()
-            ->map(fn($ipcr) => [
-                'id'         => $ipcr->id,
-                'control_no' => $ipcr->control_no,
-                'semester'   => $ipcr->semester,
-                'year'       => $ipcr->year,
-                'status'     => $ipcr->status,
-                'name'      => optional($ipcr->xPersonal)->Firstname . ' ' . optional($ipcr->xPersonal)->Surname
-            ]);
-
-        if ($ipcrList->isEmpty()) {
-            return $this->errorMessage('There is no data available for IPCR.', 404);
-        }
-
-
-        return  $this->successMessage($ipcrList, 'IPCR list fetched successfully.');
-    }
-
-
-    //list of UnitWorkPlan target period of spms
-    public function listOfUnitWorkPlan(int $year, string $semester, string $office)
-
-    {
-
-        $unitworkplan = UnitWorkPlan::select('id', 'office_name', 'semester', 'year')
-            ->where('semester', $semester)
-            ->where('year', $year)
-            ->when($office, fn($q) => $q->where('office_name', $office)) // only filter if provided
-
-            ->with('unitworkplanLastestRecord')
-            ->get();
-
-        if ($unitworkplan->isEmpty()) {
-            return $this->errorMessage('There is no data available for unit work plans.', 404);
-        }
-
-
-        $data = $unitworkplan->map(function ($item) {
-
-            $structure = $this->structureService->structure($item->office_name);
-            return [
-                'id'          => $item->id,
-                'office_name' => $item->office_name,
-                'semester'    => $item->semester,
-                'year'        => $item->year,
-                'date'        => $item->unitworkplanLastestRecord?->date,
-                'status'      => $item->unitworkplanLastestRecord?->status,
-                'remarks'     => $item->unitworkplanLastestRecord?->remarks,
-                'structure'     => $structure,
-            ];
-        });
-
-        return $this->successMessage($data, 'Unit Work Plans fetched successfully.');
-    }
-
-
-    //list of OPCR target period of spms
-    public function listOfOpcr(int $year, string $semester)
-    {
-        $opcr = OfficeOpcr::select('id', 'office_name', 'semester', 'year')
-            ->where('semester', $semester)
-            ->where('year', $year)
-            ->with('officeOpcrRecordLastestRecord')
-            ->get()
-            ->keyBy('office_name');
-
-        if ($opcr->isEmpty()) {
-            return $this->errorMessage('There is no data available for OPCR.', 404);
-        }
-
-        $officeNames = $opcr->keys();
-
-        $officeHeads = Employee::select('ControlNo', 'name', 'job_title', 'office_id', 'office')
-            ->whereIn('office', $officeNames)
-            ->where('job_title', 'Office Head')
-            ->get()
-            ->keyBy('office');
-
-        // ✅ Fix 1: correct closure syntax — was `=>` should be `use(...) { return [...] }`
-        // ✅ Fix 2: $head was undefined — get it from $officeHeads inside the closure
-        // ✅ Fix 3: $opcrItem was undefined — the variable is $item
-        $data = $opcr->map(function ($item) use ($officeHeads) {
-            $head = $officeHeads->get($item->office_name); // ✅ resolve head per office
-
-            return [
-                'opcr_id'    => $item->id,
-                'ControlNo'  => $head?->ControlNo,
-                'name'       => $head?->name,
-                'office'     => $item->office_name,        //was $opcrItem->office_name
-                // 'office_name' => $item->office_name,
-                'semester'   => $item->semester,
-                'year'       => $item->year,
-                'date'       => $item->officeOpcrRecordLastestRecord?->date,
-                'status'     => $item->officeOpcrRecordLastestRecord?->status,
-                'remarks'    => $item->officeOpcrRecordLastestRecord?->remarks,
-            ];
-        })->values();
-
-        return $this->successMessage($data, 'OPCR fetched successfully.');
-    }
-
-    
     private function plantillaStructure()
     {
         $rows = vwplantillastructure::from('vwplantillaStructure as p')
@@ -653,7 +545,7 @@ class DashboardService
             ->where('semester', $semester)
             ->where('year', $year)
             ->whereHas('officeOpcrRecordLastestRecord', function ($query) {
-                $query->whereIn('status', ['Draft','Received Target','Returned Target','Received']);
+                $query->whereIn('status', ['Draft', 'Received Target', 'Returned Target', 'Received']);
             })->get();
 
         return $data;

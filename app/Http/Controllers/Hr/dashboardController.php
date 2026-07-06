@@ -40,42 +40,6 @@ class dashboardController extends Controller
         return $employee;
     }
 
-    // get the list of IPCR target period of spms
-    public function listOfIpcr(Request $request)
-    {
-        $year  = $request->input('year');
-        $semester = $request->input('semester');       
-        // $office = $request->input('office');   
-        $employee = $this->dashboardService->listOfIpcr($year, $semester);
-
-        return $employee;
-    }
-
-    // get the list of unit work plans
-    public function listOfUnitWorkPlan(Request $request)
-    {
-        $year  = $request->input('year');
-        $semester = $request->input('semester');       
-        $office = $request->input('office');    
-
-        $employee = $this->dashboardService->listOfUnitWorkPlan($year, $semester,$office);
-
-        return $employee;
-    }
-
-
-    // get the list of IPCR target period of spms
-    public function listOfOpcr(Request $request)
-    {
-        $year  = $request->input('year');
-        $semester = $request->input('semester');       
-        // $office = $request->input('office');    
-        $employee = $this->dashboardService->listOfOpcr($year, $semester);
-
-        return $employee;
-    }
-
-
     public function plantillaEmployee()
     {
         // DB::connection('second_db')
