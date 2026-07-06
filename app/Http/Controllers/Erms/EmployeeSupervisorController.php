@@ -28,7 +28,7 @@ class EmployeeSupervisorController extends Controller
         $employee = Employee::select('id','ControlNo','name','job_title')->where('ControlNo',$controlNo)->first();
 
         if(!$employee){
-           return $this->errorMessage('not found',404);
+              return $this->errorMessage('The employee does not exist in the SPMS.', 404);
         }
         return $this->successMessage($employee,'Successfully fetch',200);
 
