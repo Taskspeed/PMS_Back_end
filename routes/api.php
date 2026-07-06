@@ -13,6 +13,8 @@ use App\Http\Controllers\Hr\IndicatorController;
 use App\Http\Controllers\Hr\PmtController;
 use App\Http\Controllers\Hr\PositionRankController;
 use App\Http\Controllers\Hr\RankController;
+use App\Http\Controllers\Hr\ReceivingController as HrReceivingController;
+use App\Http\Controllers\Hr\SpmsController as HrSpmsController;
 use App\Http\Controllers\Hr\UnitWorkPlanController as HrUnitWorkPlanController;
 use App\Http\Controllers\office\DashboardController as OfficeDashboardController;
 use App\Http\Controllers\office\EmployeeController;
@@ -163,9 +165,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('hr')->group(function () {
 
         Route::prefix('dashboard')->group(function () {
-            Route::get('/list/ipcr',            [dashboardController::class, 'listOfIpcr']);
-            Route::get('/list/opcr',            [dashboardController::class, 'listOfOpcr']);
-            Route::get('/list/unit-work-plan',  [dashboardController::class, 'listOfUnitWorkPlan']);
+      
             Route::get('/current/target-period',[dashboardController::class, 'currentTargetPeriod']);
             Route::get('/plantilla',            [dashboardController::class, 'plantillaEmployee']);
             Route::get('/employee',             [dashboardController::class, 'dashboardSummaryData']);
@@ -180,16 +180,18 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
         Route::prefix('receiving')->group(function () {
-            Route::get('/ipcr',         [ReceivingController::class, 'getApproveIpcr']);
-            Route::get('/unitworkplan', [ReceivingController::class, 'getUnitworkplan']);
-            Route::get('/qpef', [ReceivingController::class, 'getAllQpef']);
+            Route::get('/ipcr',         [HrReceivingController::class, 'getApproveIpcr']);
+            Route::get('/unitworkplan', [HrReceivingController::class, 'getUnitworkplan']);
+            Route::get('/qpef', [HrReceivingController::class, 'getAllQpef']);
 
         });
 
-        Route::get('/indicator',                        [IndicatorController::class, 'getIndicator'])->withoutMiddleware(['auth:sanctum']);
-        Route::post('/indicator/store',                 [IndicatorController::class, 'storeIndicator']);
-        Route::put('/indicator/update/{indicatorId}',   [IndicatorController::class, 'updateIndicator']);
-        Route::delete('/indicator/delete/{indicatorId}',[IndicatorController::class, 'deleteIndicator']);
+        Route::prefix('indicator')->group(function(){
+            Route::get('/',                        [IndicatorController::class, 'getIndicator'])->withoutMiddleware(['auth:sanctum']);
+            Route::post('/store',                 [IndicatorController::class, 'storeIndicator']);
+            Route::put('/update/{indicatorId}',   [IndicatorController::class, 'updateIndicator']);
+            Route::delete('/delete/{indicatorId}',[IndicatorController::class, 'deleteIndicator']);
+        });
 
         Route::prefix('rank')->group( function(){
         Route::get('/',                     [RankController::class, 'getRank']);
@@ -207,6 +209,12 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
         Route::get('/category', [CategoryController::class, 'fetchCategory']);
+
+        Route::prefix('spms')->group(function(){
+            Route::get('/ipcr',            [HrSpmsController::class, 'listOfIpcr']);
+            Route::get('/opcr',            [HrSpmsController::class, 'listOfOpcr']);
+            Route::get('/unit-work-plan',  [HrSpmsController::class, 'listOfUnitWorkPlan']);
+        });
     });
 
     /*
