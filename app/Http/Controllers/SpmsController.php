@@ -321,7 +321,7 @@ class SpmsController extends BaseController
         })->filter()->values();
 
         // Fetch all QPEFs for those employees based on the year
-        $qpefs = Qpef::select('id', 'control_no', 'year', 'quarterly', 'rated_by')->where('year', $year)
+        $qpefs = Qpef::select('id', 'control_no', 'year', 'quarterly', 'rated_by','status')->where('year', $year)
             ->whereIn('control_no', $employeeControlNos)
             ->get()
             ->groupBy('control_no');
