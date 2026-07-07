@@ -61,7 +61,7 @@ class UnitWorkPlanService
 
                  IpcrEvent::dispatch($targetPeriod,$employee); //closed properly
 
-                if ($employee && $employee->job_title == 'Office Head') {
+                if ($employee && $employee->job_title == 'Department Head') {
                     // \Illuminate\Support\Facades\Log::info('Dispatching UnitWorkPlanRecord event...');
                     UnitWorkPlanEvent::dispatch($targetPeriod,$employee);
         
@@ -158,7 +158,7 @@ class UnitWorkPlanService
 
         /**
          * ===============================
-         * 1️⃣ OFFICE HEAD
+         * 1️⃣ Department Head
          * ===============================
          */
         $officeEmployee = DB::table('employees')
@@ -171,7 +171,7 @@ class UnitWorkPlanService
 
         if (! $officeEmployee) {
             return response()->json([
-                'message' => 'Office head not found.',
+                'message' => 'Department Head not found.',
             ], 404);
         }
 
@@ -228,7 +228,7 @@ class UnitWorkPlanService
 
         /**
          * ===============================
-         * 4️⃣ FETCH OFFICE HEAD TARGET PERIOD WITH FILTERED MFOs
+         * 4️⃣ FETCH Department Head TARGET PERIOD WITH FILTERED MFOs
          * ===============================
          */
         $officeTargetPeriod = TargetPeriod::select('id', 'control_no', 'semester', 'year',)->with([
@@ -409,8 +409,8 @@ class UnitWorkPlanService
     {
         $user = Auth::user();
 
-        // Get the managerial (office head) of this office
-        $managerial = Employee::where('job_title', 'Office Head')
+        // Get the managerial (Department Head) of this office
+        $managerial = Employee::where('job_title', 'Department Head')
             ->where('office_id', $user->office_id)
             ->first();
 
@@ -435,7 +435,7 @@ class UnitWorkPlanService
             ], 404);
         }
 
-        // Get ALL target periods in this office for this year/semester (excluding office head)
+        // Get ALL target periods in this office for this year/semester (excluding Department Head)
         $allOtherTargetPeriods = TargetPeriod::with('performanceStandards')
             ->where('office_id', $user->office_id)
             ->where('year', $year)

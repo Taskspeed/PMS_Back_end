@@ -37,6 +37,6 @@ class OfficeOpcr extends Model
     public function officeHead()
     {
         return $this->hasOne(Employee::class, 'office_id', 'office_id')
-            ->where('job_title', 'Office Head');
+            ->where('job_title', 'Department Head');
     }
 }

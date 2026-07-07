@@ -35,7 +35,7 @@ class DashboardController extends Controller
         $totalEmployeesOnOffice = \App\Models\Employee::where('office_id', $officeId)->pluck('ControlNo');
 
         // get control_nos belonging to this office
-        $employeeControlNos = \App\Models\Employee::where('office_id', $officeId)->whereNotIn('job_title',['Office Head'])->pluck('ControlNo');
+        $employeeControlNos = \App\Models\Employee::where('office_id', $officeId)->whereNotIn('job_title',['Department Head'])->pluck('ControlNo');
 
         // total employee count in office
         $totalEmployees = $totalEmployeesOnOffice->count();
@@ -131,7 +131,7 @@ class DashboardController extends Controller
             //---- opcr rating ----------//
          $employee = Employee::select('ControlNo','job_title','name','office_id')
              ->where('office_id',$user->office_id)
-            ->where('job_title', 'Office Head') ->first();
+            ->where('job_title', 'Department Head') ->first();
 
             $opcr_rating = null;
         if ($employee) {
@@ -263,7 +263,7 @@ class DashboardController extends Controller
             $officeHeadOpcr->office_id,
             $year,
             $semester,
-            $officeHeadOpcr->ControlNo,  // <-- exclude the office head himself
+            $officeHeadOpcr->ControlNo,  // <-- exclude the Department Head himself
             $successIndicatorsByMfo   // ✅ pass it here
         );
         // ✅ Extract both parts from the returned array
@@ -273,7 +273,7 @@ class DashboardController extends Controller
         // $ipcrByMfoKeyed = collect($ipcrByMfo)->keyBy('mfo');
         $ipcrByMfoKeyed = collect($opcr_accomplishment)->keyBy('mfo');
 
-        // Inject ipcr accomplishment into each of the office head's performance standards
+        // Inject ipcr accomplishment into each of the Department Head's performance standards
         $officeHeadOpcr->targetPeriods->each(function ($period) use ($ipcrByMfoKeyed) {
             $period->performanceStandards->each(function ($standard) use ($ipcrByMfoKeyed) {
                 $mfo = $standard->mfo;
@@ -304,13 +304,13 @@ class DashboardController extends Controller
     }
 
     /**
-     * Aggregate IPCR by MFO — exclude the office head's own control number
+     * Aggregate IPCR by MFO — exclude the Department Head's own control number
      */
     public function aggregateIpcrByMfoForOpcr(int $officeId, int $year, string $semester, $excludeControlNo = null,  $successIndicatorsByMfo = null)
     {
         $query = Employee::where('office_id', $officeId);
 
-        // Exclude the office head himself from the aggregation
+        // Exclude the Department Head himself from the aggregation
         if ($excludeControlNo) {
             $query->where('ControlNo', '!=', $excludeControlNo);
         }

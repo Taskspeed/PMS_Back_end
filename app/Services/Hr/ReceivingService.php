@@ -27,7 +27,7 @@ class ReceivingService
 
         $employee = Employee::select('ControlNo', 'name', 'rank', 'office', 'status', 'job_title', 'position')
             ->whereNotIn('status', ['CONTRACTUAL', 'JOB ORDER'])
-            ->whereNotIn('job_title', ['Office Head'])
+            ->whereNotIn('job_title', ['Department Head'])
             ->when($office, fn($q) => $q->where('office', $office))
 
             // ✅ Filter: only employees who have an Approved target period for this semester/year
@@ -122,7 +122,7 @@ class ReceivingService
     public function qpef()
     {
         $data = Qpef::select('id', 'control_no', 'quarterly', 'year', 'status', 'created_at')
-            ->where('status', 'Pending')
+            ->whereIn('status', ['Pending','Returned'])
             ->get();
 
         // Batch-fetch employees for all control numbers in one query

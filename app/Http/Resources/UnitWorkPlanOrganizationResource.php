@@ -25,7 +25,7 @@ class UnitWorkPlanOrganizationResource extends JsonResource
         $unitworkplan = $data->unitworkplan;
 
         return [
-            // for the office head
+            // for the Department Head
             'office' => [
                 'name' => $data->office_name,  // ✅ from resource, not $request
 

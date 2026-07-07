@@ -70,19 +70,19 @@ class ErmsMfoService
     }
 
 
-    // get the all mfo of the office head
+    // get the all mfo of the Department Head
     public function getOfficeMfo(string $semester, int $year, int $officeId)
     {
         // $user = Auth::user();
 
         $employee = Employee::select('ControlNo', 'name', 'office', 'job_title', 'office_id',)
         ->where('office_id', $officeId)
-        ->where('job_title', 'Office Head')->first();
+        ->where('job_title', 'Department Head')->first();
 
 
         if (!$employee) {
             return response()->json([
-                'message' => 'Office Head not found'
+                'message' => 'Department Head not found'
             ], 404);
         }
 

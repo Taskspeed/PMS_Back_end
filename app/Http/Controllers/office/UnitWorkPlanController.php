@@ -185,7 +185,7 @@ class UnitWorkPlanController extends BaseController
         }
     }
 
-    // find the office head and supervisory on office
+    // find the Department Head and supervisory on office
     public function findManagerial(int $year, string $semester, string $mfo)
     {
 

@@ -77,7 +77,7 @@ class MfoController extends Controller
     }
 
 
-    // fetch all mfo of office head
+    // fetch all mfo of Department Head
     public function fetchMfo(string $semester, int $year)
     {
         $mfo = $this->mfoService->getMfo($semester, $year);

@@ -116,7 +116,7 @@ class OpcrService
                     'office_opcrs_records.date',
                     'office_opcrs_records.status'
                 );
-            }, // eager load office head per office
+            }, // eager load Department Head per office
             'officeHead' => function ($query) {
                 $query->select(
                     'employees.id',

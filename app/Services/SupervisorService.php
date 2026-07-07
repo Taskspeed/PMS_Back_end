@@ -420,11 +420,11 @@ class SupervisorService
             ->where('year', $year)
             ->where('semester', $semester);
 
-        // ── Always get the Office Head first ──────────────────────────────────────
+        // ── Always get the Department Head first ──────────────────────────────────────
         $officeHead = Employee::select('id', 'name', 'rank', 'ControlNo', 'position', 'status', 'job_title')
             ->with(['targetPeriods' => $withTargetPeriod])
             ->where('office_id', $officeId)
-            ->where('job_title', 'Office Head')
+            ->where('job_title', 'Department Head')
             ->where('ControlNo', '!=', $employee->ControlNo)
             ->first();
 
@@ -464,13 +464,13 @@ class SupervisorService
             }
         }
 
-        // 3️⃣ Sub-Office Head
+        // 3️⃣ Office Head
         if (!$supervisorySignatory && $employee->office2) {
             $office2Head = Employee::select('id', 'name', 'rank', 'ControlNo', 'position', 'status', 'job_title')
                 ->with(['targetPeriods' => $withTargetPeriod])
                 ->where('office_id', $officeId)
                 ->where('office2', $employee->office2)
-                ->where('job_title', 'Sub-Office Head')
+                ->where('job_title', 'Office Head')
                 ->where('ControlNo', '!=', $employee->ControlNo)
                 ->whereNull('division')
                 ->whereNull('section')
@@ -500,7 +500,7 @@ class SupervisorService
             }
         }
 
-        // 5️⃣ Final fallback: Office Head
+        // 5️⃣ Final fallback: Department Head
         if (!$supervisorySignatory) {
             $supervisorySignatory = $officeHeadData;
         }

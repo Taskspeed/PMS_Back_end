@@ -132,7 +132,7 @@ class IpcrController extends BaseController
         }
     }
 
-    // list of ipcr need to approve  of the office head
+    // list of ipcr need to approve  of the Department Head
     public function listIpcr(Request $request){
 
         $authUser = Auth::user();

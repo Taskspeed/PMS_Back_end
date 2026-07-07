@@ -271,7 +271,7 @@ class EmployeeSupervisorService
     {
         // Find the current employee in the list to check their job_title
         $self = collect($employees)->firstWhere('controlNo', $controlNo);
-        $isSupervisor = $self && in_array($self['job_title'], ['Section Head', 'Division Head', 'Office Head', 'Group Head', 'Sub-Office Head']);
+        $isSupervisor = $self && in_array($self['job_title'], ['Section Head', 'Division Head', 'Department Head', 'Group Head', 'Office Head']);
 
         return collect($employees)
             ->filter(function ($e) use ($controlNo, $isSupervisor) {
@@ -431,10 +431,10 @@ class EmployeeSupervisorService
             throw new \Exception('OPCR is not yet approved. Please have it approved before proceeding.');
         }
 
-        // ── Always get the Office Head first ──────────────────────────────────────
+        // ── Always get the Department Head first ──────────────────────────────────────
         $officeHead = Employee::select('id', 'name', 'rank', 'ControlNo', 'position', 'status', 'job_title')
             ->where('office_id', $officeId)
-            ->where('job_title', 'Office Head')
+            ->where('job_title', 'Department Head')
             ->where('ControlNo', '!=', $employee->ControlNo)
             ->first();
 
@@ -446,10 +446,10 @@ class EmployeeSupervisorService
             'jobTitle'  => $officeHead->job_title,
         ], $this->getSignatoryTargetPeriod($officeHead->ControlNo, $year, $semester)) : null;
 
-        // managerialSignatory is always the Office Head
+        // managerialSignatory is always the Department Head
         $managerialSignatory = $officeHeadData;
 
-        // ── supervisorySignatory: Section Head → Division Head → Office2 Head → Office Head ──
+        // ── supervisorySignatory: Section Head → Division Head → Office2 Head → Department Head ──
         $supervisorySignatory = null;
 
         // 1️⃣ If employee is in a unit, look for Section Head in that section
@@ -515,12 +515,12 @@ class EmployeeSupervisorService
             }
         }
 
-        // 3️⃣ Fallback: Look for a Sub-Office Head / Office2 Head in the same office2
+        // 3️⃣ Fallback: Look for a Office Head / Office2 Head in the same office2
         if (!$supervisorySignatory && $employee->office2) {
             $office2Head = Employee::select('id', 'name', 'rank', 'ControlNo', 'position', 'status', 'job_title')
                 ->where('office_id', $officeId)
                 ->where('office2', $employee->office2)
-                ->where('job_title', 'Sub-Office Head') // adjust to your actual job_title value
+                ->where('job_title', 'Office Head') // adjust to your actual job_title value
                 ->where('ControlNo', '!=', $employee->ControlNo)
                 ->whereNull('division')
                 ->whereNull('section')
@@ -538,7 +538,7 @@ class EmployeeSupervisorService
             }
         }
 
-        // 3️⃣ Fallback: Look for a Sub-Office Head / Office2 Head in the same office2
+        // 3️⃣ Fallback: Look for a Office Head / Office2 Head in the same office2
         if (!$supervisorySignatory && $employee->group) {
             $groupHead = Employee::select('id', 'name', 'rank', 'ControlNo', 'position', 'status', 'job_title')
                 ->where('office_id', $officeId)
@@ -561,7 +561,7 @@ class EmployeeSupervisorService
             }
         }
 
-        // 4️⃣ Final fallback: Office Head
+        // 4️⃣ Final fallback: Department Head
         if (!$supervisorySignatory) {
             $supervisorySignatory = $officeHeadData;
         }

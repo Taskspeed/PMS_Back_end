@@ -37,7 +37,7 @@ class OpcrController extends BaseController
         $this->ipcr = $ipcr;
     }
 
-    // get the opcr of the office head
+    // get the opcr of the Department Head
     public function opcr(string $controlNo, string $semester,int $year)
     {
 
@@ -54,7 +54,7 @@ class OpcrController extends BaseController
         ]);
     }
 
-    // saving the opcr of the office head
+    // saving the opcr of the Department Head
     public function opcrStore(opcrRequest $request)
     {
         $validated = $request->validated();
@@ -65,7 +65,7 @@ class OpcrController extends BaseController
     }
 
 
-    // saving the opcr of the office head
+    // saving the opcr of the Department Head
     public function opcrUpdate(opcrRequest $request)
     {
         $validated = $request->validated();

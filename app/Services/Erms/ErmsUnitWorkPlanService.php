@@ -11,8 +11,8 @@ class ErmsUnitWorkPlanService
     public function supervisoryDeductionOfSuccessIndicator(int $year, string $semester, string $mfo, int $officeId )
     {
 
-        // Get the managerial (office head) of this office
-        $managerial = Employee::where('job_title', 'Office Head')
+        // Get the managerial (Department Head) of this office
+        $managerial = Employee::where('job_title', 'Department Head')
             ->where('office_id', $officeId)
             ->first();
 
@@ -37,7 +37,7 @@ class ErmsUnitWorkPlanService
             ], 404);
         }
 
-        // Get ALL target periods in this office for this year/semester (excluding office head)
+        // Get ALL target periods in this office for this year/semester (excluding Department Head)
         $allOtherTargetPeriods = TargetPeriod::with('performanceStandards')
             ->where('office_id', $officeId)
             ->where('year', $year)

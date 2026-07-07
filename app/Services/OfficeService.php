@@ -176,7 +176,7 @@ class OfficeService
 
         //Ipcr Data of Employee
         $employee = \App\Models\Employee::select('id', 'name', 'ControlNo', 'status', 'job_title', 'office_id')->where('office_id', $user->office_id)->whereNotIn('status', ['Contractual', 'Job Order'])
-            ->whereNot('job_title', 'Office Head')
+            ->whereNot('job_title', 'Department Head')
             ->with([
                 'targetPeriods' => function ($q) use ($semester, $year,) {
                     $q->select('id', 'control_no', 'semester', 'year')->where('year', $year)

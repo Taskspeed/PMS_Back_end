@@ -302,7 +302,7 @@ class SpmsController extends BaseController
 
         $department_office = Employee::select('id', 'name', 'rank', 'ControlNo', 'position', 'office', 'status', 'job_title')
             ->where('office_id', $user->office_id)
-            ->where('job_title', 'Office Head')
+            ->where('job_title', 'Department Head')
             ->first();
 
         // Safely extract control numbers — handle both array key formats

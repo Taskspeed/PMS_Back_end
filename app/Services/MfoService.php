@@ -103,19 +103,19 @@ class MfoService
         return $mfo;
     }
 
-    // get the all mfo of the office head
+    // get the all mfo of the Department Head
     public function getMfo($semester, $year)
     {
         $user = Auth::user();
 
         $employee = Employee::select('ControlNo', 'name', 'office', 'job_title', 'office_id',)
         ->where('office_id', $user->office_id)
-        ->where('job_title', 'Office Head')->first();
+        ->where('job_title', 'Department Head')->first();
 
 
         if (!$employee) {
             return response()->json([
-                'message' => 'Office Head not found'
+                'message' => 'Department Head not found'
             ], 404);
         }
 

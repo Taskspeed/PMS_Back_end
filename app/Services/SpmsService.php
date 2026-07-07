@@ -215,8 +215,8 @@ class SpmsService
 
             $emp->has_target_period = $existing ? true : false;
 
-            // ✅ If Office Head, use OPCR data inside existing_target_period
-            if ($emp->job_title === 'Office Head') {
+            // ✅ If Department Head, use OPCR data inside existing_target_period
+            if ($emp->job_title === 'Department Head') {
                 $latestOpcrRecord = $officeOpcr?->officeOpcrRecordLastestRecord;
 
                 $emp->existing_target_period = [
@@ -289,8 +289,8 @@ class SpmsService
 
             $emp->has_target_period = $existing ? true : false;
 
-            // ✅ If Office Head, use OPCR data inside existing_target_period
-            if ($emp->job_title === 'Office Head') {
+            // ✅ If Department Head, use OPCR data inside existing_target_period
+            if ($emp->job_title === 'Department Head') {
                 $latestOpcrRecord = $officeOpcr?->officeOpcrRecordLastestRecord;
 
                 $emp->existing_target_period = [

@@ -28,7 +28,7 @@ class SpmsService
         // ipcr
        $employee = Employee::select('ControlNo', 'name', 'rank', 'office', 'status', 'job_title', 'position')
             ->whereNotIn('status', ['CONTRACTUAL', 'JOB ORDER'])
-            ->whereNotIn('job_title', ['Office Head'])
+            ->whereNotIn('job_title', ['Department Head'])
             ->when($office, fn($q) => $q->where('office', $office))
 
             // ✅ Filter: only employees who have an Approved target period for this semester/year
@@ -157,7 +157,7 @@ class SpmsService
 
         $officeHeads = Employee::select('ControlNo', 'name', 'job_title', 'office_id', 'office')
             ->whereIn('office', $officeNames)
-            ->where('job_title', 'Office Head')
+            ->where('job_title', 'Department Head')
             ->get()
             ->keyBy('office');
 

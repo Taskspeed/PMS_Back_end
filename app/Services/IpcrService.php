@@ -108,7 +108,7 @@ class IpcrService
             $officeHeadOpcr->office_id,
             $year,
             $semester,
-            $officeHeadOpcr->ControlNo,  // <-- exclude the office head himself
+            $officeHeadOpcr->ControlNo,  // <-- exclude the Department Head himself
             $successIndicatorsByMfo   // ✅ pass it here
         );
         // ✅ Extract both parts from the returned array
@@ -118,7 +118,7 @@ class IpcrService
         // $ipcrByMfoKeyed = collect($ipcrByMfo)->keyBy('mfo');
         $ipcrByMfoKeyed = collect($opcr_accomplishment)->keyBy('mfo');
 
-        // Inject ipcr accomplishment into each of the office head's performance standards
+        // Inject ipcr accomplishment into each of the Department Head's performance standards
         $officeHeadOpcr->targetPeriods->each(function ($period) use ($ipcrByMfoKeyed) {
             $period->performanceStandards->each(function ($standard) use ($ipcrByMfoKeyed) {
                 $mfo = $standard->mfo;
@@ -149,13 +149,13 @@ class IpcrService
     }
 
     /**
-     * Aggregate IPCR by MFO — exclude the office head's own control number
+     * Aggregate IPCR by MFO — exclude the Department Head's own control number
      */
     public function aggregateIpcrByMfoForOpcr(int $officeId, int $year, string $semester, $excludeControlNo = null,  $successIndicatorsByMfo = null)
     {
         $query = Employee::where('office_id', $officeId);
 
-        // Exclude the office head himself from the aggregation
+        // Exclude the Department Head himself from the aggregation
         if ($excludeControlNo) {
             $query->where('ControlNo', '!=', $excludeControlNo);
         }
@@ -1052,12 +1052,12 @@ class IpcrService
 
     // --------------------------------------------------------Office admin------------------------------------------------------------ //
 
-    // list of ipcr of employee need to approve by office head
+    // list of ipcr of employee need to approve by Department Head
     public function ipcr(?string $semester = null, ?int $year = null, Authenticatable $authUser)
     {
         $employee = Employee::select('id', 'ControlNo', 'name', 'office', 'job_title', 'office_id')
             ->where('office_id', $authUser->office_id)
-               ->where('job_title', '!=', 'Office Head') // <-- exclude Office Head
+               ->where('job_title', '!=', 'Department Head') // <-- exclude Department Head
             ->where(function ($query) use ($semester, $year) {
                 // if job_title is NOT Employee, fetch only if ipcrLastestRecord status is 'Draft'
                 $query->where(function ($query) use ($semester, $year) {

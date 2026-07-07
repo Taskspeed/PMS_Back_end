@@ -37,10 +37,10 @@ class SupervisorController extends Controller
         $year     = $request->input('year');
         $semester = $request->input('semester');
 
-        // check if the supervisor is an Office Head
+        // check if the supervisor is an Department Head
         $isOfficeHead = Employee::where('office_id', $supervisor->office_id)
             ->where('ControlNo', $supervisor->control_no)
-            ->where('job_title', 'Office Head')
+            ->where('job_title', 'Department Head')
             ->exists();
 
         $query = TargetPeriod::select('id', 'control_no', 'year', 'semester', 'office_id', 'supervisory_control_no')
@@ -49,8 +49,8 @@ class SupervisorController extends Controller
             ->where('semester', $semester);
 
         if ($isOfficeHead) {
-            // ✅ Office Head sees ALL employees in the office with Draft and Reviewed status
-            $query->where('control_no', '!=', $supervisor->control_no) // ✅ exclude office head themselves
+            // ✅ Department Head sees ALL employees in the office with Draft and Reviewed status
+            $query->where('control_no', '!=', $supervisor->control_no) // ✅ exclude Department Head themselves
                 ->whereHas('ipcrLastestRecord', function ($q) {
                     $q->whereIn(DB::raw('LOWER(status)'), ['Draft', 'Reviewed']); // ✅ lowercase
                 });
@@ -91,10 +91,10 @@ class SupervisorController extends Controller
     {
         $supervisor = Auth::user();
 
-        // ✅ check if the current user is an Office Head
+        // ✅ check if the current user is an Department Head
         $isOfficeHead = Employee::where('office_id', $supervisor->office_id)
             ->where('ControlNo', $supervisor->control_no)
-            ->where('job_title', 'Office Head')
+            ->where('job_title', 'Department Head')
             ->exists();
 
         $validated = $request->validate(
@@ -107,9 +107,9 @@ class SupervisorController extends Controller
             // 'status.in' => "Status must be 'Reviewed' or 'Approved'.",
         );
 
-        // block non-Office Head from using Approved status
+        // block non-Department Head from using Approved status
         if ($validated['status'] === 'Approved' && ! $isOfficeHead) {
-            return $this->errorMessage('Only the Office Head can Approve IPCR.', 403);
+            return $this->errorMessage('Only the Department Head can Approve IPCR.', 403);
         }
 
         $records = [];

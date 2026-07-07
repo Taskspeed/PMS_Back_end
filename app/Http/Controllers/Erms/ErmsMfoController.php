@@ -25,7 +25,7 @@ class ErmsMfoController extends Controller
         return response()->json($user);
     }
 
-    // fetch all mfo of office head
+    // fetch all mfo of Department Head
     public function officeMfo(string $semester, int $year,int  $officeId)
     {
         $mfo = $this->ErmsMfoService->getOfficeMfo($semester, $year, $officeId);
