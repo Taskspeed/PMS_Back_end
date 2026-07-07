@@ -3,6 +3,7 @@
 namespace App\Services\Hr;
 
 use App\Models\Employee;
+use App\Models\Qpef;
 use App\Models\UnitWorkPlan;
 use App\Services\StructureService;
 use App\Traits\ApiResponseTrait;
@@ -116,5 +117,37 @@ class ReceivingService
         return $this->successMessage($data, 'Successfully fetched.');
     }
 
+
+     // fetch Qpef
+    public function qpef()
+    {
+        $data = Qpef::select('id', 'control_no', 'quarterly', 'year', 'status', 'created_at')
+            ->where('status', 'Pending')
+            ->get();
+
+        // Batch-fetch employees for all control numbers in one query
+        $controlNos = $data->pluck('control_no')->unique()->values();
+
+        $employees = Employee::select('ControlNo', 'name', 'office')
+            ->whereIn('ControlNo', $controlNos)
+            ->get()
+            ->keyBy('ControlNo');
+
+        $result = $data->map(function ($qpef) use ($employees) {
+            $credential = $employees->get($qpef->control_no);
+
+            return [
+                'id'          => $qpef->id,
+                'name'        => $credential->name ?? null,
+                'control_no'  => $qpef->control_no,
+                'quarterly'   => $qpef->quarterly,
+                'year'        => $qpef->year,
+                'status'      => $qpef->status,
+                'office'      => $credential->office ?? null,
+            ];
+        });
+
+        return $this->successMessage($result, 'success', 200);
+    }
 
 }

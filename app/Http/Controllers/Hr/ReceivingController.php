@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Hr;
 
 use App\Http\Controllers\Controller;
+use App\Models\Employee;
 use App\Models\Qpef;
 use App\Services\Hr\ReceivingService;
 use App\Services\StructureService;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+
+use function PHPUnit\Framework\returnCallback;
 
 class ReceivingController extends Controller
 {
@@ -18,7 +21,7 @@ class ReceivingController extends Controller
     protected  StructureService $structureService;
     protected  ReceivingService $receivingService;
 
-    public function __construct(StructureService $structureService,ReceivingService $receivingService)
+    public function __construct(StructureService $structureService, ReceivingService $receivingService)
     {
         $this->structureService = $structureService;
         $this->receivingService = $receivingService;
@@ -27,7 +30,7 @@ class ReceivingController extends Controller
     // get the list of ApproveIpcr
     public function getApproveIpcr(Request $request)
     {
-         $user = Auth::user();
+        $user = Auth::user();
 
         // Actually enforce the role check
         if ($user->role_id != 6) {
@@ -40,17 +43,16 @@ class ReceivingController extends Controller
         $semester = $request->input('semester');
         $office   = $request->input('office');
 
-        $data = $this->receivingService->ipcr($year,$semester,$office);
+        $data = $this->receivingService->ipcr($year, $semester, $office);
 
         return $data;
-
     }
 
     // get the targetperiod of  office opcr,unitworkplan,office
     public function getUnitworkplan(Request $request)
     {
 
-     $user = Auth::user();
+        $user = Auth::user();
 
         // Actually enforce the role check
         if ($user->role_id != 6) {
@@ -63,18 +65,16 @@ class ReceivingController extends Controller
         $semester = $request->input('semester');
         $office   = $request->input('office');
 
-        $data = $this->receivingService->unitworkplan($year,$semester,$office);
+        $data = $this->receivingService->unitworkplan($year, $semester, $office);
 
         return $data;
-     
     }
 
     // fetch Qpef
-    public function getAllQpef(){
+    public function getAllQpef()
+    {
+       $result = $this->receivingService->qpef();
 
-        $data = Qpef::select('id','control_no','quarterly','year','status','created_at')->where('status','Pending')->get();
-
-        return $this->successMessage($data,'success',200);
+       return $result;
     }
-
 }
