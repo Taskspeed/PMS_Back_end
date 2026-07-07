@@ -316,7 +316,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/employee/quarter',                [QpefController::class, 'getAllEmployeeQpefQuater']);
         Route::post('/store',                           [QpefController::class, 'qpefStore']);
         Route::put('/update/{qpefId}',                  [QpefController::class, 'qpefUpdate']);
-        Route::put('/update/status/{qpefId}',                  [QpefController::class, 'qpefUpdate']); 
+        Route::put('/update/status/{qpefId}',                  [QpefController::class, 'updateQpef']); 
     });
 
     /*
