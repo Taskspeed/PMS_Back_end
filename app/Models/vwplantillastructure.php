@@ -8,7 +8,7 @@ class vwplantillastructure extends Model
 {
     //
 
-    // protected $connection = 'second_db'; 
+    protected $connection = 'second_db'; 
     protected $table = 'vwplantillaStructure';
 
     protected $fillable = [

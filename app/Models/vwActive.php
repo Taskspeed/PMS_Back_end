@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class vwActive extends Model
 {
 
-    // protected $connection = 'second_db'; // Specify the connection name
+    protected $connection = 'second_db'; // Specify the connection name
     protected $table = 'vwActive';
     public $timestamps = false; // Disable timestamps
     protected $primaryKey = 'ControlNo'; // Set ControlNo as the primary key

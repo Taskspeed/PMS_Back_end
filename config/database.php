@@ -99,16 +99,16 @@ return [
 
         'second_db' => [
             'driver'   => 'sqlsrv',
-            'host'     => env('DB_HOST_SECOND', 'localhost'),
-            'port'     => env('DB_PORT_SECOND', '1433'),
-            'database' => env('DB_DATABASE_SECOND', 'laravel'),
-            'username' => env('DB_USERNAME_SECOND', ''),
-            'password' => env('DB_PASSWORD_SECOND', ''),
+            'host'     => env('SECOND_DB_HOST', 'localhost'),
+            'port'     => env('SECOND_DB_PORT', '1433'),
+            'database' => env('SECOND_DB_DATABASE', 'laravel'),
+            'username' => env('SECOND_DB_USERNAME', ''),
+            'password' => env('SECOND_DB_PASSWORD', ''),
             'charset'  => 'utf8',
             'prefix'   => '',
             'prefix_indexes' => true,
-                'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE_SECOND', 'true'), // 👈 add this
-    'encrypt'  => env('DB_ENCRYPT_SECOND', 'false'), // 👈 add this
+            'trust_server_certificate' => env('SECOND_DB_TRUST_SERVER_CERTIFICATE', 'true'),
+            'encrypt'  => env('SECOND_DB_ENCRYPT', 'false'),
         ],
 
         'sqlsrv' => [
@@ -161,7 +161,7 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_') . '_database_'),
             'persistent' => env('REDIS_PERSISTENT', false),
         ],
 
