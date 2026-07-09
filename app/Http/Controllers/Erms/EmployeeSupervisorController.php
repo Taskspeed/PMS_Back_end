@@ -23,15 +23,24 @@ class EmployeeSupervisorController extends Controller
     }
 
     // get employee information
-    public function employeeInformation(string $controlNo){
+    public function employeeInformation(string $controlNo)
+    {
+        $employee = Employee::select('id', 'ControlNo', 'name', 'job_title')
+            ->where('ControlNo', $controlNo)
+            ->first();
 
-        $employee = Employee::select('id','ControlNo','name','job_title')->where('ControlNo',$controlNo)->first();
-
-        if(!$employee){
-              return $this->errorMessage('The employee does not exist in the SPMS.', 404);
+        if (!$employee) {
+            return $this->successMessage(
+                ['spms' => false],
+                'The employee does not exist in the SPMS.',
+                200
+            );
         }
-        return $this->successMessage($employee,'Successfully fetch',200);
 
+        $data = $employee->toArray();
+        $data['spms'] = true;
+
+        return $this->successMessage($data, 'Successfully fetch', 200);
     }
 
 
