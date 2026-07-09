@@ -47,7 +47,7 @@ class PmtService
                 $query->where('year', $year)
                     ->where('semester', $semester)
                     ->whereHas('ipcrLastestRecord', function ($q) {
-                        $q->where('status','Reviewed'); // ✅ fix typo: was 'Aprroved'
+                        $q->where('status','Reviewed Target'); // ✅ fix typo: was 'Aprroved'
                     });
             })
 
