@@ -23,9 +23,10 @@ class EmployeeSupervisorController extends Controller
     }
 
     // get employee information
+   // get employee information
     public function employeeInformation(string $controlNo)
     {
-        $employee = Employee::select('id', 'ControlNo', 'name', 'job_title')
+        $employee = Employee::select('id', 'ControlNo', 'name', 'job_title', 'status')
             ->where('ControlNo', $controlNo)
             ->first();
 
@@ -37,12 +38,21 @@ class EmployeeSupervisorController extends Controller
             );
         }
 
-        $data = $employee->toArray();
+        $allowedStatuses = ['CASUAL', 'REGULAR', 'CO-TERMINOUS'];
+
+        if (!in_array($employee->status, $allowedStatuses)) {
+            return $this->successMessage(
+                ['spms' => false],
+                'The employee is not CASUAL, REGULAR, or CO-TERMINOUS.',
+                200
+            );
+        }
+
+        $data = $employee->only(['id', 'ControlNo', 'name', 'job_title']);
         $data['spms'] = true;
 
         return $this->successMessage($data, 'Successfully fetch', 200);
     }
-
 
     // get my Supervisor and managerial
     public function getMySupervisor(Request $request)
