@@ -76,6 +76,7 @@ class PmtService
                 'job_title'   => $item->job_title,
                 'position'    => $item->position,
                 'emp_status'  => $item->status,
+                'ipcr_id' => $latestRecord?->id, 
                 'ipcr_status' => $latestRecord?->status, 
                 'year'        => $ipcr?->year,
                 'semester'    => $ipcr?->semester,
