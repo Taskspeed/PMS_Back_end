@@ -76,12 +76,14 @@ Route::prefix('erms')->group(function () {
     Route::get('employee/performance-record/{targetPeriodId}',                      [EmployeeRatingController::class,    'performanceRatingRecord']);
     Route::get('/employee/target-periods/details/{targetperiodId}/{month}/{year}/{week}', [EmployeeRatingController::class, 'targetPeriod']);
     Route::get('/employee/target-periods/rating/{targetperiodId}/{month}/{year}',   [EmployeeRatingController::class,    'targetPeriodRating']);
+    Route::get('/employee/target-periods/rating/weeks/{targetperiodId}/{month}/{year}',   [EmployeeRatingController::class,    'targetPeriodRatingWeek']);
+
     Route::post('employee/store/rating',                                            [EmployeeRatingController::class,    'performanceRating']);
     Route::get('/target-period',                                                    [ErmsTargetperiodController::class,  'lastestTargetPeriods']);
     Route::get('/mfo/{officeId}',                                                   [ErmsMfoController::class,           'getMfoErms']);
     Route::get('/head-mfo/{semester}/{year}/{officeId}',                            [ErmsMfoController::class,           'officeMfo']);
     Route::get('/managerial/{year}/{semester}/{mfo}/{officeId}',                    [ErmsUnitWorkPlanController::class,  'findManagerial']);
-    Route::post('upload/attachment/performance-rating',                    [EmployeeRatingController::class,  'uploadWeekAttachment']);
+    // Route::post('upload/attachment/performance-rating',                    [EmployeeRatingController::class,  'uploadWeekAttachment']);
 
 });
 
@@ -288,6 +290,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/delete/{id}',           [EmployeeController::class,  'deleteEmployee']);
         Route::get('/list-of-Head',             [EmployeeController::class,  'listOfHead']);
         Route::get('/head',                     [SpmsController::class,      'getEmployeeUnderOfHead']);
+        Route::get('/signatory',                         [EmployeeController::class,  'getEmployeeListSignatories']);
+        Route::put('/component/{employeeId}',                         [EmployeeController::class,  'updateEmployeeComponent']);
         Route::get('/{controlNo}',              [UnitWorkPlanController::class, 'findEmployee']);
     });
 
@@ -353,6 +357,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/ipcr',                 [SupervisorController::class, 'getAdvisoryEmployeeIpcr']);
         Route::post('/update/ipcr',         [SupervisorController::class, 'updateIpcr']);
         Route::get('/list/employee/ipcr',   [SupervisorController::class, 'getSupervisor']);
-        Route::put('/update/performance-rating',   [SupervisorController::class, 'updatePerformanceRatingEmployee']); // approve the performance rating of employee
+        Route::post('/update/performance-rating',   [SupervisorController::class, 'updatePerformanceRatingEmployee']); // approve the performance rating of employee
     });
+
+
+    Route::prefix('ipcr')->group(function () {
+    Route::post('/store',                                      [IpcrController::class, 'storeDocumentSignatories']);
+    Route::get('/view/signatory/{controlNo}',                                      [IpcrController::class, 'viewDocumentSignatories']);
+
+});
+
 });
