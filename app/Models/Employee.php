@@ -15,7 +15,7 @@ class Employee extends Model
 
     protected $table = 'employees';
 
-    protected $fillable =[
+    protected $fillable = [
         'name',
         'rank',
         'office',
@@ -36,7 +36,9 @@ class Employee extends Model
         'position',
         'status',
 
-        'job_title'
+        'job_title',
+        'suffix',
+        'prefix'
 
     ];
 
@@ -92,6 +94,11 @@ class Employee extends Model
         return $this->belongsTo(Opcr::class);
     }
 
+    public function signatories()
+    {
+        return $this->hasOne(DocumentSignatory::class, 'control_no', 'ControlNo');
+        //                                              ^ FK on document_signatories   ^ local key on employees
+    }
 
     // // for opcr
     // public function officeHeadTargetPeriod()
