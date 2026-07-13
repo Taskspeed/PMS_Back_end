@@ -13,6 +13,14 @@ class UpdateIpcrRequest extends FormRequest
     {
         return true;
     }
+      protected function prepareForValidation(): void
+    {
+        if ($this->has('status')) {
+            $this->merge([
+                'status' => ucwords(strtolower($this->status)),
+            ]);
+        }
+    }
 
     /**
      * Get the validation rules that apply to the request.
@@ -24,8 +32,9 @@ class UpdateIpcrRequest extends FormRequest
         return [
             'ipcr_id'   => 'required|array',
             'ipcr_id.*' => 'required|exists:target_periods,id',
-            'status'    => 'required|string',
-            'remarks'   => 'nullable|string',
+            'status'           => ['required', 'string', 'in:Received Target,Reviewed Target,Returned Target','Received Accomplishment','Returned Accomplishment','Reviewed Accomplishment','Approved Target','Approved Accomplishment'],
+            'remarks'          => ['nullable', 'string', 'required_if:status,Returned Target','Returned Accomplishment'],
+
         ];
     }
 }

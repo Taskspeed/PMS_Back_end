@@ -13,7 +13,7 @@ class UpdateUnitWorkPlanRequest extends FormRequest
     {
         return true;
     }
-          protected function prepareForValidation(): void
+    protected function prepareForValidation(): void
     {
         if ($this->has('status')) {
             $this->merge([
@@ -30,11 +30,11 @@ class UpdateUnitWorkPlanRequest extends FormRequest
     public function rules(): array
     {
         return [
-                //
+            //
             'unitworkplan_id'   => 'required|array',
             'unitworkplan_id.*' => 'required|exists:unitworkplans,id',
-            'status' => 'required|string',
-            'remarks'          => ['nullable', 'string', 'required_if:status,Returned'],
+            'status'           => ['required', 'string', 'in:Received Target,Reviewed Target,Returned Target', 'Received Accomplishment', 'Returned Accomplishment', 'Reviewed Accomplishment', 'Approved Target', 'Approved Accomplishment'],
+            'remarks'          => ['nullable', 'string', 'required_if:status,Returned Target', 'Returned Accomplishment'],
 
         ];
     }

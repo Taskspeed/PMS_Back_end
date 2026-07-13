@@ -32,8 +32,8 @@ class UpdateOpcrRequest extends FormRequest
         return [
             'office_opcr_id'   => 'required|array',
             'office_opcr_id.*' => 'required|exists:office_opcrs,id',
-            'status'    => 'required|string',
-            'remarks'          => ['nullable', 'string', 'required_if:status,Returned'],
+            'status'           => ['required', 'string', 'in:Received Target,Reviewed Target,Returned Target','Received Accomplishment','Returned Accomplishment','Reviewed Accomplishment','Approved Target','Approved Accomplishment'],
+             'remarks'          => ['nullable', 'string', 'required_if:status,Returned Target','Returned Accomplishment'],
         ];
     }
 }

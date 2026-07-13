@@ -64,8 +64,8 @@ class IpcrResource extends JsonResource
                     'control_no' => $period->control_no,
                     'year'      => $period->year,
                     'semester'  => $period->semester,
-                    'status'     => $latestRecord?->status,   // ✅ fixed swap
-                    'remarks'    => $latestRecord?->remarks,  // ✅ fixed swap
+                    'status'     => $latestRecord?->status,   
+                    'remarks'    => $latestRecord?->remarks,  
 
 
                     // performance standards with nested standard outcomes and monthly ratings
