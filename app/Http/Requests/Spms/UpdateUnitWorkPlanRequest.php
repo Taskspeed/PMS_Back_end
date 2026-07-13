@@ -13,6 +13,14 @@ class UpdateUnitWorkPlanRequest extends FormRequest
     {
         return true;
     }
+          protected function prepareForValidation(): void
+    {
+        if ($this->has('status')) {
+            $this->merge([
+                'status' => ucwords(strtolower($this->status)),
+            ]);
+        }
+    }
 
     /**
      * Get the validation rules that apply to the request.
@@ -26,7 +34,8 @@ class UpdateUnitWorkPlanRequest extends FormRequest
             'unitworkplan_id'   => 'required|array',
             'unitworkplan_id.*' => 'required|exists:unitworkplans,id',
             'status' => 'required|string',
-            'remarks' => 'nullable|string'
+            'remarks'          => ['nullable', 'string', 'required_if:status,Returned'],
+
         ];
     }
 }

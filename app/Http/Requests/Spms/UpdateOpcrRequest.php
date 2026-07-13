@@ -13,6 +13,14 @@ class UpdateOpcrRequest extends FormRequest
     {
         return true;
     }
+       protected function prepareForValidation(): void
+    {
+        if ($this->has('status')) {
+            $this->merge([
+                'status' => ucwords(strtolower($this->status)),
+            ]);
+        }
+    }
 
     /**
      * Get the validation rules that apply to the request.
@@ -22,10 +30,10 @@ class UpdateOpcrRequest extends FormRequest
     public function rules(): array
     {
         return [
-             'office_opcr_id'   => 'required|array',
+            'office_opcr_id'   => 'required|array',
             'office_opcr_id.*' => 'required|exists:office_opcrs,id',
             'status'    => 'required|string',
-            'remarks'   => 'nullable|string',
+            'remarks'          => ['nullable', 'string', 'required_if:status,Returned'],
         ];
     }
 }
