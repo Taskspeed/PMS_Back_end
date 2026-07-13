@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\performanceRatingStoreRequest;
 use App\Http\Requests\UploadAttachmentRatingRequest;
 use App\Http\Resources\TargetPeriodRatingResource;
+use App\Http\Resources\TargetPeriodRatingWeeksResource;
 use App\Models\PerformanceRating;
 use App\Models\TargetPeriod;
 use App\Services\PerformanceRatingService;
@@ -123,6 +124,18 @@ class EmployeeRatingController extends Controller
         return $this->successMessage( $attachment,'Attachment uploaded.',200);
 
 
+    }
+
+    //   //  get the target peroid rating
+    public function targetPeriodRatingWeek(int $targetPeriodId, $month = null, $year = null)
+    {
+        $data = $this->targetperiodService->getTargetPeriodRatingWeeks($targetPeriodId, $month, $year);
+
+        if (!$data) {
+            return $this->errorMessage('Target period not found.', 404);
+        }
+
+        return new TargetPeriodRatingWeeksResource($data,$month,$year);
     }
     
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\PerformanceRating;
+use App\Models\RatingWeek;
 use App\Models\TargetPeriod;
 use App\Models\TargetPeriodRecord;
 use App\Services\SupervisorService;
@@ -152,13 +153,23 @@ class SupervisorController extends Controller
     public function updatePerformanceRatingEmployee(Request $request)
     {
         $validatedData = $request->validate([
-            'performance_rating_id'   => 'required|array',
-            'performance_rating_id.*' => 'exists:performance_ratings,id',
-            'status'                  => 'required|string',
+            'ratings'                            => 'required|array',
+            'ratings.*.target_period_id'  => 'required|exists:target_periods,id',
+            'ratings.*.week'                     => 'required|string',
+            'ratings.*.status'                   => 'required|string',
         ]);
 
-        PerformanceRating::whereIn('id', $validatedData['performance_rating_id'])
-            ->update(['status' => $validatedData['status']]);
+        foreach ($validatedData['ratings'] as $rating) {
+            RatingWeek::updateOrCreate(
+                [
+                    'target_period_id' => $rating['target_period_id'],
+                    'week'                    => $rating['week'],
+                ],
+                [
+                    'status' => $rating['status'],
+                ]
+            );
+        }
 
         return $this->successMessage('Performance rating status updated successfully.');
     }

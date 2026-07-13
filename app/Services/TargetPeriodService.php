@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\OfficeOpcr;
 use App\Models\PerformanceRatingAttachment;
+use App\Models\RatingWeek;
 use App\Models\TargetPeriod;
 use App\Models\UnitWorkPlan;
 use Carbon\Carbon;
@@ -394,34 +395,163 @@ class TargetPeriodService
         return $weeks;
     }
 
-        // uploading attachment file
-        public function uploadAttachmentPerformanceRating(array $validatedData)
-        {
-            $file = $validatedData['file']; // UploadedFile instance from validated()
+    // uploading attachment file
+    public function uploadAttachmentPerformanceRating(array $validatedData)
+    {
+        $file = $validatedData['file']; // UploadedFile instance from validated()
 
-            $path = $file->store(
-                "spms/attachments/{$validatedData['year']}/{$validatedData['month']}/week{$validatedData['week_number']}",
-                'public'
-            );
+        $path = $file->store(
+            "spms/attachments/{$validatedData['year']}/{$validatedData['month']}/week{$validatedData['week_number']}",
+            'public'
+        );
 
-            $attachment = PerformanceRatingAttachment::updateOrCreate(
-                [
-                    'performance_standard_id' => $validatedData['performance_standard_id'],
-                    'week_number'             => $validatedData['week_number'],
-                    'month'                   => $validatedData['month'],
-                    'year'                    => $validatedData['year'],
-                ],
-                [
-                    'file_path'     => $path,
-                    'original_name' => $file->getClientOriginalName(),
-                ]
-            );
+        $attachment = PerformanceRatingAttachment::updateOrCreate(
+            [
+                'performance_standard_id' => $validatedData['performance_standard_id'],
+                'week_number'             => $validatedData['week_number'],
+                'month'                   => $validatedData['month'],
+                'year'                    => $validatedData['year'],
+            ],
+            [
+                'file_path'     => $path,
+                'original_name' => $file->getClientOriginalName(),
+            ]
+        );
 
-            $attachment->url = Storage::disk('public')->url($attachment->file_path);
+        $attachment->url = Storage::disk('public')->url($attachment->file_path);
 
-            return $attachment;
+        return $attachment;
+    }
+
+
+
+
+
+    // get the target period with standard and rating
+    public function getTargetPeriodRatingWeeks(int $targetPeriodId, $month = null, $year = null)
+    {
+        $targetPeriod = TargetPeriod::select('id')
+            ->where('id', $targetPeriodId)
+            ->with([
+                'performanceStandards' => function ($query) {
+                    $query->select(
+                        'id',
+                        'target_period_id',
+                        'category',
+                        'mfo',
+                        'output',
+                        'output_name',
+                        'performance_indicator',
+                        'success_indicator',
+                        'required_output',
+                    )
+                        ->with([
+                            'performanceRating' => function ($query) {
+                                $query->select(
+                                    'id',
+                                    'performance_standard_id',
+                                    'control_no',
+                                    'date',
+                                    'quantity_actual',
+                                    'effectiveness_actual',
+                                    'timeliness_actual',
+                                    'status'
+                                )->with(['dropdownRating']);
+                            },
+                            'configurations' => function ($query) {
+                                $query->select(
+                                    'id',
+                                    'performance_standard_id',
+                                    'target_output as targetOutput',
+                                    'quantity_indicator as quantityIndicator',
+                                    'timeliness_indicator as timelinessIndicator',
+                                    'timeliness_range as range',
+                                    'timeliness_date as date',
+                                    'timeliness_description as description'
+                                );
+                            }
+                        ]);
+                }
+            ])
+            ->first();
+
+        if (!$targetPeriod) {
+            return response()->json(['message' => 'Target period not found.'], 404);
         }
 
+        // bulk fetch rating weeks for ALL standards under this target period — avoids N+1
+        $standardIds = $targetPeriod->performanceStandards->pluck('id');
 
+        // bulk fetch rating weeks — now scoped by target_period_id, hindi na per performance_standard_id
+        $ratingWeeksByWeek = RatingWeek::select('id', 'target_period_id', 'week', 'status', 'updated_at')
+            ->where('target_period_id', $targetPeriodId)
+            ->get()
+            ->keyBy('week'); // e.g. "week1", "week2"...
+
+        if ($month && $year) {
+            $monthNumber = Carbon::createFromFormat('F', $month)->month;
+            $weeks       = $this->getWeeks($month, $year);
+
+            $ratingWeeksResult = [];
+
+            foreach ($weeks as $weekNumber => $range) {
+                [$dayStart, $dayEnd] = $range;
+
+                // hanapin lahat ng ratings sa lahat ng standards na nasa loob ng week na ito
+                $allRatingsInWeek = $targetPeriod->performanceStandards
+                    ->flatMap(fn($standard) => $standard->performanceRating)
+                    ->filter(function ($rating) use ($monthNumber, $year, $dayStart, $dayEnd) {
+                        try {
+                            $date = Carbon::parse($rating->date);
+                            return $date->month == $monthNumber
+                                && $date->year == $year
+                                && $date->day >= $dayStart
+                                && $date->day <= $dayEnd;
+                        } catch (\Exception $e) {
+                            return false;
+                        }
+                    })->values();
+
+                $ratingWeeksResult["week{$weekNumber}"] = [
+                    'ratings'     => $allRatingsInWeek,
+                    'rating_week' => $ratingWeeksByWeek->get("week{$weekNumber}"),
+                ];
+            }
+
+            // ilagay sa target period mismo, hindi na per standard
+            $targetPeriod->setAttribute('rating_weeks', collect($ratingWeeksResult));
+        }
+
+        return $targetPeriod;
+    }
+
+    // helper: returns week number => [dayStart, dayEnd] for the month
+    private function getWeeks($month, $year): array
+    {
+        $monthNumber  = Carbon::createFromFormat('F', $month)->month;
+        $startOfMonth = Carbon::createFromDate($year, $monthNumber, 1);
+        $endOfMonth   = $startOfMonth->copy()->endOfMonth();
+
+        $weeks      = [];
+        $weekNumber = 1;
+        $current    = $startOfMonth->copy();
+
+        while ($current->lte($endOfMonth)) {
+            $weekStart = $current->day;
+            $weekEnd   = min($current->copy()->endOfWeek(Carbon::SATURDAY)->day, $endOfMonth->day);
+
+            // handle month boundary — endOfWeek may spill into next month
+            if ($current->copy()->endOfWeek(Carbon::SATURDAY)->month > $monthNumber) {
+                $weekEnd = $endOfMonth->day;
+            }
+
+            $weeks[$weekNumber] = [$weekStart, $weekEnd];
+
+            $current->addDays($weekEnd - $weekStart + 1);
+            $weekNumber++;
+        }
+
+        return $weeks;
+    }
     //============================================================== ERMS =============================================================//
 }
