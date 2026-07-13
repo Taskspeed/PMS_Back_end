@@ -34,28 +34,29 @@ class IpcrResource extends JsonResource
             'office' => $this->office,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+          
 
             // target periods with nested performance standards
             'target_periods' => $this->targetPeriods->map(function ($period) {
                 $latestRecord = $period->ipcrLastestRecord;
 
-            // Received hr target
-             $targetRecord = collect($period->ipcrRecord)
-                    ->where('status', 'received')
+                // Received hr target
+                $targetRecord = collect($period->ipcrRecord)
+                    ->where('status', 'Received Target')
                     ->sortByDesc('id')
                     ->first();
 
-            // Received hr accomplishment
-            $accomplishmentRecord = collect($period->ipcrRecord)
-                ->where('status', 'Received_accomplishment')
-                ->sortByDesc('id')
-                ->first();
+                // Received hr accomplishment
+                $accomplishmentRecord = collect($period->ipcrRecord)
+                    ->where('status', 'Received_accomplishment')
+                    ->sortByDesc('id')
+                    ->first();
 
                 // calibrated
-             $calibratedRecord = collect($period->ipcrRecord)
-            ->where('status', 'Calibrated_target')
-            ->sortByDesc('id')
-            ->first();
+                $calibratedRecord = collect($period->ipcrRecord)
+                    ->where('status', 'Calibrated/Validated Target')
+                    ->sortByDesc('id')
+                    ->first();
 
 
                 return [
@@ -96,7 +97,7 @@ class IpcrResource extends JsonResource
 
                         ];
                     }),
-   'final_rating' => $this->final_rating ?? null,
+                    'final_rating' => $this->final_rating ?? null,
                     //  target 
                     'ipcr_target_record' => $targetRecord ? [
                         'id'           => $targetRecord->id,
@@ -138,10 +139,12 @@ class IpcrResource extends JsonResource
                         ] : null,
                         'date' => $targetRecord->date ?? null,
                     ] : null,
-                        // ← add this
-              
+                    // ← add this
+           
                 ];
-            })
+
+            }),
+             'signatories' => $this->signatories_resolved ?? null, 
         ];
     }
 }

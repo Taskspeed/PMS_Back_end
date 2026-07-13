@@ -23,12 +23,12 @@ class EmployeeController extends Controller
 
     // arg  data,message
 
-     protected EmployeeService $employeeService;
+    protected EmployeeService $employeeService;
 
-     public function __construct(EmployeeService $employeeService)
-     {
+    public function __construct(EmployeeService $employeeService)
+    {
         $this->employeeService = $employeeService;
-     }
+    }
 
 
     // add an employee on the plantilla structure
@@ -46,7 +46,7 @@ class EmployeeController extends Controller
         ]);
     }
 
-        // add an employee on the plantilla structure
+    // add an employee on the plantilla structure
     public function v1addEmployee(addEmployeeRequest $request)
     {
         $validated = $request->validated();
@@ -234,5 +234,41 @@ class EmployeeController extends Controller
         }
 
         return $this->successMessage($employee, 'Fetch employee successful');
+    }
+
+    // fetch list employee for signatories
+    public function getEmployeeListSignatories()
+    {
+        $user = Auth::user();
+
+        $officeId = $user->office_id;
+
+        $employees = Employee::select(
+            'ControlNo',
+            'name',
+            'rank',
+            'job_title','position','suffix','prefix'
+        )->where('office_id', $officeId)->where('job_title', '!=', 'Employee')
+            ->get();
+        return response()->json($employees);
+    }
+
+    // update employee title and suffix
+    public function updateEmployeeComponent(int $employeeId, Request $request)
+    {
+        $validatedData = $request->validate([
+            'suffix' => 'nullable|string',
+            'prefix' => 'nullable|string',
+        ]);
+
+        $employee = Employee::find($employeeId);
+
+        if (! $employee) {
+            return $this->errorMessage('Employee not found', 404);
+        }
+
+        $employee->update($validatedData);
+
+        return $this->successMessage($employee->fresh(), 'success update', 200);
     }
 }

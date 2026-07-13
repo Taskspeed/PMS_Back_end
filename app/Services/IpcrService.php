@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Http\Requests\AttendanceRequest;
+use App\Models\DocumentSignatory;
 use App\Models\Employee;
 use App\Models\Month;
 use App\Models\OfficeOpcr;
@@ -438,15 +439,68 @@ class IpcrService
 
                             // 'performanceStandards.standardOutcomes:performance_standard_id,rating,quantity_target as quantity,effectiveness_criteria as effectiveness,timeliness_range as timeliness',
 
-
                         ]); //
-                }
+                   
+                },
+                      'signatories' => function ($query) use($controlNo) {  // get the lastest record of the ipcr
+                                       $query->select(
+                                    'id',
+                                    'control_no',
+                                    'performance_standard_discussed_by_control_no',
+                                    'performance_standard_approved_by_control_no',
+                                    //ipcr
+                                    'ipcr_reviewed_by_control_no',
+                                    'ipcr_approved_by_control_no',
+                                    'ipcr_assessed_by_control_no',
+                                    'ipcr_final_rating_by_control_no',
+                                    //por
+                                    'por_confirmed_control_no',
+                                    'por_approved_final_rating_control_no'
+                                   )->where('control_no',$controlNo)->first();
+                             },
             ])
             ->first();
 
         if (! $employee) {
             return null;
         }
+ 
+// ── Resolve signatory control_nos into employee objects (ONCE, not per period) ──
+$signatoryFields = [
+    'performance_standard_discussed_by_control_no',
+    'performance_standard_approved_by_control_no',
+    'ipcr_reviewed_by_control_no',
+    'ipcr_approved_by_control_no',
+    'ipcr_assessed_by_control_no',
+    'ipcr_final_rating_by_control_no',
+    'por_confirmed_control_no',
+    'por_approved_final_rating_control_no',
+];
+
+if ($employee->signatories) {
+    $controlNos = collect($signatoryFields)
+        ->map(fn ($field) => $employee->signatories->{$field})
+        ->filter()
+        ->unique()
+        ->values();
+
+    $employeesByControlNo = Employee::select('ControlNo', 'name', 'rank', 'job_title','suffix','prefix')
+        ->whereIn('ControlNo', $controlNos)
+        ->get()
+        ->keyBy('ControlNo');
+
+    $resolved = [
+        'id' => $employee->signatories->id,
+        'control_no' => $employee->signatories->control_no,
+    ];
+
+    foreach ($signatoryFields as $field) {
+        $cn = $employee->signatories->{$field};
+        $resolved[$field] = $cn ? ($employeesByControlNo->get($cn) ?? null) : null;
+    }
+
+    $employee->setAttribute('signatories_resolved', $resolved);
+}
 
         $employee->targetPeriods->each(function ($period) {
             $period->performanceStandards->each(function ($standard) {
@@ -1098,5 +1152,64 @@ class IpcrService
             ->get();
 
         return $employee;
+    }
+
+    // document signatories
+    public function storeDocumentSignatories($validatedData){
+
+    $data = DocumentSignatory::updateOrCreate(
+        ['control_no' => $validatedData['control_no']],
+        $validatedData
+    );
+
+    return $data;
+
+    }
+
+     // signatories detail
+    public function viewDocumentSignatories(string $controlNo)
+    {
+        $data = DocumentSignatory::where('control_no', $controlNo)->first();
+
+        if (!$data) {
+            return $this->successMessage(null, 'no signatory found', 200);
+        }
+
+        // fields that hold a control_no needing resolution to employee details
+        $signatoryFields = [
+            'performance_standard_discussed_by_control_no',
+            'performance_standard_approved_by_control_no',
+            'ipcr_reviewed_by_control_no',
+            'ipcr_approved_by_control_no',
+            'ipcr_assessed_by_control_no',
+            'ipcr_final_rating_by_control_no',
+            'por_confirmed_control_no',
+            'por_approved_final_rating_control_no',
+        ];
+
+        // gather all control_nos we need to look up in one query (avoid N+1)
+        $controlNos = collect($signatoryFields)
+            ->map(fn($field) => $data->{$field})
+            ->filter()
+            ->unique()
+            ->values();
+
+        $employees = Employee::select('ControlNo', 'name', 'rank', 'job_title')
+            ->whereIn('ControlNo', $controlNos)
+            ->get()
+            ->keyBy('ControlNo');
+
+        // build the response, replacing each control_no with the employee object
+        $result = [
+            'id' => $data->id,
+            'control_no' => $data->control_no,
+        ];
+
+        foreach ($signatoryFields as $field) {
+            $cn = $data->{$field};
+            $result[$field] = $cn ? ($employees->get($cn) ?? null) : null;
+        }
+
+        return $result;
     }
 }

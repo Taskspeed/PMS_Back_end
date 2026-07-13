@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\office;
 
 use App\Http\Requests\AttendanceRequest;
-
+use App\Http\Requests\Library\DocumentSignatoryRequest;
 use App\Http\Resources\IpcrResource;
 
 use App\Http\Resources\MonthlyPerformanceResource;
 use App\Http\Resources\MonthlyPerformanceSummaryResource;
 use App\Http\Resources\Office\IpcrEmployeeResource;
+use App\Models\DocumentSignatory;
 use App\Models\Employee;
 use App\Models\PerformanceStandard;
 use App\Services\IpcrService;
@@ -25,7 +26,7 @@ class IpcrController extends BaseController
 
     public function __construct(IpcrService $ipcrService)
     {
-       $this->ipcrService = $ipcrService;
+        $this->ipcrService = $ipcrService;
     }
 
     public function getIpcrEmployee(string $controlNo, int $year, string $semester)
@@ -133,7 +134,8 @@ class IpcrController extends BaseController
     }
 
     // list of ipcr need to approve  of the Department Head
-    public function listIpcr(Request $request){
+    public function listIpcr(Request $request)
+    {
 
         $authUser = Auth::user();
 
@@ -142,8 +144,25 @@ class IpcrController extends BaseController
 
         $data = $this->ipcrService->ipcr($semester, $year, $authUser);
 
-       return $this->successMessage(IpcrEmployeeResource::collection($data),'Successfully fetched',);
+        return $this->successMessage(IpcrEmployeeResource::collection($data), 'Successfully fetched',);
     }
-    
-   
+
+    // signatories
+    public function storeDocumentSignatories(DocumentSignatoryRequest $request)
+    {
+
+        $validatedData = $request->validated();
+
+        $data = $this->ipcrService->storeDocumentSignatories($validatedData);
+
+        return $this->successMessage($data, 'success created', 200);
+    }
+
+    // signatories detail
+    public function viewDocumentSignatories(string $controlNo)
+    {
+       $data = $this->ipcrService->viewDocumentSignatories($controlNo);
+
+        return $this->successMessage($data, 'success fetch', 200);
+    }
 }
