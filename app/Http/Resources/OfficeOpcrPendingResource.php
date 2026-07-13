@@ -31,18 +31,8 @@ class OfficeOpcrPendingResource extends JsonResource
             ? \Carbon\Carbon::parse($latestRecord->date)->format('F d, Y') 
             : null,
             'status'      => $latestRecord?->status,
-            'office_head_name' => $officeHead->name,
-            'control_no' => $officeHead->ControlNo,
-            // 'target_period_id'    => $targetPeriod->id,
-            //     'control_no' => $targetPeriod->control_no,
-            // 'target_period_semester' => $targetPeriod->semester,
-            // 'target_period_year' => $targetPeriod->year,
-            // 'target_period'    => $targetPeriod ? [
-            //     'target_period_id'    => $targetPeriod->id,
-            //     'control_no' => $targetPeriod->control_no,
-            //     'semester' => $targetPeriod->semester,
-            //     'year' => $targetPeriod->year,
-            // ] : null,
+            'office_head_name' => $officeHead?->name ?? 'Department Head not found',
+            'control_no'       => $officeHead?->ControlNo ?? null,
 
         ];
     }
