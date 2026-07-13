@@ -131,7 +131,7 @@ class OpcrService
             ->where('semester', $semester)
             ->where('year', $year)
             ->whereHas('officeOpcrRecordLastestRecord', function ($query) {
-                $query->whereIn('status', ['Received Target','Reviewed Target','Returned Target','Received']);
+                $query->whereIn('status', ['Received Target','Reviewed Target','Returned Target',]);
             })->get();
 
         return $data;

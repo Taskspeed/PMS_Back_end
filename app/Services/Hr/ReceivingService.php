@@ -90,7 +90,7 @@ class ReceivingService
             ->where('year', $year)
             ->when($office, fn($q) => $q->where('office_name', $office))
             ->whereHas('unitworkplanLastestRecord', function ($query) {
-                 $query->whereIn('status', ['Draft','Received Target']);
+                 $query->whereIn('status', ['Draft','Received Target',]);
             })
             ->with('unitworkplanLastestRecord')
             ->get()

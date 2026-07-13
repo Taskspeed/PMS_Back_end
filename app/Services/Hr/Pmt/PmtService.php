@@ -42,21 +42,21 @@ class PmtService
             ->whereNotIn('status', ['CONTRACTUAL', 'JOB ORDER'])
             ->when($office, fn($q) => $q->where('office', $office))
 
-          // ✅ Filter: only employees who have an Approved target period for this semester/year
+          //Filter: only employees who have an Approved target period for this semester/year
             ->whereHas('targetPeriods', function ($query) use ($year, $semester) {
                 $query->where('year', $year)
                     ->where('semester', $semester)
                     ->whereHas('ipcrLastestRecord', function ($q) {
-                        $q->where('status','Reviewed Target'); // ✅ fix typo: was 'Aprroved'
+                    $q->whereIn('status',['Received Target','Reviewed Target']);
                     });
             })
 
-            // ✅ Eager load the matching target period with its latest record
+            // Eager load the matching target period with its latest record
             ->with(['targetPeriods' => function ($query) use ($year, $semester) {
                 $query->select('id', 'control_no', 'year', 'semester')
                     ->where('year', $year)
                     ->where('semester', $semester)
-                    ->with('ipcrLastestRecord'); // ✅ load latest record on the period
+                    ->with('ipcrLastestRecord'); //load latest record on the period
             }])
             ->get();
 
@@ -76,7 +76,7 @@ class PmtService
                 'job_title'   => $item->job_title,
                 'position'    => $item->position,
                 'emp_status'  => $item->status,
-                'ipcr_id' => $latestRecord?->id, 
+                'ipcr_id' =>    $ipcr->id, 
                 'ipcr_status' => $latestRecord?->status, 
                 'year'        => $ipcr?->year,
                 'semester'    => $ipcr?->semester,
