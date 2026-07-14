@@ -32,8 +32,11 @@ class UpdateIpcrRequest extends FormRequest
         return [
             'ipcr_id'   => 'required|array',
             'ipcr_id.*' => 'required|exists:target_periods,id',
-            'status'           => ['required', 'string', 'in:Received Target,Reviewed Target,Returned Target','Received Accomplishment','Returned Accomplishment','Reviewed Accomplishment','Approved Target','Approved Accomplishment'],
-            'remarks'          => ['nullable', 'string', 'required_if:status,Returned Target','Returned Accomplishment'],
+                'status' => [
+                    'required',
+                    'string',
+                    'in:Received Target,Reviewed Target,Returned Target,Received Accomplishment,Returned Accomplishment,Reviewed Accomplishment,Approved Target,Approved Accomplishment,Discussed Target',
+                ],            'remarks'          => ['nullable', 'string', 'required_if:status,Returned Target','Returned Accomplishment'],
 
         ];
     }

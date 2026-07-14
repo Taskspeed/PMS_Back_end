@@ -33,7 +33,7 @@ class UpdateUnitWorkPlanRequest extends FormRequest
             //
             'unitworkplan_id'   => 'required|array',
             'unitworkplan_id.*' => 'required|exists:unitworkplans,id',
-            'status'           => ['required', 'string', 'in:Received Target,Reviewed Target,Returned Target', 'Received Accomplishment', 'Returned Accomplishment', 'Reviewed Accomplishment', 'Approved Target', 'Approved Accomplishment'],
+            'status'           => ['required', 'string', 'in:Received Target,Reviewed Target,Returned Target, Received Accomplishment, Returned Accomplishment, Reviewed Accomplishment, Approved Target, Approved Accomplishment'],
             'remarks'          => ['nullable', 'string', 'required_if:status,Returned Target', 'Returned Accomplishment'],
 
         ];
