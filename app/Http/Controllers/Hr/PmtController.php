@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Hr;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\OfficeOpcrPendingResource;
 use App\Models\Employee;
 use App\Models\EmployeeStatus;
 use App\Models\User;
@@ -10,11 +11,11 @@ use App\Models\vwActive;
 use App\Services\Hr\Pmt\PmtService;
 use App\Traits\ApiResponseTrait;
 use Exception;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Routing\Controller as BaseController;
 
 class PmtController extends BaseController
 {
@@ -73,4 +74,25 @@ class PmtController extends BaseController
             return $this->errorMessage($e->getMessage());
        }
     }
+
+          //list of the opcr draft
+        // Controller
+        public function listOfOpcrPmt(string $semester, int $year)
+        {
+            try {
+                $result = $this->pmtService->opcr($semester, $year, $this->user);
+            } catch (\Exception $e) {
+                return $this->infoMessage($e->getMessage(), 200);
+            }
+
+            if ($result->isEmpty()) {
+                return $this->infoMessage('No records found', 200);
+            }
+
+            return $this->successMessage(
+                OfficeOpcrPendingResource::collection($result),
+                'Successfully fetched',
+                200
+            );
+        }
 }
