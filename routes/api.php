@@ -342,6 +342,7 @@ Route::middleware('auth:sanctum')->group(function () {
     */
 
     Route::prefix('pmt')->group(function () {
+        Route::get('/opcr/{semester}/{year}',             [PmtController::class, 'listOfOpcrPmt']);
         Route::get('/office',           [PmtController::class, 'office']);
         Route::get('/ipcr',             [PmtController::class, 'listOfEmployeeIpcr']);
         Route::get('/office-employee',  [PmtController::class, 'getOfficeEmployeePmt']);
