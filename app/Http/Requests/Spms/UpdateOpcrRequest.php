@@ -13,11 +13,11 @@ class UpdateOpcrRequest extends FormRequest
     {
         return true;
     }
-       protected function prepareForValidation(): void
+    protected function prepareForValidation(): void
     {
         if ($this->has('status')) {
             $this->merge([
-                'status' => ucwords(strtolower($this->status)),
+                'status' => ucwords(strtolower($this->status), " \t\r\n\f\v/"),
             ]);
         }
     }
@@ -32,7 +32,7 @@ class UpdateOpcrRequest extends FormRequest
         return [
             'office_opcr_id'   => 'required|array',
             'office_opcr_id.*' => 'required|exists:office_opcrs,id',
-            'status'           => ['required', 'string', 'in:Received Target,Reviewed Target,Returned Target,Received Accomplishment,Returned Accomplishment,Reviewed Accomplishment,Approved Target,Approved Accomplishment'],
+            'status'           => ['required', 'string', 'in:Received Target,Reviewed Target,Returned Target,Received Accomplishment,Returned Accomplishment,Reviewed Accomplishment,Approved Target,Approved Accomplishment,Calibrated/Validated Target'],
              'remarks'          => ['nullable', 'string', 'required_if:status,Returned Target','Returned Accomplishment'],
         ];
     }
