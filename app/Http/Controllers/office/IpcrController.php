@@ -161,7 +161,11 @@ class IpcrController extends BaseController
     // signatories detail
     public function viewDocumentSignatories(string $controlNo)
     {
-       $data = $this->ipcrService->viewDocumentSignatories($controlNo);
+        $data = $this->ipcrService->viewDocumentSignatories($controlNo);
+        
+        if (!$data) {
+            return $this->successMessage(null, 'no signatory found', 200);
+        }
 
         return $this->successMessage($data, 'success fetch', 200);
     }
