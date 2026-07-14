@@ -359,13 +359,13 @@ class IpcrService
         $finalRating = round($strategicWeighted + $coreWeighted + $supportWeighted, 2);
 
         // Adjectival rating based on final rating
-        $adjectivalRating = match(true) {
+        $adjectivalRating = match (true) {
             $finalRating >= 5 => 'Outstanding',
             $finalRating >= 4 => 'Very Satisfactory',
             $finalRating >= 3 => 'Satisfactory',
             $finalRating >= 2 => 'Unsatisfactory',
             $finalRating >= 1         => 'Poor',
-               default => 'Pending rating',
+            default => 'Pending rating',
         };
 
         $averageRating = [
@@ -410,9 +410,10 @@ class IpcrService
                                     'targetperiod_records.processed_by',
                                     'targetperiod_records.date',
                                     'targetperiod_records.created_at',
-                                )->where('status', 'Received')->with(['processedBy' => function ($q) {
-                                    $q->select('id', 'name', 'prefix', 'suffix', 'designation');  // only what you need
-                                }]);;
+                                );
+                                // ->where('status', 'Received')->with(['processedBy' => function ($q) {
+                                //     $q->select('id', 'name', 'prefix', 'suffix', 'designation');  // only what you need
+                                // }]);;
                             },
                             'performanceStandards.performanceRating' => function ($query) {
                                 $query->select(
@@ -440,72 +441,72 @@ class IpcrService
                             // 'performanceStandards.standardOutcomes:performance_standard_id,rating,quantity_target as quantity,effectiveness_criteria as effectiveness,timeliness_range as timeliness',
 
                         ]); //
-                   
+
                 },
-                      'signatories' => function ($query) use($controlNo) {  // get the lastest record of the ipcr
-                                       $query->select(
-                                    'id',
-                                    'control_no',
-                                    'performance_standard_discussed_by_control_no',
-                                    'performance_standard_approved_by_control_no',
-                                    //ipcr
-                                    'ipcr_reviewed_by_control_no',
-                                    'ipcr_approved_by_control_no',
-                                    'ipcr_assessed_by_control_no',
-                                    'ipcr_final_rating_by_control_no',
-                                    //por
-                                    'por_confirmed_control_no',
-                                    'por_approved_final_rating_control_no'
-                                   )->where('control_no',$controlNo)->first();
-                             },
+                'signatories' => function ($query) use ($controlNo) {  // get the lastest record of the ipcr
+                    $query->select(
+                        'id',
+                        'control_no',
+                        'performance_standard_discussed_by_control_no',
+                        'performance_standard_approved_by_control_no',
+                        //ipcr
+                        'ipcr_reviewed_by_control_no',
+                        'ipcr_approved_by_control_no',
+                        'ipcr_assessed_by_control_no',
+                        'ipcr_final_rating_by_control_no',
+                        //por
+                        'por_confirmed_control_no',
+                        'por_approved_final_rating_control_no'
+                    )->where('control_no', $controlNo)->first();
+                },
             ])
             ->first();
 
         if (! $employee) {
             return null;
         }
- 
-// ── Resolve signatory control_nos into employee objects (ONCE, not per period) ──
-$signatoryFields = [
-    'performance_standard_discussed_by_control_no',
-    'performance_standard_approved_by_control_no',
-    'ipcr_reviewed_by_control_no',
-    'ipcr_approved_by_control_no',
-    'ipcr_assessed_by_control_no',
-    'ipcr_final_rating_by_control_no',
-    'por_confirmed_control_no',
-    'por_approved_final_rating_control_no',
-];
 
-if ($employee->signatories) {
-    $controlNos = collect($signatoryFields)
-        ->map(fn ($field) => $employee->signatories->{$field})
-        ->filter()
-        ->unique()
-        ->values();
+        // ── Resolve signatory control_nos into employee objects (ONCE, not per period) ──
+        $signatoryFields = [
+            'performance_standard_discussed_by_control_no',
+            'performance_standard_approved_by_control_no',
+            'ipcr_reviewed_by_control_no',
+            'ipcr_approved_by_control_no',
+            'ipcr_assessed_by_control_no',
+            'ipcr_final_rating_by_control_no',
+            'por_confirmed_control_no',
+            'por_approved_final_rating_control_no',
+        ];
 
-    $employeesByControlNo = Employee::select('ControlNo', 'name', 'rank', 'job_title','suffix','prefix')
-        ->whereIn('ControlNo', $controlNos)
-        ->get()
-        ->keyBy('ControlNo');
+        if ($employee->signatories) {
+            $controlNos = collect($signatoryFields)
+                ->map(fn($field) => $employee->signatories->{$field})
+                ->filter()
+                ->unique()
+                ->values();
 
-    $resolved = [
-        'id' => $employee->signatories->id,
-        'control_no' => $employee->signatories->control_no,
-    ];
+            $employeesByControlNo = Employee::select('ControlNo', 'name', 'rank', 'job_title', 'suffix', 'prefix')
+                ->whereIn('ControlNo', $controlNos)
+                ->get()
+                ->keyBy('ControlNo');
 
-    foreach ($signatoryFields as $field) {
-        $cn = $employee->signatories->{$field};
-        $resolved[$field] = $cn ? ($employeesByControlNo->get($cn) ?? null) : null;
-    }
+            $resolved = [
+                'id' => $employee->signatories->id,
+                'control_no' => $employee->signatories->control_no,
+            ];
 
-    $employee->setAttribute('signatories_resolved', $resolved);
-}
+            foreach ($signatoryFields as $field) {
+                $cn = $employee->signatories->{$field};
+                $resolved[$field] = $cn ? ($employeesByControlNo->get($cn) ?? null) : null;
+            }
+
+            $employee->setAttribute('signatories_resolved', $resolved);
+        }
 
         $employee->targetPeriods->each(function ($period) {
             $period->performanceStandards->each(function ($standard) {
 
-            
+
                 $monthly = $this->groupRatingsByMonthlySummary(
                     $standard->performanceRating
                 );
@@ -548,61 +549,61 @@ if ($employee->signatories) {
                 $standard->makeHidden('performanceRating');
             });
         });
-                    // ─── Add final rating computation ───────────────────────────────────────
-            $categoryRatings = [
-                'core'    => ['sum' => 0, 'count' => 0],
-                'support' => ['sum' => 0, 'count' => 0],
-            ];
+        // ─── Add final rating computation ───────────────────────────────────────
+        $categoryRatings = [
+            'core'    => ['sum' => 0, 'count' => 0],
+            'support' => ['sum' => 0, 'count' => 0],
+        ];
 
-             foreach ($employee->targetPeriods as $period) {
-        foreach ($period->performanceStandards as $standard) {
-            if (is_null($standard->ratings)) continue;
+        foreach ($employee->targetPeriods as $period) {
+            foreach ($period->performanceStandards as $standard) {
+                if (is_null($standard->ratings)) continue;
 
-            $category = strtoupper($standard->category ?? '');
-            $avgRating = $standard->ratings['average_rating'] ?? 0;
+                $category = strtoupper($standard->category ?? '');
+                $avgRating = $standard->ratings['average_rating'] ?? 0;
 
-            if (str_contains($category, 'CORE')) {
-                $categoryRatings['core']['sum']   += $avgRating;
-                $categoryRatings['core']['count'] += 1;
-            } elseif (str_contains($category, 'SUPPORT')) {
-                $categoryRatings['support']['sum']   += $avgRating;
-                $categoryRatings['support']['count'] += 1;
+                if (str_contains($category, 'CORE')) {
+                    $categoryRatings['core']['sum']   += $avgRating;
+                    $categoryRatings['core']['count'] += 1;
+                } elseif (str_contains($category, 'SUPPORT')) {
+                    $categoryRatings['support']['sum']   += $avgRating;
+                    $categoryRatings['support']['count'] += 1;
+                }
             }
         }
-    }
 
-    $coreAvg = $categoryRatings['core']['count'] > 0
-        ? round($categoryRatings['core']['sum'] / $categoryRatings['core']['count'], 2)
-        : 0;
+        $coreAvg = $categoryRatings['core']['count'] > 0
+            ? round($categoryRatings['core']['sum'] / $categoryRatings['core']['count'], 2)
+            : 0;
 
-    $supportAvg = $categoryRatings['support']['count'] > 0
-        ? round($categoryRatings['support']['sum'] / $categoryRatings['support']['count'], 2)
-        : 0;
+        $supportAvg = $categoryRatings['support']['count'] > 0
+            ? round($categoryRatings['support']['sum'] / $categoryRatings['support']['count'], 2)
+            : 0;
 
-    $coreWeighted    = $categoryRatings['core']['count'] > 0;
-    $supportWeighted = $categoryRatings['support']['count'] > 0;
-
-  
-    $coreWeighted    = round($coreAvg    * 0.8, 2);
-    $supportWeighted = round($supportAvg * 0.2, 2);
+        $coreWeighted    = $categoryRatings['core']['count'] > 0;
+        $supportWeighted = $categoryRatings['support']['count'] > 0;
 
 
-    $finalRating = round($coreWeighted + $supportWeighted, 2);
+        $coreWeighted    = round($coreAvg    * 0.8, 2);
+        $supportWeighted = round($supportAvg * 0.2, 2);
 
-    $adjectivalRating = match(true) {
-        $finalRating >= 4.5 => 'Outstanding',
-        $finalRating >= 3.5 => 'Very Satisfactory',
-        $finalRating >= 2.5 => 'Satisfactory',
-        $finalRating >= 1.5 => 'Unsatisfactory',
-        default             => 'Poor',
-    };
 
-    $employee->final_rating = [
-        'core_functions'    => $coreWeighted,
-        'support_functions' => $supportWeighted,
-        'final_rating'      => $finalRating,
-        'adjectival_rating' => $adjectivalRating,
-    ];
+        $finalRating = round($coreWeighted + $supportWeighted, 2);
+
+        $adjectivalRating = match (true) {
+            $finalRating >= 4.5 => 'Outstanding',
+            $finalRating >= 3.5 => 'Very Satisfactory',
+            $finalRating >= 2.5 => 'Satisfactory',
+            $finalRating >= 1.5 => 'Unsatisfactory',
+            default             => 'Poor',
+        };
+
+        $employee->final_rating = [
+            'core_functions'    => $coreWeighted,
+            'support_functions' => $supportWeighted,
+            'final_rating'      => $finalRating,
+            'adjectival_rating' => $adjectivalRating,
+        ];
         // ────────────────────────────────────────────────────────────────────────
 
         return $employee;
@@ -1111,7 +1112,7 @@ if ($employee->signatories) {
     {
         $employee = Employee::select('id', 'ControlNo', 'name', 'office', 'job_title', 'office_id')
             ->where('office_id', $authUser->office_id)
-               ->where('job_title', '!=', 'Department Head') // <-- exclude Department Head
+            ->where('job_title', '!=', 'Department Head') // <-- exclude Department Head
             ->where(function ($query) use ($semester, $year) {
                 // if job_title is NOT Employee, fetch only if ipcrLastestRecord status is 'Draft'
                 $query->where(function ($query) use ($semester, $year) {
@@ -1155,24 +1156,24 @@ if ($employee->signatories) {
     }
 
     // document signatories
-    public function storeDocumentSignatories($validatedData){
+    public function storeDocumentSignatories($validatedData)
+    {
 
-    $data = DocumentSignatory::updateOrCreate(
-        ['control_no' => $validatedData['control_no']],
-        $validatedData
-    );
+        $data = DocumentSignatory::updateOrCreate(
+            ['control_no' => $validatedData['control_no']],
+            $validatedData
+        );
 
-    return $data;
-
+        return $data;
     }
 
-     // signatories detail
+    // signatories detail
     public function viewDocumentSignatories(string $controlNo)
     {
         $data = DocumentSignatory::where('control_no', $controlNo)->first();
 
         if (!$data) {
-            return $this->successMessage(null, 'no signatory found', 200);
+            return null; // or throw a NotFoundException if you want the controller to catch it
         }
 
         // fields that hold a control_no needing resolution to employee details
