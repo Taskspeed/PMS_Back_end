@@ -135,7 +135,7 @@ class QpefController extends Controller
     public function updateQpef(int $qpefId, Request $request)
     {
         $validatedData = $request->validate([
-            'status' => 'required|string|in:Returned,Received',
+            'status' => 'required|string|in:Returned,Received,Approved',
         ]);
 
         $qpef = Qpef::find($qpefId);

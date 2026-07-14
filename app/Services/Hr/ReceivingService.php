@@ -122,7 +122,7 @@ class ReceivingService
     public function qpef()
     {
         $data = Qpef::select('id', 'control_no', 'quarterly', 'year', 'status', 'created_at')
-            ->whereIn('status', ['Pending','Returned'])
+            ->whereIn('status', ['Pending','Returned','Received'])
             ->get();
 
         // Batch-fetch employees for all control numbers in one query
