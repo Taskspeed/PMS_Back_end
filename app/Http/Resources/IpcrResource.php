@@ -48,7 +48,7 @@ class IpcrResource extends JsonResource
 
                 // Received hr accomplishment
                 $accomplishmentRecord = collect($period->ipcrRecord)
-                    ->where('status', 'Received_accomplishment')
+                    ->where('status', 'Received Accomplishment')
                     ->sortByDesc('id')
                     ->first();
 
@@ -99,7 +99,7 @@ class IpcrResource extends JsonResource
                     }),
                     'final_rating' => $this->final_rating ?? null,
                     //  target 
-                    'ipcr_target_record' => $targetRecord ? [
+                    'ipcr_target_received_signature' => $targetRecord ? [
                         'id'           => $targetRecord->id,
                         'status'       => $targetRecord->status,
                         'remarks'      => $targetRecord->remarks,
@@ -113,7 +113,7 @@ class IpcrResource extends JsonResource
                         'date' => $targetRecord->date ?? null,
                     ] : null,
 
-                    'ipcr_accomplishment_record' => $accomplishmentRecord ? [
+                    'ipcr_accomplish_received_signature' => $accomplishmentRecord ? [
                         'id'                => $accomplishmentRecord->id,
                         'status'            => $accomplishmentRecord->status,
                         'remarks'           => $accomplishmentRecord->remarks,
@@ -127,7 +127,7 @@ class IpcrResource extends JsonResource
                         'date' => $targetRecord->date ?? null,
                     ] : null,
 
-                    'ipcr_calibrated_record' => $calibratedRecord ? [
+                    'ipcr_pmt_calibrated_signature' => $calibratedRecord ? [
                         'id'                => $calibratedRecord->id,
                         'status'            => $calibratedRecord->status,
                         'remarks'           => $calibratedRecord->remarks,
