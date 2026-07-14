@@ -60,20 +60,21 @@ class DashboardController extends Controller
 
         $ipcr_data = [
             'ipcr' => [
+                // todo: dashboard
                 // target
                 'Validated_target'  => (int) $ipcr_status->get('Validated target', 0),
                 'Calibrated_target'  => (int) $ipcr_status->get('Calibrated target', 0),
-                'Approved' => (int) $ipcr_status->get('approved', 0),
-                'Reviewed' => (int) $ipcr_status->get('reviewed', 0),
-                'Draft'    => (int) $ipcr_status->get('draft', 0),
+                'Approved Target' => (int) $ipcr_status->get('Approved Target', 0),
+                'Reviewed Target' => (int) $ipcr_status->get('Reviewed Target', 0),
+                'Received Target'  => (int) $ipcr_status->get('Received Target', 0),
+                'Discussed Target'  => (int) $ipcr_status->get('Discussed Target', 0),
+                'Draft'    => (int) $ipcr_status->get('Draft', 0),
 
                 // accomplishment
                 'Validated_accomplishment'  => (int) $ipcr_status->get('Validated accomplishment', 0),
                 'Calibrated_accomplishment' => (int) $ipcr_status->get('Calibrated accomplishment', 0),
                 'Pre_validation'    => (int) $ipcr_status->get('Pre validation', 0),
                 'In_Progress' => (int) $ipcr_status->get('In Progress', 0),
-
-
                 'total_ipcr' => (int) $ipcr_status->sum(),
             ]
         ];
