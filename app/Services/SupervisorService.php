@@ -17,19 +17,7 @@ class SupervisorService
     // }
     public function getListOfEmployeeBaseOnSupervisor($year, $semester, $controlNo, $user)
     {
-        // $user = Auth::user();
 
-        // if ($user->role_id != 4) {
-        //     return response()->json([
-        //         'message' => 'Unauthorized. Access restricted to authorized person only.'
-        //     ], 403);
-        // }
-
-        // $year      = $request->input('year');
-        // $semester  = $request->input('semester');
-        // $controlNo = $user->control_no;
-
-        // if (!$controlNo) return response()->json([]);
         if (!$controlNo) return null;  // or throw an exception
 
         // ── Fetch the logged-in supervisor's own employee record ──────────────────
@@ -50,6 +38,10 @@ class SupervisorService
             'sg',
             'level'
         )
+            ->where('ControlNo', $controlNo)
+            ->first();
+
+        $userStruture = Employee::select('ControlNo', 'job_title', 'office', 'office2', 'group', 'division', 'section', 'unit')
             ->where('ControlNo', $controlNo)
             ->first();
 
@@ -116,7 +108,8 @@ class SupervisorService
         $structureData = json_decode($structure->getContent(), true);
 
         // Get subordinates list (same node employees)
-        $employees = $this->findEmployeesSameNode($structureData, $controlNo);
+        // $employees = $this->findEmployeesSameNode($structureData, $controlNo);
+        $employees = $this->fetchEmployeesUnderStructure($userStruture);
 
         // Safely extract control numbers
         $employeeControlNos = collect($employees)->map(function ($employee) {
@@ -286,91 +279,23 @@ class SupervisorService
             ->values()
             ->all();
     }
-    /**
-     * Walk the structure tree and return the hierarchy labels
-     * for the node where the given controlNo lives.
-     */
-    private function findEmployeeHierarchy(array $structure, string $controlNo): array
+
+
+    private function fetchEmployeesUnderStructure($userStruture)
     {
-        foreach ($structure as $officeData) {
+        $query = Employee::query()->where('office', $userStruture->office);
 
-            // Office-level
-            if ($this->controlNoExistsIn($officeData['employees'], $controlNo)) {
-                return $this->buildHierarchyResult($officeData['office'], null, null, null, null, null);
-            }
-
-            foreach ($officeData['office2'] as $office2Data) {
-
-                // Office2-level
-                if ($this->controlNoExistsIn($office2Data['employees'], $controlNo)) {
-                    return $this->buildHierarchyResult($officeData['office'], $office2Data['office2'], null, null, null, null);
-                }
-
-                foreach ($office2Data['groups'] as $groupData) {
-
-                    // Group-level
-                    if ($this->controlNoExistsIn($groupData['employees'], $controlNo)) {
-                        return $this->buildHierarchyResult($officeData['office'], $office2Data['office2'], $groupData['group'], null, null, null);
-                    }
-
-                    foreach ($groupData['divisions'] as $divisionData) {
-
-                        // Division-level
-                        if ($this->controlNoExistsIn($divisionData['employees'], $controlNo)) {
-                            return $this->buildHierarchyResult($officeData['office'], $office2Data['office2'], $groupData['group'], $divisionData['division'], null, null);
-                        }
-
-                        foreach ($divisionData['sections'] as $sectionData) {
-
-                            // Section-level
-                            if ($this->controlNoExistsIn($sectionData['employees'], $controlNo)) {
-                                return $this->buildHierarchyResult($officeData['office'], $office2Data['office2'], $groupData['group'], $divisionData['division'], $sectionData['section'], null);
-                            }
-
-                            foreach ($sectionData['units'] as $unitData) {
-
-                                // Unit-level
-                                if ($this->controlNoExistsIn($unitData['employees'], $controlNo)) {
-                                    return $this->buildHierarchyResult($officeData['office'], $office2Data['office2'], $groupData['group'], $divisionData['division'], $sectionData['section'], $unitData['unit']);
-                                }
-                            }
-                        }
-                    }
-                }
+        foreach (['office2', 'group', 'division', 'section', 'unit'] as $level) {
+            if (!is_null($userStruture->$level)) {
+                $query->where($level, $userStruture->$level);
             }
         }
 
-        return ['hierarchy' => null];
+        return $query->get()
+            ->reject(fn($e) => $e->ControlNo === $userStruture->ControlNo)
+            ->filter(fn($e) => in_array(strtoupper($e->status ?? ''), ['CASUAL', 'HONORARIUM', 'CONTRACTUAL', 'JOB ORDER', 'REGULAR', 'CO-TERMINOUS']))
+            ->values();
     }
-
-    /**
-     * Build the hierarchy array shape matching your expected response.
-     */
-    private function buildHierarchyResult(?string $office, ?string $office2, ?string $group, ?string $division, ?string $section, ?string $unit): array
-    {
-        return [
-            'hierarchy' => [
-                'office'   => $office   ? ['label' => $office,   'type' => 'office']   : null,
-                'office2'  => $office2  ? ['label' => $office2,  'type' => 'office2']  : null,
-                'group'    => $group    ? ['label' => $group,    'type' => 'group']    : null,
-                'division' => $division ? ['label' => $division, 'type' => 'division'] : null,
-                'section'  => $section  ? ['label' => $section,  'type' => 'section']  : null,
-                'unit'     => $unit     ? ['label' => $unit,     'type' => 'unit']     : null,
-            ],
-            // carry these for signatory resolution
-            '_office'   => $office,
-            '_office2'  => $office2,
-            '_group'    => $group,
-            '_division' => $division,
-            '_section'  => $section,
-            '_unit'     => $unit,
-        ];
-    }
-
-    /**
-     * Build hierarchy labels directly from the employee's own DB columns.
-     * This is accurate regardless of where they appear in the structure tree.
-     */
     private function buildHierarchyFromEmployee(Employee $employee): array
     {
         return [

@@ -17,8 +17,8 @@ class SpmsController extends BaseController
 {
 
 
-    protected ? Authenticatable $user = null;
-    protected ? int $officeId = null;
+    protected ?Authenticatable $user = null;
+    protected ?int $officeId = null;
 
     public function __construct()
     {
@@ -101,6 +101,8 @@ class SpmsController extends BaseController
 
         return response()->json($targetPeriods);
     }
+
+
 
 
     // get the employee base on the employee
@@ -291,144 +293,144 @@ class SpmsController extends BaseController
         $user = Auth::user();
         $controlNo = $user->control_no;
 
-        if (!$controlNo) return response()->json([]);
+        $userStruture = Employee::select('ControlNo', 'job_title', 'office', 'office2', 'group', 'division', 'section', 'unit')
+            ->where('ControlNo', $controlNo)
+            ->first();
 
-        // Get the full office structure
-        $structure = $this->getStructureOffice();
-        $structureData = json_decode($structure->getContent(), true);
+        if (!$userStruture) {
+            return response()->json([
+                'message' => 'No employee record found for the current user.',
+            ], 404);
+        }
 
-        // Search through the structure to find where this controlNo belongs
-        $employees = $this->findEmployeesSameNode($structureData, $controlNo);
+        $employees = $this->fetchEmployeesUnderStructure($userStruture);
 
         $department_office = Employee::select('id', 'name', 'rank', 'ControlNo', 'position', 'office', 'status', 'job_title')
             ->where('office_id', $user->office_id)
             ->where('job_title', 'Department Head')
             ->first();
 
-        // Safely extract control numbers — handle both array key formats
-        $employeeControlNos = collect($employees)->map(function ($employee) {
-            // Try all possible key formats
-            if (is_array($employee)) {
-                return $employee['ControlNo']
-                    ?? $employee['control_no']
-                    ?? $employee['controlNo']
-                    ?? null;
-            }
-            // If it's an object
-            return $employee->ControlNo
-                ?? $employee->control_no
-                ?? null;
-        })->filter()->values();
+        $employeeControlNos = $employees->pluck('ControlNo')->filter()->values();
 
-        // Fetch all QPEFs for those employees based on the year
-        $qpefs = Qpef::select('id', 'control_no', 'year', 'quarterly', 'rated_by','status')->where('year', $year)
+        $qpefs = Qpef::select('id', 'control_no', 'year', 'quarterly', 'rated_by', 'status')
+            ->where('year', $year)
             ->whereIn('control_no', $employeeControlNos)
             ->get()
             ->groupBy('control_no');
 
-        // Map QPEF data into each employee
-        $employeesWithQpef = collect($employees)->map(function ($employee) use ($qpefs) {
-            // Safely get the control number from the employee
-            if (is_array($employee)) {
-                $empControlNo = $employee['ControlNo']
-                    ?? $employee['control_no']
-                    ?? $employee['controlNo']
-                    ?? null;
-            } else {
-                $empControlNo = $employee->ControlNo
-                    ?? $employee->control_no
-                    ?? null;
-            }
-
-            // Attach QPEFs to the employee
-            if (is_array($employee)) {
-                $employee['qpef'] = $qpefs->get($empControlNo, collect())->values();
-            } else {
-                $employee->qpef = $qpefs->get($empControlNo, collect())->values();
-            }
-
-            return $employee;
+        $employeesWithQpef = $employees->map(function ($e) use ($qpefs) {
+            return [
+                'controlNo' => $e->ControlNo,
+                'name'      => $e->name,
+                'status'    => $e->status,
+                'position'  => $e->position,
+                'job_title' => $e->job_title,
+                'office'    => $e->office,
+                'qpef'      => $qpefs->get($e->ControlNo, collect())->values(),
+            ];
         });
 
         return response()->json([
-            'employee'             => $employeesWithQpef,
+            'employee'             => $employeesWithQpef->values(),
             'immediate_supervisor' => [
                 'name'     => $user->name,
                 'position' => $user->designation,
+                'office'   => $userStruture->office,
+                'office2'  => $userStruture->office2,
+                'group'    => $userStruture->group,
+                'division' => $userStruture->division,
+                'section'  => $userStruture->section,
+                'unit'     => $userStruture->unit,
             ],
             'department_office'    => $department_office,
         ]);
     }
-    private function findEmployeesSameNode(array $structure, string $controlNo): array
+    // private function findEmployeesSameNode(array $structure, string $controlNo): array
+    // {
+    //     foreach ($structure as $officeData) {
+
+    //         // Check office-level employees
+    //         $found = $this->controlNoExistsIn($officeData['employees'], $controlNo);
+    //         if ($found) {
+    //             return $this->excludeSelf($officeData['employees'], $controlNo);
+    //         }
+
+    //         foreach ($officeData['office2'] as $office2Data) {
+
+    //             // Check office2-level employees
+    //             $found = $this->controlNoExistsIn($office2Data['employees'], $controlNo);
+    //             if ($found) {
+    //                 return $this->excludeSelf($office2Data['employees'], $controlNo);
+    //             }
+
+    //             foreach ($office2Data['groups'] as $groupData) {
+
+    //                 // Check group-level employees
+    //                 $found = $this->controlNoExistsIn($groupData['employees'], $controlNo);
+    //                 if ($found) {
+    //                     return $this->excludeSelf($groupData['employees'], $controlNo);
+    //                 }
+
+    //                 foreach ($groupData['divisions'] as $divisionData) {
+
+    //                     // Check division-level employees
+    //                     $found = $this->controlNoExistsIn($divisionData['employees'], $controlNo);
+    //                     if ($found) {
+    //                         return $this->excludeSelf($divisionData['employees'], $controlNo);
+    //                     }
+
+    //                     foreach ($divisionData['sections'] as $sectionData) {
+
+    //                         // Check section-level employees
+    //                         $found = $this->controlNoExistsIn($sectionData['employees'], $controlNo);
+    //                         if ($found) {
+    //                             return $this->excludeSelf($sectionData['employees'], $controlNo);
+    //                         }
+
+    //                         foreach ($sectionData['units'] as $unitData) {
+
+    //                             // Check unit-level employees
+    //                             $found = $this->controlNoExistsIn($unitData['employees'], $controlNo);
+    //                             if ($found) {
+    //                                 return $this->excludeSelf($unitData['employees'], $controlNo);
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     return [];
+    // }
+
+    // private function controlNoExistsIn(array $employees, string $controlNo): bool
+    // {
+    //     return collect($employees)->contains('controlNo', $controlNo);
+    // }
+
+    // private function excludeSelf(array $employees, string $controlNo): array
+    // {
+    //     return collect($employees)
+    //         ->reject(fn($e) => $e['controlNo'] === $controlNo)
+    //         ->filter(fn($e) => in_array(strtoupper($e['status']), ['CASUAL', 'HONORARIUM', 'CONTRACTUAL', 'JOB ORDER']))
+    //         ->values()
+    //         ->all();
+    // }
+
+    private function fetchEmployeesUnderStructure($userStruture)
     {
-        foreach ($structure as $officeData) {
+        $query = Employee::query()->where('office', $userStruture->office);
 
-            // Check office-level employees
-            $found = $this->controlNoExistsIn($officeData['employees'], $controlNo);
-            if ($found) {
-                return $this->excludeSelf($officeData['employees'], $controlNo);
-            }
-
-            foreach ($officeData['office2'] as $office2Data) {
-
-                // Check office2-level employees
-                $found = $this->controlNoExistsIn($office2Data['employees'], $controlNo);
-                if ($found) {
-                    return $this->excludeSelf($office2Data['employees'], $controlNo);
-                }
-
-                foreach ($office2Data['groups'] as $groupData) {
-
-                    // Check group-level employees
-                    $found = $this->controlNoExistsIn($groupData['employees'], $controlNo);
-                    if ($found) {
-                        return $this->excludeSelf($groupData['employees'], $controlNo);
-                    }
-
-                    foreach ($groupData['divisions'] as $divisionData) {
-
-                        // Check division-level employees
-                        $found = $this->controlNoExistsIn($divisionData['employees'], $controlNo);
-                        if ($found) {
-                            return $this->excludeSelf($divisionData['employees'], $controlNo);
-                        }
-
-                        foreach ($divisionData['sections'] as $sectionData) {
-
-                            // Check section-level employees
-                            $found = $this->controlNoExistsIn($sectionData['employees'], $controlNo);
-                            if ($found) {
-                                return $this->excludeSelf($sectionData['employees'], $controlNo);
-                            }
-
-                            foreach ($sectionData['units'] as $unitData) {
-
-                                // Check unit-level employees
-                                $found = $this->controlNoExistsIn($unitData['employees'], $controlNo);
-                                if ($found) {
-                                    return $this->excludeSelf($unitData['employees'], $controlNo);
-                                }
-                            }
-                        }
-                    }
-                }
+        foreach (['office2', 'group', 'division', 'section', 'unit'] as $level) {
+            if (!is_null($userStruture->$level)) {
+                $query->where($level, $userStruture->$level);
             }
         }
 
-        return [];
-    }
-
-    private function controlNoExistsIn(array $employees, string $controlNo): bool
-    {
-        return collect($employees)->contains('controlNo', $controlNo);
-    }
-
-    private function excludeSelf(array $employees, string $controlNo): array
-    {
-        return collect($employees)
-            ->reject(fn($e) => $e['controlNo'] === $controlNo)
-            ->filter(fn($e) => in_array(strtoupper($e['status']), ['CASUAL', 'HONORARIUM', 'CONTRACTUAL', 'JOB ORDER']))
-            ->values()
-            ->all();
+        return $query->get()
+            ->reject(fn($e) => $e->ControlNo === $userStruture->ControlNo)
+            ->filter(fn($e) => in_array(strtoupper($e->status ?? ''), ['CASUAL', 'HONORARIUM', 'CONTRACTUAL', 'JOB ORDER',]))
+            ->values();
     }
 }
