@@ -14,4 +14,9 @@ class RatingWeek extends Model
         'week',
         'status'
     ];
+
+      public function targetPeriod()
+    {
+        return $this->belongsTo(TargetPeriod::class);
+    }
 }
