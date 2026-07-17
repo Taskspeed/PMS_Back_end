@@ -121,7 +121,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/',                     [OfficeController::class,            'getOffices']);
         Route::get('/structure',            [OfficeController::class,            'officeStructure']);
         Route::get('/structure/number',     [OfficeController::class,            'officeStructure']);
-        Route::get('/structure/count',      [VwplantillastructureController::class, 'plantillaStructureEmployeeWithCount']);
+        Route::get('/structure/count',      [VwplantillastructureController::class, 'plantillaStructureEmployee']);
+         Route::get('/structure/test',      [VwplantillastructureController::class, 'testplantilla']);
         Route::get('/mfo',                  [MfoController::class,               'Mfo']);
         Route::get('/head-mfo/{semester}/{year}', [MfoController::class,         'fetchMfo']);
         Route::get('/employee-draft-rating/{semester}/{year}', [OfficeController::class, 'listOfEmployeeRatingDraft']);
@@ -367,5 +368,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/view/signatory/{controlNo}',                                      [IpcrController::class, 'viewDocumentSignatories']);
 
 });
+    Route::get('/test/plantilla',                                      [SpmsController::class, 'getStructureOffice']);
 
 });
