@@ -293,9 +293,10 @@ class SupervisorService
 
         return $query->get()
             ->reject(fn($e) => $e->ControlNo === $userStruture->ControlNo)
-            ->filter(fn($e) => in_array(strtoupper($e->status ?? ''), ['CASUAL', 'HONORARIUM', 'CONTRACTUAL', 'JOB ORDER', 'REGULAR', 'CO-TERMINOUS']))
+            ->filter(fn($e) => in_array(strtoupper($e->status ?? ''), [ 'REGULAR', 'CASUAL','CO-TERMINOUS']))
             ->values();
     }
+
     private function buildHierarchyFromEmployee(Employee $employee): array
     {
         return [
