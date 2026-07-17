@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Erms;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\performanceRatingStoreRequest;
 use App\Http\Requests\UploadAttachmentRatingRequest;
+use App\Http\Resources\TargetPeriodDetailsResource;
 use App\Http\Resources\TargetPeriodRatingResource;
 use App\Http\Resources\TargetPeriodRatingWeeksResource;
 use App\Models\PerformanceRating;
@@ -51,7 +52,7 @@ class EmployeeRatingController extends Controller
 
         $data = $this->targetperiodService->getTargetPeriodWithStandardsAndRatings($targetPeriodId,$month,$year,$week);
 
-        return $data;
+       return new TargetPeriodDetailsResource($data);
     }
 
     // employee store his rate
