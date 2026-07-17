@@ -105,9 +105,16 @@ class TargetPeriodService
     // get the target period with standard and rating
     public function getTargetPeriodWithStandardsAndRatings(int $targetPeriodId, $month = null, $year = null, $week = null)
     {
-        $targetPeriod = TargetPeriod::select('id')
-            ->where('id', $targetPeriodId)
+        $targetPeriod = TargetPeriod::select('id','control_no')
+            ->where('id', $targetPeriodId)  
             ->with([
+              'employee' => function ($query) {
+                    $query->select('ControlNo', 'name', 'office',);
+                },
+                'ratingWeeks' => function ($query) use ($targetPeriodId,$week){
+                    $query->select('target_period_id','week','status')->where('target_period_id',$targetPeriodId)->where('week',$week)->first();
+                },
+            
                 'performanceStandards' => function ($query) {
                     $query->select(
                         'id',
@@ -166,34 +173,82 @@ class TargetPeriodService
             return response()->json(['message' => 'Target period not found.'], 404);
         }
 
+           // bulk fetch rating weeks — now scoped by target_period_id, hindi na per performance_standard_id
+       $ratingWeeksByWeek = RatingWeek::select('id', 'target_period_id', 'week', 'status')
+            ->where('target_period_id', $targetPeriodId)
+            ->where('week', $week)
+            ->first();
+
+    
+
         // filter performance ratings in PHP if month, year, week are provided
-        if ($month && $year && $week) {
-            $range       = $this->getWeekRangeForMonth($month, $year, $week);
-            $monthNumber = Carbon::createFromFormat('F', $month)->month;
-            $dayStart    = $range[0];
-            $dayEnd      = $range[1];
+        // if ($month && $year && $week) {
+        //     $range       = $this->getWeekRangeForMonth($month, $year, $week);
+        //     $monthNumber = Carbon::createFromFormat('F', $month)->month;
+        //     $dayStart    = $range[0];
+        //     $dayEnd      = $range[1];
 
-            $targetPeriod->performanceStandards->each(function ($standard) use ($monthNumber, $year, $dayStart, $dayEnd) {
-                $standard->setRelation(
-                    'performanceRating',
-                    $standard->performanceRating->filter(function ($rating) use ($monthNumber, $year, $dayStart, $dayEnd) {
-                        try {
-                            // date format is mm/dd/yyyy
-                            $date = Carbon::createFromFormat('m/d/Y', $rating->date);
+        //     $targetPeriod->performanceStandards->each(function ($standard) use ($monthNumber, $year, $dayStart, $dayEnd) {
+        //         $standard->setRelation(
+        //             'performanceRating',
+        //             $standard->performanceRating->filter(function ($rating) use ($monthNumber, $year, $dayStart, $dayEnd) {
+        //                 try {
+        //                     // date format is mm/dd/yyyy
+        //                     $date = Carbon::createFromFormat('m/d/Y', $rating->date);
 
-                            return $date->month == $monthNumber
-                                && $date->year  == $year
-                                && $date->day   >= $dayStart
-                                && $date->day   <= $dayEnd;
-                        } catch (\Exception $e) {
-                            return false;
-                        }
-                    })->values() // re-index the array
-                );
-            });
-        }
+        //                     return $date->month == $monthNumber
+        //                         && $date->year  == $year
+        //                         && $date->day   >= $dayStart
+        //                         && $date->day   <= $dayEnd;
+        //                 } catch (\Exception $e) {
+        //                     return false;
+        //                 }
+        //             })->values() // re-index the array
+        //         );
+        //     });
+        // }
 
-        return response()->json($targetPeriod);
+         if ($month && $year && $week) {
+        $range       = $this->getWeekRangeForMonth($month, $year, $week);
+        $monthNumber = Carbon::createFromFormat('F', $month)->month;
+        $dayStart    = $range[0];
+        $dayEnd      = $range[1];
+
+        $targetPeriod->performanceStandards->each(function ($standard) use ($monthNumber, $year, $dayStart, $dayEnd) {
+            $standard->setRelation(
+                'performanceRating',
+                $standard->performanceRating->filter(function ($rating) use ($monthNumber, $year, $dayStart, $dayEnd) {
+                    try {
+                        $date = Carbon::createFromFormat('m/d/Y', $rating->date);
+
+                        return $date->month == $monthNumber
+                            && $date->year  == $year
+                            && $date->day   >= $dayStart
+                            && $date->day   <= $dayEnd;
+                    } catch (\Exception $e) {
+                        return false;
+                    }
+                })->values()
+            );
+        });
+    }
+    // compute hasRating AFTER filtering, so it reflects only this specific week
+    $hasRating = $targetPeriod->performanceStandards
+        ->pluck('performanceRating')
+        ->flatten()
+        ->isNotEmpty();
+
+    if ($ratingWeeksByWeek && $ratingWeeksByWeek->status) {
+        $weekStatus = $ratingWeeksByWeek->status;
+    } elseif ($hasRating) {
+        $weekStatus = 'Pending';
+    } else {
+        $weekStatus = 'No Rating';
+    }
+
+    $targetPeriod->setAttribute('week_status', $weekStatus);
+
+        return $targetPeriod;
     }
 
     // week range of months
